@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<configuration>
+    <!-- Important: don't forget to add res to the build path, otherwise potentially the logback file will not become part of the jar -->
+    
+	<!-- Tip: see the logging slides on Moodle for information how to store log messages also in files. Note, logback can do MUCH more! -->
+	<appender name="STDOUT"
+		class="ch.qos.logback.core.ConsoleAppender">
+		<!-- encoders are assigned the type ch.qos.logback.classic.encoder.PatternLayoutEncoder 
+			by default -->
+		<encoder>
+			<pattern>%d{HH:mm:ss.SSS} [%thread] %-5level %logger{36} - %msg%n
+			</pattern>
+		</encoder>
+	</appender>
+	
+	<!-- example how to set a unique log level for the logging package (and all its sub packages) -->
+	<logger name="logging" level="WARN"/>
+	
+	<!-- generic log level for all the behaviour  -->
+	<root level="DEBUG">
+		<appender-ref ref="STDOUT" />
+	</root>
+</configuration>
