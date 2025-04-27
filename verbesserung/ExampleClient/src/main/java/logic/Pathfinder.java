@@ -3,6 +3,7 @@ package logic;
 import messagesbase.messagesfromclient.ETerrain;
 import messagesbase.messagesfromserver.FullMap;
 import messagesbase.messagesfromserver.FullMapNode;
+import java.util.Comparator;
 
 import java.util.*;
 
@@ -78,12 +79,16 @@ public class Pathfinder {
 
             FullMapNode currentNode = graph.get(current.key);
             for (FullMapNode neighbor : getNeighbors(currentNode)) {
+                if (neighbor.getTerrain() == ETerrain.Water) {
+                    continue; // 🚫 Never go into water!
+                }
                 String neighborKey = key(neighbor.getX(), neighbor.getY());
                 int newCost = costSoFar.get(current.key) + getTerrainCost(neighbor);
 
                 if (!costSoFar.containsKey(neighborKey) || newCost < costSoFar.get(neighborKey)) {
                     costSoFar.put(neighborKey, newCost);
-                    int priority = newCost;
+                    int heuristic = Math.abs(goalX - neighbor.getX()) + Math.abs(goalY - neighbor.getY());
+                    int priority = newCost + heuristic;
                     frontier.add(new Node(neighborKey, priority));
                     cameFrom.put(neighborKey, current.key);
                 }

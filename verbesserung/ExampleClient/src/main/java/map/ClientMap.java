@@ -115,8 +115,8 @@ public class ClientMap {
     // Random terrain generator
     private ETerrain randomTerrain(Random rand) {
         int r = rand.nextInt(100);
-        if (r < 60) return ETerrain.Grass;
-        if (r < 80) return ETerrain.Mountain;
+        if (r < 80) return ETerrain.Grass;
+        if (r < 90) return ETerrain.Mountain;
         return ETerrain.Water;
     }
 
@@ -181,3 +181,7 @@ public class ClientMap {
         return myNodes;
     }
 }
+
+
+
+

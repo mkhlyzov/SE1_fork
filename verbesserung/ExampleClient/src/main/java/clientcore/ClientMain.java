@@ -65,16 +65,18 @@ public class ClientMain {
                 mapSent = true;
             }
 
-            if (mapSent) {
-                break;
-            }
+            
 
             System.out.println("⏳ Warte auf meinen Zug zum Senden der HalfMap...");
             try {
-                Thread.sleep(600); // Sicherstellen, dass mindestens 400ms warten
+                Thread.sleep(400); // Sicherstellen, dass mindestens 400ms warten
             } catch (InterruptedException e) {
                 Thread.currentThread().interrupt();
                 return;
+            }
+
+            if (mapSent) {
+                break;
             }
         }
 
@@ -112,7 +114,7 @@ public class ClientMain {
             }
 
             try {
-                Thread.sleep(600); // Sicherstellen, dass mindestens 400ms warten
+                Thread.sleep(400); // Sicherstellen, dass mindestens 400ms warten
             } catch (InterruptedException e) {
                 Thread.currentThread().interrupt();
                 return;
