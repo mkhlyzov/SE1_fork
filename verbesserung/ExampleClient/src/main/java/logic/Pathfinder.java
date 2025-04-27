@@ -50,7 +50,7 @@ public class Pathfinder {
             case Grass:
                 return 1;
             case Mountain:
-                return 3;
+                return 8;
             case Water:
                 return 9999; // sollte nie genommen werden
             default:
