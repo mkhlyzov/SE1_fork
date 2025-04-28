@@ -1,0 +1,16 @@
+propchange/controller/PCController.java
+ propchange.controller.PCController
+observer/view/OView.java
+ observer.view.OView
+observer/model/OModel.java
+ observer.model.OModel
+observer/controller/OController.java
+ observer.controller.OController
+propchange/main/PCMain.java
+ propchange.main.PCMain
+observer/main/OMain.java
+ observer.main.OMain
+propchange/view/PCView.java
+ propchange.view.PCView
+propchange/model/PCModel.java
+ propchange.model.PCModel
