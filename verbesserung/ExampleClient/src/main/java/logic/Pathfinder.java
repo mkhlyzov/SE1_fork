@@ -1,20 +1,23 @@
 package logic;
 
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Comparator;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.PriorityQueue;
 import messagesbase.messagesfromclient.ETerrain;
 import messagesbase.messagesfromserver.FullMap;
 import messagesbase.messagesfromserver.FullMapNode;
-import java.util.Comparator;
-
-import java.util.*;
 
 public class Pathfinder {
 
     private final Map<String, FullMapNode> graph = new HashMap<>();
-
+    
     public Pathfinder(FullMap map) {
         for (FullMapNode node : map.getMapNodes()) {
-            String key = key(node.getX(), node.getY());
-            graph.put(key, node);
+            graph.put(key(node.getX(), node.getY()), node);
         }
     }
 
@@ -24,7 +27,7 @@ public class Pathfinder {
 
     private List<FullMapNode> getNeighbors(FullMapNode node) {
         List<FullMapNode> neighbors = new ArrayList<>();
-        int[][] directions = {{0,1}, {1,0}, {-1,0}, {0,-1}};
+        int[][] directions = {{0, 1}, {1, 0}, {-1, 0}, {0, -1}};
         for (int[] dir : directions) {
             int nx = node.getX() + dir[0];
             int ny = node.getY() + dir[1];
@@ -45,17 +48,13 @@ public class Pathfinder {
     }
 
     private int getTerrainCost(FullMapNode node) {
-        ETerrain terrain = node.getTerrain();
-        switch (terrain) {
-            case Grass:
-                return 1;
-            case Mountain:
-                return 8;
-            case Water:
-                return 9999; // sollte nie genommen werden
-            default:
-                return 10;
-        }
+        int baseCost = switch (node.getTerrain()) {
+            case Grass -> 1;
+            case Mountain -> 3;
+            default -> 9999; // water = invalid
+        };
+
+        return baseCost;
     }
 
     public List<FullMapNode> findPath(int startX, int startY, int goalX, int goalY) {
@@ -79,9 +78,8 @@ public class Pathfinder {
 
             FullMapNode currentNode = graph.get(current.key);
             for (FullMapNode neighbor : getNeighbors(currentNode)) {
-                if (neighbor.getTerrain() == ETerrain.Water) {
-                    continue; // 🚫 Never go into water!
-                }
+                if (neighbor.getTerrain() == ETerrain.Water) continue;
+
                 String neighborKey = key(neighbor.getX(), neighbor.getY());
                 int newCost = costSoFar.get(current.key) + getTerrainCost(neighbor);
 
@@ -95,13 +93,13 @@ public class Pathfinder {
             }
         }
 
-        // Pfad zurückverfolgen
+        // Backtrack to build path
         List<FullMapNode> path = new ArrayList<>();
         String currentKey = goalKey;
 
         while (!currentKey.equals(startKey)) {
             if (!cameFrom.containsKey(currentKey)) {
-                return new ArrayList<>(); // Kein Pfad gefunden
+                return new ArrayList<>(); // No path found
             }
             path.add(graph.get(currentKey));
             currentKey = cameFrom.get(currentKey);

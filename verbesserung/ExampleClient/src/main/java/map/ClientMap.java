@@ -1,10 +1,13 @@
 package map;
 
+import java.util.ArrayList;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.Queue;
+import java.util.Random;
 import messagesbase.messagesfromclient.ETerrain;
 import messagesbase.messagesfromclient.PlayerHalfMap;
 import messagesbase.messagesfromclient.PlayerHalfMapNode;
-
-import java.util.*;
 
 public class ClientMap {
 
@@ -67,15 +70,18 @@ public class ClientMap {
 
         // 🏰 Place the fort near the center (x 3-6, y 1-3)
         PlayerHalfMapNode fortNode = null;
-        while (true) {
+        int countfort = 0;
+        for (int i = 0; i < 1000 && countfort < 6; ++i){
             int idx = rand.nextInt(nodes.size());
             PlayerHalfMapNode node = nodes.get(idx);
-            if (node.getTerrain() == ETerrain.Grass && node.getX() >= 3 && node.getX() <= 6 && node.getY() >= 1 && node.getY() <= 3) {
-                fortNode = new PlayerHalfMapNode(node.getX(), node.getY(), true, node.getTerrain());
+            if (node.getTerrain() == ETerrain.Grass && node.getX() >= 3 && node.getX() <= 6 && node.getY() >= 1 && node.getY() <= 3 && !node.isFortPresent()) {
+                fortNode = new PlayerHalfMapNode(node.getX(), node.getY(), true, ETerrain.Grass);
                 nodes.set(idx, fortNode);
-                break;
+                countfort++;
+                System.out.println("Coordinates of Fort " + node.getX() + node.getY());
             }
         }
+        if(countfort < 6) return generate();
 
         // 🌟 Place the treasure close to the fort (within 2-3 moves)
         for (PlayerHalfMapNode node : nodes) {
@@ -162,5 +168,4 @@ public class ClientMap {
         return myNodes;
     }
 }
-
 

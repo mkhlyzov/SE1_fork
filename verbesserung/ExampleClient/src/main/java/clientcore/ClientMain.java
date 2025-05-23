@@ -1,5 +1,7 @@
 package clientcore;
 
+import java.util.Set;
+
 import logic.MoveStrategy;
 import map.ClientMap;
 import messagesbase.messagesfromclient.PlayerHalfMap;
@@ -7,8 +9,6 @@ import messagesbase.messagesfromclient.PlayerMove;
 import messagesbase.messagesfromserver.GameState;
 import messagesbase.messagesfromserver.PlayerState;
 import network.clientNetwork;
-
-import java.util.Set;
 
 public class ClientMain {
 
