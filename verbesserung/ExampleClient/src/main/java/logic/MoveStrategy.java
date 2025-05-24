@@ -106,6 +106,21 @@ public class MoveStrategy {
         drawMap(map);
         visitedFields.add(key(myPosition.getX(), myPosition.getY()));
 
+        if(myPosition.getTerrain() == ETerrain.Mountain){
+            int x = myPosition.getX();
+            int y = myPosition.getY();
+            int maxX = getMaxX(map);
+            int maxY = getMaxY(map);
+            int[][] dirs = {{1, 0}, {-1, 0}, {0, 1}, {0, -1},{1,1},{-1,1},{-1,-1},{1,-1}}; 
+            for (int[] dir : dirs) {
+                int nx = x + dir[0];
+                int ny = y + dir[1];
+            
+                if (nx >= 0 && ny >= 0 && nx <= maxX && ny <= maxY) {
+                    visitedFields.add(key(nx, ny));
+                }
+            }
+        }
         boolean playerHasTreasure = hasTreasure(gameState,playerId);
         FullMapNode goal;
 
@@ -250,8 +265,8 @@ public class MoveStrategy {
                 if (visitedInSearch.contains(neighborKey)) continue;
 
                 FullMapNode neighbor = nodeMap.get(neighborKey);
-                if (neighbor == null || neighbor.getTerrain() == ETerrain.Water || neighbor.getTerrain() == ETerrain.Mountain) continue;
-
+                if (neighbor == null || neighbor.getTerrain() == ETerrain.Water) continue;
+                if(neighbor.getTerrain() == ETerrain.Mountain) continue;
                 visitedInSearch.add(neighborKey);
                 queue.add(neighbor);
 
