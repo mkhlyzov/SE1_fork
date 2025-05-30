@@ -6,17 +6,17 @@ import messagesbase.messagesfromclient.ETerrain;
 import messagesbase.messagesfromclient.PlayerMove;
 import messagesbase.messagesfromserver.*;
 
- import java.io.FileWriter;
- import java.io.IOException;
- import java.io.PrintWriter;
- import java.time.LocalDateTime;
-import java.util.*;
-import messagesbase.messagesfromclient.ETerrain;
+ //import java.io.FileWriter;
+ //import java.io.IOException;
+ //import java.io.PrintWriter;
+ //import java.time.LocalDateTime;
+   import java.util.*;
+   import messagesbase.messagesfromclient.ETerrain;
 
 public class MoveStrategy {
 
      private final Set<String> visitedFields = new HashSet<>();
-     private int turnCounter = 0;
+     //private int turnCounter = 0;
      //private boolean treasureSeen = false;
      //private boolean treasureCollected = false;
     //  private boolean enemyFortSeen = false;
@@ -103,7 +103,7 @@ public class MoveStrategy {
             System.err.println("⚠️ Spielerposition nicht gefunden.");
             return PlayerMove.of(playerId, EMove.Right);
         }
-        drawMap(map);
+        //drawMap(map);
         visitedFields.add(key(myPosition.getX(), myPosition.getY()));
 
         if(myPosition.getTerrain() == ETerrain.Mountain){
@@ -299,63 +299,63 @@ public class MoveStrategy {
     
     
     
-    private void drawMap(FullMap map) {
-        turnCounter++;
-        try (PrintWriter writer = new PrintWriter(new java.io.FileOutputStream("map_log.txt", true))) {
-            writer.println("===== Turn #" + turnCounter + " =====");
-            writer.println("🕒 " + LocalDateTime.now());
-            writer.println();
+    // private void drawMap(FullMap map) {
+    //     turnCounter++;
+    //     try (PrintWriter writer = new PrintWriter(new java.io.FileOutputStream("map_log.txt", true))) {
+    //         writer.println("===== Turn #" + turnCounter + " =====");
+    //         writer.println("🕒 " + LocalDateTime.now());
+    //         writer.println();
 
-             boolean treasureVisibleThisTurn = false;
-             boolean fortVisibleThisTurn = false;
+    //          boolean treasureVisibleThisTurn = false;
+    //          boolean fortVisibleThisTurn = false;
 
-            for (int y = 0; y < 10; y++) {
-                StringBuilder row = new StringBuilder();
-                for (int x = 0; x < 20; x++) {
-                    FullMapNode node = getNodeAt(map, x, y);
-                    if (node != null) {
-                        if (node.getTreasureState() == ETreasureState.MyTreasureIsPresent) treasureVisibleThisTurn = true;
-                        if (node.getFortState() == EFortState.EnemyFortPresent) fortVisibleThisTurn = true;
-                    }
-                    String symbol = getSymbol(node);
-                    if(!visitedFields.contains(key(x,y)))
-                    {
-                        symbol = symbol.toLowerCase();
-                    }
-                    row.append(symbol);
-                }
-                writer.println(row);
-            }
+    //         for (int y = 0; y < 10; y++) {
+    //             StringBuilder row = new StringBuilder();
+    //             for (int x = 0; x < 20; x++) {
+    //                 FullMapNode node = getNodeAt(map, x, y);
+    //                 if (node != null) {
+    //                     if (node.getTreasureState() == ETreasureState.MyTreasureIsPresent) treasureVisibleThisTurn = true;
+    //                     if (node.getFortState() == EFortState.EnemyFortPresent) fortVisibleThisTurn = true;
+    //                 }
+    //                 String symbol = getSymbol(node);
+    //                 if(!visitedFields.contains(key(x,y)))
+    //                 {
+    //                     symbol = symbol.toLowerCase();
+    //                 }
+    //                 row.append(symbol);
+    //             }
+    //             writer.println(row);
+    //         }
 
-            writer.println();
-        } catch (Exception e) {
-            System.err.println("❌ Fehler beim Schreiben der Karte: " + e.getMessage());
-        }
-    }
+    //         writer.println();
+    //     } catch (Exception e) {
+    //         System.err.println("❌ Fehler beim Schreiben der Karte: " + e.getMessage());
+    //     }
+    // }
 
-    private FullMapNode getNodeAt(FullMap map, int x, int y) {
-        return map.getMapNodes().stream()
-            .filter(n -> n.getX() == x && n.getY() == y)
-            .findFirst().orElse(null);
-    }
+    // private FullMapNode getNodeAt(FullMap map, int x, int y) {
+    //     return map.getMapNodes().stream()
+    //         .filter(n -> n.getX() == x && n.getY() == y)
+    //         .findFirst().orElse(null);
+    // }
 
-    private String getSymbol(FullMapNode node) {
-        if (node == null) return ".";
+    // private String getSymbol(FullMapNode node) {
+    //     if (node == null) return ".";
 
-        String symbol = switch (node.getTerrain()) {
-            case Water -> "W";
-            case Grass -> "G";
-            case Mountain -> "M";
-        };
+    //     String symbol = switch (node.getTerrain()) {
+    //         case Water -> "W";
+    //         case Grass -> "G";
+    //         case Mountain -> "M";
+    //     };
 
-        if (node.getPlayerPositionState() == EPlayerPositionState.MyPlayerPosition) symbol = "P";
-        else if (node.getPlayerPositionState() == EPlayerPositionState.EnemyPlayerPosition) symbol = "E";
-        else if (node.getFortState() == EFortState.MyFortPresent) symbol = "F";
-        else if (node.getFortState() == EFortState.EnemyFortPresent) symbol = "X";
-        else if (node.getTreasureState() == ETreasureState.MyTreasureIsPresent) symbol = "T";
+    //     if (node.getPlayerPositionState() == EPlayerPositionState.MyPlayerPosition) symbol = "P";
+    //     else if (node.getPlayerPositionState() == EPlayerPositionState.EnemyPlayerPosition) symbol = "E";
+    //     else if (node.getFortState() == EFortState.MyFortPresent) symbol = "F";
+    //     else if (node.getFortState() == EFortState.EnemyFortPresent) symbol = "X";
+    //     else if (node.getTreasureState() == ETreasureState.MyTreasureIsPresent) symbol = "T";
 
-        return symbol;
-    }
+    //     return symbol;
+    // }
 
 }
 
