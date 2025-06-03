@@ -100,8 +100,9 @@ public class MoveStrategy {
         FullMapNode myPosition = getMyPosition(map);
         initialize(map,myPosition);
         if (myPosition == null) {
-            System.err.println("⚠️ Spielerposition nicht gefunden.");
-            return PlayerMove.of(playerId, EMove.Right);
+            //System.err.println("⚠️ Spielerposition nicht gefunden.");
+            // return PlayerMove.of(playerId, EMove.Right);
+            throw new RuntimeException("Spielerposition not found");
         }
         //drawMap(map);
         visitedFields.add(key(myPosition.getX(), myPosition.getY()));
@@ -206,7 +207,7 @@ public class MoveStrategy {
 
     private FullMapNode getMyPosition(FullMap map) {
         return map.getMapNodes().stream()
-                .filter(n -> n.getPlayerPositionState() == EPlayerPositionState.MyPlayerPosition)
+                .filter(n -> n.getPlayerPositionState() == EPlayerPositionState.BothPlayerPosition || n.getPlayerPositionState() == EPlayerPositionState.MyPlayerPosition)
                 .findFirst().orElse(null);
     }
 
@@ -266,14 +267,15 @@ public class MoveStrategy {
 
                 FullMapNode neighbor = nodeMap.get(neighborKey);
                 if (neighbor == null || neighbor.getTerrain() == ETerrain.Water) continue;
-                if(neighbor.getTerrain() == ETerrain.Mountain) continue;
                 visitedInSearch.add(neighborKey);
                 queue.add(neighbor);
 
+                if(neighbor.getTerrain() == ETerrain.Mountain) continue;
+
                 if (!visitedFields.contains(neighborKey)) {
-                    if (!mustBeOnEnemySide || (nx >= enemyXmin && nx < enemyXmax && ny >= enemyYmin && ny < enemyYmax)) {
+                    //if (!mustBeOnEnemySide || (nx >= enemyXmin && nx < enemyXmax && ny >= enemyYmin && ny < enemyYmax)) {
                         return neighbor;
-                    }
+                    //}
                 }
             }
         }
