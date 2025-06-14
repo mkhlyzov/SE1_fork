@@ -1,12 +1,13 @@
 package map;
-
 import messagesbase.messagesfromclient.ETerrain;
+
 
 public class PlayerHalfMapNode {
     private int x;
     private int y;
     private ETerrain setType;
     private boolean fortPresent;
+   
 
     public PlayerHalfMapNode(int x, int y, ETerrain setType, boolean fortPresent) {
         this.x = x;
@@ -48,4 +49,5 @@ public class PlayerHalfMapNode {
     public void setFortPresent(boolean fortPresent) {
         this.fortPresent = fortPresent;
     }
+    
 }

@@ -25,6 +25,7 @@ public class MoveStrategy {
     private int enemyXmin, enemyXmax, enemyYmin, enemyYmax;
     private boolean isInitialized = false;
     private boolean treasureLastTurn = false;
+   
 
    
    
@@ -136,7 +137,8 @@ public class MoveStrategy {
             goal = findEnemyFort(map);
             if (goal == null) {
                 System.out.println("🔍 Suche Gegnerburg (nur auf feindlicher Seite)");
-                goal = findClosestUndiscoveredNode(map, true);
+                 goal = findClosestUndiscoveredNode(map, true);
+                
             }
             else
             {
@@ -147,6 +149,7 @@ public class MoveStrategy {
             if (goal == null) {
                 System.out.println("🔍 Suche Schatz (egal wo)");
                 goal = findClosestUndiscoveredNode(map, false);
+                
             }
 
             else
@@ -295,6 +298,8 @@ public class MoveStrategy {
     private int getMaxY(FullMap map) {
         return map.getMapNodes().stream().mapToInt(FullMapNode::getY).max().orElse(0);
     }
+    
+
     
     
 

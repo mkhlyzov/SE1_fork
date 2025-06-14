@@ -9,6 +9,7 @@ import messagesbase.messagesfromclient.PlayerMove;
 import messagesbase.messagesfromserver.GameState;
 import messagesbase.messagesfromserver.PlayerState;
 import network.clientNetwork;
+import view.ConsoleView;
 
 public class ClientMain {
 
@@ -27,6 +28,7 @@ public class ClientMain {
         String myPlayerId = net.getPlayerId().getUniquePlayerID();
         mapGen = new ClientMap(myPlayerId);
 
+        ConsoleView view = new ConsoleView(myPlayerId);
         boolean mapSent = false;
 
         // 🔄 Warten auf Erlaubnis zur HalfMap-Übertragung oder Move-Phase
@@ -81,46 +83,54 @@ public class ClientMain {
         }
 
         // 🔁 Danach: Move-Phase starten
-        startMovePhase(myPlayerId);
+        startMovePhase(myPlayerId,view);
     }
 
-    public void startMovePhase(String myPlayerId) {
+    public void startMovePhase(String myPlayerId, ConsoleView view) {
         MoveStrategy strategy = new MoveStrategy();
-
+    
         while (true) {
             GameState state = net.getGameState();
             boolean myTurnToMove = false;
+            view.update(state);
+            view.render();  // 🗺️ Konsolenkarte ausgeben
 
             if (state != null) {
                 for (PlayerState ps : state.getPlayers()) {
                     if (ps.getUniquePlayerID().equals(myPlayerId)) {
-                        if (ps.getState().name().equals("MustAct")) {
-                            myTurnToMove = true;
-                        } else if (ps.getState().name().equals("Won") || ps.getState().name().equals("Lost")) {
-                            // Kein Fehler ausgeben, falls das Spiel beendet wurde
-                            System.out.println("🏁 Spiel beendet: " + ps.getState().name());
-                            return;
+                        switch (ps.getState()) {
+                            case MustAct -> myTurnToMove = true;
+                            //case MustWait -> myTurnToMove = false;
+                            case Won -> {
+                                view.printGameResult(true);
+                                return;
+                            }
+                            case Lost -> {
+                                view.printGameResult(false);
+                                return;
+                            }
                         }
                         break;
                     }
                 }
             }
-
+            //System.out.println("The value of variable myTurnTomove = " + myTurnToMove);
             if (myTurnToMove) {
                 PlayerMove move = strategy.calculateNextMove(state, net.getPlayerId());
                 net.sendMove(move);
             } else {
-                System.out.println("⏳ Warte auf meinen Zug zum Bewegen...");
+                System.out.println("⏳ Warte auf meinen Zug...");
             }
-
+    
             try {
-                Thread.sleep(400); // Sicherstellen, dass mindestens 400ms warten
+                Thread.sleep(400);
             } catch (InterruptedException e) {
                 Thread.currentThread().interrupt();
                 return;
             }
         }
     }
+    
 
     public static void main(String[] args) {
         if (args.length < 3) {
