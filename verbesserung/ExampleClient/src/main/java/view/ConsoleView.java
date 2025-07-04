@@ -13,73 +13,22 @@ import messagesbase.messagesfromserver.FullMapNode;
 import messagesbase.messagesfromserver.GameState;
 import messagesbase.messagesfromserver.PlayerState;
 
+import logic.GameHelper;
+
 public class ConsoleView {
+    public ConsoleView() {}
 
-    private GameState currentGameState;
-    private final Set<String> visitedFields = new HashSet<>();
-    private boolean lastHadTreasure = false;
-    private String rememberGoldPosition = null;
-    private final String playerId;
-
-    public ConsoleView(String playerId)
-    {
-       this.playerId = playerId;
-    }
-    public void update(GameState gameState){
-        currentGameState = gameState;
-        FullMap map = gameState.getMap();
-        boolean hasTreasureNow = gameState.getPlayers().stream().filter(p->p.getUniquePlayerID().equals(playerId)).findFirst().map(PlayerState::hasCollectedTreasure).orElse(false);
-        int maxX = map.stream().mapToInt(FullMapNode::getX).max().orElse(0);
-        int maxY = map.stream().mapToInt(FullMapNode::getY).max().orElse(0);
-        for (FullMapNode node : map.getMapNodes()) {
-            int x = node.getX();
-            int y = node.getY();
-            String key = x + "," + y;
-            if(node.getTreasureState() == ETreasureState.MyTreasureIsPresent){
-                rememberGoldPosition = key;
-            }
-            if(node.getPlayerPositionState() == EPlayerPositionState.MyPlayerPosition || node.getPlayerPositionState() == EPlayerPositionState.BothPlayerPosition)
-            {
-                visitedFields.add(key);
-
-                if(hasTreasureNow && !lastHadTreasure){
-                    rememberGoldPosition = key;
-                }
-                if(node.getTerrain() == ETerrain.Mountain)
-                {
-                    int[][] dirs = {{1, 0}, {-1, 0}, {0, 1}, {0, -1},{1,1},{-1,1},{-1,-1},{1,-1}}; 
-                    for (int[] dir : dirs) {
-                        int nx = x + dir[0];
-                        int ny = y + dir[1];
-            
-                        if (nx >= 0 && ny >= 0 && nx <= maxX && ny <= maxY) {
-                            String neighbourkey = nx + "," + ny;
-                            visitedFields.add(neighbourkey);
-                        }
-                    }
-                }
-            }
-        }
-        lastHadTreasure = hasTreasureNow;
-    }
-
-    public void render() {
-        FullMap map = currentGameState.getMap();
-        if (map == null || map.isEmpty()) {
-            System.out.println("❗ Karte ist leer oder nicht geladen.");
-            return;
-        }
-
-        // Dynamische Größe bestimmen
-        int maxX = map.stream().mapToInt(FullMapNode::getX).max().orElse(0);
-        int maxY = map.stream().mapToInt(FullMapNode::getY).max().orElse(0);
+    public void render(GameHelper gameHelper) {
+        FullMap map = gameHelper.getMap();
+        int maxX = gameHelper.getMaxX();
+        int maxY = gameHelper.getMaxY();
 
         // 2D-Matrix vorbereiten
         String[][] grid = new String[maxY + 1][maxX + 1];
         for (FullMapNode node : map.getMapNodes()) {
             int x = node.getX();
             int y = node.getY();
-            grid[y][x] = getSymbolForNode(node);
+            grid[y][x] = getSymbolForNode(node, gameHelper);
         }
 
         System.out.println("📜 Aktuelle Spielkarte:");
@@ -91,12 +40,9 @@ public class ConsoleView {
         }
     }
   
-    private String getSymbolForNode(FullMapNode node) {
-        int x = node.getX();
-        int y = node.getY();
-        String n = x + "," + y;
-        if(visitedFields.contains(n))
-           return getSymbolForNodeVisited(node);
+    private String getSymbolForNode(FullMapNode node, GameHelper gameHelper) {
+        if(gameHelper.isVisited(node))
+           return getSymbolForNodeVisited(node, gameHelper);
         ETerrain terrain = node.getTerrain();
         EPlayerPositionState position = node.getPlayerPositionState();
         EFortState fortState = node.getFortState();
@@ -130,14 +76,11 @@ public class ConsoleView {
 
     }
 
-    private String getSymbolForNodeVisited(FullMapNode node) {
+    private String getSymbolForNodeVisited(FullMapNode node, GameHelper gameHelper) {
         ETerrain terrain = node.getTerrain();
         EPlayerPositionState position = node.getPlayerPositionState();
         EFortState fortState = node.getFortState();
         ETreasureState hasTreasure = node.getTreasureState();
-        int x = node.getX();
-        int y = node.getY();
-        String n = x + "," + y;
 
         // Spielerzustand hat höchste Priorität
         switch (position) {
@@ -156,7 +99,7 @@ public class ConsoleView {
         // // Schatzanzeige (anders je nach Sammlung)
         
         //if(hasTreasure == ETreasureState.MyTreasureIsPresent) return "🟡"; // Sichtbarer Schatz
-        if(rememberGoldPosition != null && rememberGoldPosition.equals(n))
+        if(gameHelper.goldWasHere(node))
         {
             if(node.getTreasureState() == ETreasureState.NoOrUnknownTreasureState)
             {
@@ -190,13 +133,4 @@ public class ConsoleView {
         System.err.println("[FEHLER] " + message);
         System.err.println("Verursacht durch: " + methodName + " in " + className);
     }
-
-    private boolean hasTreasure(GameState gameState, UniquePlayerIdentifier playerId) {
-        return gameState.getPlayers().stream()
-                        .filter(p->p.getUniquePlayerID().equals(playerId.getUniquePlayerID()))
-                        .findFirst()
-                        .map(PlayerState::hasCollectedTreasure)
-                        .orElse(false);
-    }
-
 }
