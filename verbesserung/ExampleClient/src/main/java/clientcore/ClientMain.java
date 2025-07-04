@@ -8,11 +8,12 @@ import messagesbase.messagesfromclient.PlayerHalfMap;
 import messagesbase.messagesfromclient.PlayerMove;
 import messagesbase.messagesfromserver.GameState;
 import messagesbase.messagesfromserver.PlayerState;
+
 import network.clientNetwork;
 import view.ConsoleView;
+import logic.GameHelper;
 
 public class ClientMain {
-
     public clientNetwork net;
     public ClientMap mapGen;
 
@@ -26,9 +27,8 @@ public class ClientMain {
         }
 
         String myPlayerId = net.getPlayerId().getUniquePlayerID();
-        mapGen = new ClientMap(myPlayerId);
 
-        ConsoleView view = new ConsoleView(myPlayerId);
+        mapGen = new ClientMap(myPlayerId);
         boolean mapSent = false;
 
         // 🔄 Warten auf Erlaubnis zur HalfMap-Übertragung oder Move-Phase
@@ -83,17 +83,19 @@ public class ClientMain {
         }
 
         // 🔁 Danach: Move-Phase starten
-        startMovePhase(myPlayerId,view);
+        startMovePhase(myPlayerId);
     }
 
-    public void startMovePhase(String myPlayerId, ConsoleView view) {
+    public void startMovePhase(String myPlayerId) {
         MoveStrategy strategy = new MoveStrategy();
+        ConsoleView view = new ConsoleView();
+        GameHelper gameHelper = new GameHelper(myPlayerId);
     
         while (true) {
             GameState state = net.getGameState();
             boolean myTurnToMove = false;
-            view.update(state);
-            view.render();  // 🗺️ Konsolenkarte ausgeben
+            gameHelper.update(state);
+            view.render(gameHelper);  // 🗺️ Konsolenkarte ausgeben
 
             if (state != null) {
                 for (PlayerState ps : state.getPlayers()) {
