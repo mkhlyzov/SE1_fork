@@ -1,3 +1,4 @@
+# macOS system files
 .DS_Store
 .DS_Store?
 ._*
@@ -5,3 +6,21 @@
 .Trashes
 .AppleDouble
 .LSOverride
+
+# Java compiled files
+*.class
+hs_err_pid*
+
+# Gradle directories & wrappers
+.gradle/
+gradle-app.setting
+!gradle-wrapper.jar
+**/build/
+
+# IDE
+.settings
+.classpath
+.project
+
+# Log files
+logs
