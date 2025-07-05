@@ -13,26 +13,23 @@ import messagesbase.messagesfromserver.*;
    import java.util.*;
    import messagesbase.messagesfromclient.ETerrain;
 
+import logic.GameHelper;
+
 public class MoveStrategy {
 
-     private final Set<String> visitedFields = new HashSet<>();
-     //private int turnCounter = 0;
-     //private boolean treasureSeen = false;
-     //private boolean treasureCollected = false;
     //  private boolean enemyFortSeen = false;
 
     private int myXmin, myXmax, myYmin, myYmax;
     private int enemyXmin, enemyXmax, enemyYmin, enemyYmax;
     private boolean isInitialized = false;
-    private boolean treasureLastTurn = false;
-   
-
    
    
-    private void initialize(FullMap map, FullMapNode myPosition) {
+    private void initialize(GameHelper gameHelper) {
+        FullMap map = gameHelper.getMap();
+        FullMapNode myPosition = gameHelper.getMyPosition();
         if (!isInitialized) {
-            int maxX = getMaxX(map);  // 9 or 19
-            int maxY = getMaxY(map);  // 9 or 4
+            int maxX = gameHelper.getMaxX();  // 9 or 19
+            int maxY = gameHelper.getMaxY();  // 9 or 4
             int playerX = myPosition.getX();
             int playerY = myPosition.getY();
 
@@ -74,90 +71,46 @@ public class MoveStrategy {
                 System.err.println("❌ Unbekanntes Kartenformat (" + (maxX + 1) + " x " + (maxY + 1) + ")");
             }
             isInitialized = true;
-            PseudoVisitEnemySide();
         }
     }
 
-    private void PseudoVisitMySide() {
-        visitedFields.clear();
-        for (int x = myXmin; x < myXmax; x++) {
-            for (int y = myYmin; y < myYmax; y++) {
-                visitedFields.add(key(x, y));
-            }
-        }
-    }
-
-    private void PseudoVisitEnemySide() {
-        visitedFields.clear();
-        for (int x = enemyXmin; x < enemyXmax; x++) {
-            for (int y = enemyYmin; y < enemyYmax; y++) {
-                visitedFields.add(key(x, y));
-            }
-        }
-    }
     
-    public PlayerMove calculateNextMove(GameState gameState, UniquePlayerIdentifier playerId) {
-        FullMap map = gameState.getMap();
-        FullMapNode myPosition = getMyPosition(map);
-        initialize(map,myPosition);
-        if (myPosition == null) {
-            //System.err.println("⚠️ Spielerposition nicht gefunden.");
-            // return PlayerMove.of(playerId, EMove.Right);
-            throw new RuntimeException("Spielerposition not found");
-        }
-        //drawMap(map);
-        visitedFields.add(key(myPosition.getX(), myPosition.getY()));
+    public PlayerMove calculateNextMove(GameHelper gameHelper) {
+        FullMap map = gameHelper.getMap();
+        FullMapNode myPosition = gameHelper.getMyPosition();
+        assert myPosition != null;
+        initialize(gameHelper);
+        boolean playerHasTreasure = gameHelper.hasTreasure();
 
-        if(myPosition.getTerrain() == ETerrain.Mountain){
-            int x = myPosition.getX();
-            int y = myPosition.getY();
-            int maxX = getMaxX(map);
-            int maxY = getMaxY(map);
-            int[][] dirs = {{1, 0}, {-1, 0}, {0, 1}, {0, -1},{1,1},{-1,1},{-1,-1},{1,-1}}; 
-            for (int[] dir : dirs) {
-                int nx = x + dir[0];
-                int ny = y + dir[1];
-            
-                if (nx >= 0 && ny >= 0 && nx <= maxX && ny <= maxY) {
-                    visitedFields.add(key(nx, ny));
-                }
-            }
-        }
-        boolean playerHasTreasure = hasTreasure(gameState,playerId);
         FullMapNode goal;
-
-        // 💰 Проверка: если золото исчезло, значит оно было поднято
-        if (playerHasTreasure && !treasureLastTurn) {
-            System.out.println("💰 Schatz wurde eingesammelt → markiere eigene Seite");
-            PseudoVisitMySide();
-        }
-        treasureLastTurn = playerHasTreasure;
 
         if (playerHasTreasure) {
             goal = findEnemyFort(map);
             if (goal == null) {
                 System.out.println("🔍 Suche Gegnerburg (nur auf feindlicher Seite)");
-                 goal = findClosestUndiscoveredNode(map, true);
+                goal = findClosestUndiscoveredNode(
+                    gameHelper,
+                    enemyXmin, enemyYmin, enemyXmax, enemyYmax
+                );
                 
-            }
-            else
-            {
+            } else {
                 System.out.println("Coordinates of  Fort: " + goal.getX() + ", " + goal.getY());
             }
         } else {
             goal = findTreasure(map);
             if (goal == null) {
                 System.out.println("🔍 Suche Schatz (egal wo)");
-                goal = findClosestUndiscoveredNode(map, false);
+                goal = findClosestUndiscoveredNode(
+                    gameHelper,
+                    myXmin, myYmin, myXmax, myYmax
+                );
                 
-            }
-
-            else
-            {
+            } else {
                 System.out.println("Coordinates of  Treasure: " + goal.getX() + ", " + goal.getY());
             }
         }
 
+        UniquePlayerIdentifier playerId = gameHelper.getPlayerId();
         if (goal == null) {
             System.out.println("❌ Kein Ziel gefunden – bleibe stehen.");
             return stayClose(myPosition, playerId, map);
@@ -171,22 +124,9 @@ public class MoveStrategy {
             return stayClose(myPosition, playerId, map);
         }
 
-        FullMapNode next = path.get(0);
-        if (next.getTerrain() == ETerrain.Water) {
-            System.out.println("🚫 Wasser – bleibe lieber stehen.");
-            return stayClose(myPosition, playerId, map);
-        }
-        
+        FullMapNode next = path.get(0);        
         EMove move = calculateMove(myPosition, next);
         return PlayerMove.of(playerId, move);
-    }
-
-    private boolean hasTreasure(GameState gameState, UniquePlayerIdentifier playerId) {
-        return gameState.getPlayers().stream()
-                        .filter(p->p.getUniquePlayerID().equals(playerId.getUniquePlayerID()))
-                        .findFirst()
-                        .map(PlayerState::hasCollectedTreasure)
-                        .orElse(false);
     }
 
     private FullMapNode findTreasure(FullMap map) {
@@ -207,12 +147,6 @@ public class MoveStrategy {
     //               .filter(n -> n.getFortState() == EFortState.MyFortPresent)
     //               .findFirst().orElse(null);
     // }
-
-    private FullMapNode getMyPosition(FullMap map) {
-        return map.getMapNodes().stream()
-                .filter(n -> n.getPlayerPositionState() == EPlayerPositionState.BothPlayerPosition || n.getPlayerPositionState() == EPlayerPositionState.MyPlayerPosition)
-                .findFirst().orElse(null);
-    }
 
     private PlayerMove stayClose(FullMapNode pos, UniquePlayerIdentifier playerId, FullMap map) {
         int x = pos.getX();
@@ -239,8 +173,16 @@ public class MoveStrategy {
     }
 
     // 🔍 Find nearest undiscovered node (optionally on enemy side only)
-    private FullMapNode findClosestUndiscoveredNode(FullMap map, boolean mustBeOnEnemySide) {
-        FullMapNode start = getMyPosition(map);
+
+    // 1 byte = 8 bits
+    // 1 integer = 4 byte = 32 bits
+    // 1 MegaByte
+    private FullMapNode findClosestUndiscoveredNode(
+        GameHelper gameHelper,
+        int x1, int y1, int x2, int y2 // 4 * 4 bytes = 16 bytes = 128 bits
+    ) {
+        FullMap map = gameHelper.getMap();
+        FullMapNode start = gameHelper.getMyPosition();
         if (start == null) return null;
 
         Map<String, FullMapNode> nodeMap = new HashMap<>();
@@ -248,8 +190,8 @@ public class MoveStrategy {
             nodeMap.put(key(node.getX(), node.getY()), node);
         }
 
-        int maxX = getMaxX(map);
-        int maxY = getMaxY(map);
+        int maxX = gameHelper.getMaxX();
+        int maxY = gameHelper.getMaxY();
 
         Queue<FullMapNode> queue = new LinkedList<>();
         Set<String> visitedInSearch = new HashSet<>();
@@ -275,10 +217,9 @@ public class MoveStrategy {
 
                 if(neighbor.getTerrain() == ETerrain.Mountain) continue;
 
-                if (!visitedFields.contains(neighborKey)) {
-                    //if (!mustBeOnEnemySide || (nx >= enemyXmin && nx < enemyXmax && ny >= enemyYmin && ny < enemyYmax)) {
+                if (!gameHelper.isVisited(neighbor)) {
+                    if (nx >= x1 && nx < x2 && ny >= y1 && ny < y2)
                         return neighbor;
-                    //}
                 }
             }
         }
@@ -290,55 +231,7 @@ public class MoveStrategy {
     private String key(int x, int y) {
         return x + "," + y;
     }
-
-    private int getMaxX(FullMap map) {
-        return map.getMapNodes().stream().mapToInt(FullMapNode::getX).max().orElse(0);
-    }
-
-    private int getMaxY(FullMap map) {
-        return map.getMapNodes().stream().mapToInt(FullMapNode::getY).max().orElse(0);
-    }
     
-
-    
-    
-
-    
-    
-    
-    // private void drawMap(FullMap map) {
-    //     turnCounter++;
-    //     try (PrintWriter writer = new PrintWriter(new java.io.FileOutputStream("map_log.txt", true))) {
-    //         writer.println("===== Turn #" + turnCounter + " =====");
-    //         writer.println("🕒 " + LocalDateTime.now());
-    //         writer.println();
-
-    //          boolean treasureVisibleThisTurn = false;
-    //          boolean fortVisibleThisTurn = false;
-
-    //         for (int y = 0; y < 10; y++) {
-    //             StringBuilder row = new StringBuilder();
-    //             for (int x = 0; x < 20; x++) {
-    //                 FullMapNode node = getNodeAt(map, x, y);
-    //                 if (node != null) {
-    //                     if (node.getTreasureState() == ETreasureState.MyTreasureIsPresent) treasureVisibleThisTurn = true;
-    //                     if (node.getFortState() == EFortState.EnemyFortPresent) fortVisibleThisTurn = true;
-    //                 }
-    //                 String symbol = getSymbol(node);
-    //                 if(!visitedFields.contains(key(x,y)))
-    //                 {
-    //                     symbol = symbol.toLowerCase();
-    //                 }
-    //                 row.append(symbol);
-    //             }
-    //             writer.println(row);
-    //         }
-
-    //         writer.println();
-    //     } catch (Exception e) {
-    //         System.err.println("❌ Fehler beim Schreiben der Karte: " + e.getMessage());
-    //     }
-    // }
 
     // private FullMapNode getNodeAt(FullMap map, int x, int y) {
     //     return map.getMapNodes().stream()
@@ -346,23 +239,6 @@ public class MoveStrategy {
     //         .findFirst().orElse(null);
     // }
 
-    // private String getSymbol(FullMapNode node) {
-    //     if (node == null) return ".";
-
-    //     String symbol = switch (node.getTerrain()) {
-    //         case Water -> "W";
-    //         case Grass -> "G";
-    //         case Mountain -> "M";
-    //     };
-
-    //     if (node.getPlayerPositionState() == EPlayerPositionState.MyPlayerPosition) symbol = "P";
-    //     else if (node.getPlayerPositionState() == EPlayerPositionState.EnemyPlayerPosition) symbol = "E";
-    //     else if (node.getFortState() == EFortState.MyFortPresent) symbol = "F";
-    //     else if (node.getFortState() == EFortState.EnemyFortPresent) symbol = "X";
-    //     else if (node.getTreasureState() == ETreasureState.MyTreasureIsPresent) symbol = "T";
-
-    //     return symbol;
-    // }
 
 }
 

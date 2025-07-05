@@ -19,17 +19,17 @@ import messagesbase.messagesfromserver.*;
 public class GameHelper {
     private GameState currentGameState;
     private final Set<String> visitedFields = new HashSet<>();
-    private final String playerId;
+    private final UniquePlayerIdentifier playerId;
     private boolean lastHadTreasure = false;
     private String rememberGoldPosition = null;
 
     private boolean isInitialized = false;
 
-    public GameHelper(String playerId) {
+    public GameHelper(UniquePlayerIdentifier playerId) {
         this.playerId = playerId;
     }
 
-    public String getPlayerId() {
+    public UniquePlayerIdentifier getPlayerId() {
         return playerId;
     }
 
@@ -55,13 +55,20 @@ public class GameHelper {
         return visitedFields.contains(key(node));
     }
 
+    public FullMapNode getMyPosition() {
+        FullMap map = currentGameState.getMap();
+        return map.getMapNodes().stream()
+                .filter(n -> n.getPlayerPositionState() == EPlayerPositionState.BothPlayerPosition || n.getPlayerPositionState() == EPlayerPositionState.MyPlayerPosition)
+                .findFirst().orElse(null);
+    }
+
     public boolean goldWasHere(FullMapNode node) {
         return rememberGoldPosition != null && key(node).equals(rememberGoldPosition);
     }
 
     public boolean hasTreasure() {
         return currentGameState.getPlayers().stream()
-            .filter(p->p.getUniquePlayerID().equals(playerId))
+            .filter(p->p.getUniquePlayerID().equals(playerId.getUniquePlayerID()))
             .findFirst()
             .map(PlayerState::hasCollectedTreasure)
             .orElse(false);
