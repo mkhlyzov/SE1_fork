@@ -89,7 +89,7 @@ public class ClientMain {
     public void startMovePhase(String myPlayerId) {
         MoveStrategy strategy = new MoveStrategy();
         ConsoleView view = new ConsoleView();
-        GameHelper gameHelper = new GameHelper(myPlayerId);
+        GameHelper gameHelper = new GameHelper(net.getPlayerId());
     
         while (true) {
             GameState state = net.getGameState();
@@ -118,7 +118,7 @@ public class ClientMain {
             }
             //System.out.println("The value of variable myTurnTomove = " + myTurnToMove);
             if (myTurnToMove) {
-                PlayerMove move = strategy.calculateNextMove(state, net.getPlayerId());
+                PlayerMove move = strategy.calculateNextMove(gameHelper);
                 net.sendMove(move);
             } else {
                 System.out.println("⏳ Warte auf meinen Zug...");
