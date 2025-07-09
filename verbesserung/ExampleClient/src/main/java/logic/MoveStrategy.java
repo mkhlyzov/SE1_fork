@@ -10,14 +10,12 @@ import messagesbase.messagesfromserver.*;
  //import java.io.IOException;
  //import java.io.PrintWriter;
  //import java.time.LocalDateTime;
-   import java.util.*;
-   import messagesbase.messagesfromclient.ETerrain;
+import java.util.*;
+import messagesbase.messagesfromclient.ETerrain;
 
 import logic.GameHelper;
 
 public class MoveStrategy {
-
-    //  private boolean enemyFortSeen = false;
 
     private int myXmin, myXmax, myYmin, myYmax;
     private int enemyXmin, enemyXmax, enemyYmin, enemyYmax;
@@ -76,10 +74,10 @@ public class MoveStrategy {
 
     
     public PlayerMove calculateNextMove(GameHelper gameHelper) {
+        initialize(gameHelper);
         FullMap map = gameHelper.getMap();
         FullMapNode myPosition = gameHelper.getMyPosition();
         assert myPosition != null;
-        initialize(gameHelper);
         boolean playerHasTreasure = gameHelper.hasTreasure();
 
         FullMapNode goal;
@@ -92,7 +90,6 @@ public class MoveStrategy {
                     gameHelper,
                     enemyXmin, enemyYmin, enemyXmax, enemyYmax
                 );
-                
             } else {
                 System.out.println("Coordinates of  Fort: " + goal.getX() + ", " + goal.getY());
             }
@@ -104,27 +101,21 @@ public class MoveStrategy {
                     gameHelper,
                     myXmin, myYmin, myXmax, myYmax
                 );
-                
             } else {
                 System.out.println("Coordinates of  Treasure: " + goal.getX() + ", " + goal.getY());
             }
         }
 
         UniquePlayerIdentifier playerId = gameHelper.getPlayerId();
-        if (goal == null) {
+        if (goal == null || goal == myPosition) {
             System.out.println("❌ Kein Ziel gefunden – bleibe stehen.");
             return stayClose(myPosition, playerId, map);
         }
 
         Pathfinder pathfinder = new Pathfinder(map);  
-        List<FullMapNode> path = pathfinder.findPath(myPosition.getX(), myPosition.getY(), goal.getX(), goal.getY());
+        List<FullMapNode> trajectory = pathfinder.findPath(myPosition, goal);
 
-        if (path.isEmpty()) {
-            System.out.println("⚠️ Kein Pfad gefunden – bleibe stehen.");
-            return stayClose(myPosition, playerId, map);
-        }
-
-        FullMapNode next = path.get(0);        
+        FullMapNode next = trajectory.get(0);        
         EMove move = calculateMove(myPosition, next);
         return PlayerMove.of(playerId, move);
     }
@@ -140,13 +131,6 @@ public class MoveStrategy {
                 .filter(n -> n.getFortState() == EFortState.EnemyFortPresent)
                 .findFirst().orElse(null);
     }
-
-    // private FullMapNode findMyFort(FullMap map)
-    // {
-    //     return map.getMapNodes().stream()
-    //               .filter(n -> n.getFortState() == EFortState.MyFortPresent)
-    //               .findFirst().orElse(null);
-    // }
 
     private PlayerMove stayClose(FullMapNode pos, UniquePlayerIdentifier playerId, FullMap map) {
         int x = pos.getX();
@@ -165,6 +149,10 @@ public class MoveStrategy {
     }
 
     private EMove calculateMove(FullMapNode from, FullMapNode to) {
+        int dx = to.getX() - from.getX();
+        int dy = to.getY() - from.getY();
+        assert dx * dx + dy * dy == 1;
+
         if (to.getX() > from.getX()) return EMove.Right;
         if (to.getX() < from.getX()) return EMove.Left;
         if (to.getY() > from.getY()) return EMove.Down;
@@ -172,14 +160,10 @@ public class MoveStrategy {
         return EMove.Right;
     }
 
-    // 🔍 Find nearest undiscovered node (optionally on enemy side only)
-
-    // 1 byte = 8 bits
-    // 1 integer = 4 byte = 32 bits
-    // 1 MegaByte
+    // Find nearest undiscovered node
     private FullMapNode findClosestUndiscoveredNode(
         GameHelper gameHelper,
-        int x1, int y1, int x2, int y2 // 4 * 4 bytes = 16 bytes = 128 bits
+        int x1, int y1, int x2, int y2
     ) {
         FullMap map = gameHelper.getMap();
         FullMapNode start = gameHelper.getMyPosition();
@@ -232,13 +216,11 @@ public class MoveStrategy {
         return x + "," + y;
     }
     
-
-    // private FullMapNode getNodeAt(FullMap map, int x, int y) {
-    //     return map.getMapNodes().stream()
-    //         .filter(n -> n.getX() == x && n.getY() == y)
-    //         .findFirst().orElse(null);
-    // }
-
+    private FullMapNode getNodeAt(FullMap map, int x, int y) {
+        return map.getMapNodes().stream()
+            .filter(n -> n.getX() == x && n.getY() == y)
+            .findFirst().orElse(null);
+    }
 
 }
 

@@ -41,82 +41,52 @@ public class ConsoleView {
     }
   
     private String getSymbolForNode(FullMapNode node, GameHelper gameHelper) {
-        if(gameHelper.isVisited(node))
-           return getSymbolForNodeVisited(node, gameHelper);
-        ETerrain terrain = node.getTerrain();
-        EPlayerPositionState position = node.getPlayerPositionState();
-        EFortState fortState = node.getFortState();
-        ETreasureState hasTreasure = node.getTreasureState();
-
         // Spielerzustand hat höchste Priorität
+        EPlayerPositionState position = node.getPlayerPositionState();
         switch (position) {
-            case MyPlayerPosition:
+            case EPlayerPositionState.MyPlayerPosition:
                 return "🧍"; // Eigener Spieler
-            case EnemyPlayerPosition:
+            case EPlayerPositionState.EnemyPlayerPosition:
                 return "🤺"; // Gegner
-            case BothPlayerPosition:
+            case EPlayerPositionState.BothPlayerPosition:
                 return "⚔️"; // Beide auf dem Feld
         }
 
         // // Burganzeige (wird nicht überschrieben durch Terrain)
-        if (fortState == EFortState.MyFortPresent) return "🏰";
-        if (fortState == EFortState.EnemyFortPresent) return "🏯";
-
-        // // Schatzanzeige (anders je nach Sammlung)
-        
-        if(hasTreasure == ETreasureState.MyTreasureIsPresent) return "💰"; // Sichtbarer Schatz
-
-
-        // Terrainanzeige
-        return switch (terrain) {
-            case Grass -> "\uD83D\uDFE9";
-            case Water -> "\uD83D\uDFE6";
-            case Mountain -> "\uD83D\uDFEB";
-        };
-
-    }
-
-    private String getSymbolForNodeVisited(FullMapNode node, GameHelper gameHelper) {
-        ETerrain terrain = node.getTerrain();
-        EPlayerPositionState position = node.getPlayerPositionState();
         EFortState fortState = node.getFortState();
-        ETreasureState hasTreasure = node.getTreasureState();
-
-        // Spielerzustand hat höchste Priorität
-        switch (position) {
-            case MyPlayerPosition:
-                return "🧍"; // Eigener Spieler
-            case EnemyPlayerPosition:
-                return "🤺"; // Gegner
-            case BothPlayerPosition:
-                return "⚔️"; // Beide auf dem Feld
+        switch (fortState) {
+            case EFortState.MyFortPresent:
+                return "🏰"; // eigene Burg
+            case EFortState.EnemyFortPresent:
+                return "🏯"; // gegnerische Burg
         }
 
-        // // Burganzeige (wird nicht überschrieben durch Terrain)
-        if (fortState == EFortState.MyFortPresent) return "🏰";
-        if (fortState == EFortState.EnemyFortPresent) return "🏯";
-
         // // Schatzanzeige (anders je nach Sammlung)
-        
-        //if(hasTreasure == ETreasureState.MyTreasureIsPresent) return "🟡"; // Sichtbarer Schatz
-        if(gameHelper.goldWasHere(node))
-        {
-            if(node.getTreasureState() == ETreasureState.NoOrUnknownTreasureState)
-            {
-                return "\uD83D\uDC7B";
-            }
-            else
-            {
-                return "\uD83D\uDCB0";
+        if (gameHelper.goldWasHere(node)) {
+            ETreasureState hasTreasure = node.getTreasureState();
+            switch(hasTreasure) {
+                case ETreasureState.MyTreasureIsPresent:
+                    return "💰"; // Sichtbarer Schatz
+                case ETreasureState.NoOrUnknownTreasureState:
+                    return "🟡"; // Sichtbarer Schatz
             }
         }
 
         // Terrainanzeige
-        return switch (terrain) {
-            case Grass -> "🟢";     
-            case Water -> "\uD83D\uDFE6";     
-            case Mountain -> "🟤"; 
-        };
+        ETerrain terrain = node.getTerrain();
+        if(gameHelper.isVisited(node)) {
+            return switch (terrain) {
+                case ETerrain.Grass -> "🟢";     
+                case ETerrain.Water -> "\uD83D\uDFE6";     
+                case ETerrain.Mountain -> "🟤"; 
+            };
+        } else {
+            return switch (terrain) {
+                case ETerrain.Grass -> "\uD83D\uDFE9";
+                case ETerrain.Water -> "\uD83D\uDFE6";
+                case ETerrain.Mountain -> "\uD83D\uDFEB";
+            };  
+        }
     }
 
     /**
@@ -124,13 +94,5 @@ public class ConsoleView {
      */
     public void printGameResult(boolean won) {
         System.out.println(won ? "🏆 Du hast gewonnen!" : "💀 Du hast verloren.");
-    }
-
-    /**
-     * Gibt technische Validierungsfehler auf System.err aus.
-     */
-    public void logValidationError(String message, String className, String methodName) {
-        System.err.println("[FEHLER] " + message);
-        System.err.println("Verursacht durch: " + methodName + " in " + className);
     }
 }

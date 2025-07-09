@@ -15,7 +15,7 @@ import messagesbase.messagesfromserver.GameState;
 import messagesbase.messagesfromclient.PlayerMove;
 
 
-public class clientNetwork {
+public class ClientNetwork {
 
     // === Attribute ===
     private final String baseURL;
@@ -25,7 +25,7 @@ public class clientNetwork {
     
 
     // === Konstruktor ===
-    public clientNetwork(String baseURL, String gameId) {
+    public ClientNetwork(String baseURL, String gameId) {
         this.baseURL = baseURL;
         this.gameId = gameId;
     }
