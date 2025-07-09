@@ -9,13 +9,16 @@ import messagesbase.messagesfromclient.PlayerMove;
 import messagesbase.messagesfromserver.GameState;
 import messagesbase.messagesfromserver.PlayerState;
 
-import network.clientNetwork;
+import network.ClientNetwork;
 import view.ConsoleView;
 import logic.GameHelper;
 
 public class ClientMain {
-    public clientNetwork net;
-    public ClientMap mapGen;
+    private ClientNetwork net;
+
+    public ClientMain(String serverURL, String gameId) {
+        this.net = new ClientNetwork(serverURL, gameId);
+    }
 
     public void startGame(String studentId) {
         // ✅ Registrierung
@@ -28,7 +31,7 @@ public class ClientMain {
 
         String myPlayerId = net.getPlayerId().getUniquePlayerID();
 
-        mapGen = new ClientMap(myPlayerId);
+        ClientMap mapGen = new ClientMap(myPlayerId);
         boolean mapSent = false;
 
         // 🔄 Warten auf Erlaubnis zur HalfMap-Übertragung oder Move-Phase
@@ -83,10 +86,10 @@ public class ClientMain {
         }
 
         // 🔁 Danach: Move-Phase starten
-        startMovePhase(myPlayerId);
+        startMovePhase();
     }
 
-    public void startMovePhase(String myPlayerId) {
+    public void startMovePhase() {
         MoveStrategy strategy = new MoveStrategy();
         ConsoleView view = new ConsoleView();
         GameHelper gameHelper = new GameHelper(net.getPlayerId());
@@ -99,6 +102,7 @@ public class ClientMain {
 
             if (state != null) {
                 for (PlayerState ps : state.getPlayers()) {
+                    String myPlayerId = net.getPlayerId().getUniquePlayerID();
                     if (ps.getUniquePlayerID().equals(myPlayerId)) {
                         switch (ps.getState()) {
                             case MustAct -> myTurnToMove = true;
@@ -144,8 +148,7 @@ public class ClientMain {
         String gameId = args[2];
         String studentId = "kostarievd00"; // 🧑‍🎓 Deinen u:account hier einsetzen
 
-        ClientMain main = new ClientMain();
-        main.net = new clientNetwork(serverURL, gameId);
+        ClientMain main = new ClientMain(serverURL, gameId);
         main.startGame(studentId);
     }
 }

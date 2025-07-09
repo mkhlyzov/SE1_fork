@@ -57,7 +57,12 @@ public class Pathfinder {
         return baseCost;
     }
 
-    public List<FullMapNode> findPath(int startX, int startY, int goalX, int goalY) {
+    public List<FullMapNode> findPath(FullMapNode start, FullMapNode goal) {
+        int startX = start.getX();
+        int startY = start.getY();
+        int goalX = goal.getX();
+        int goalY = goal.getY();
+
         String startKey = key(startX, startY);
         String goalKey = key(goalX, goalY);
 
