@@ -15,12 +15,16 @@ import messagesbase.messagesfromserver.GameState;
 import messagesbase.messagesfromclient.PlayerMove;
 
 
+
 public class ClientNetwork {
 
+    private static final int GAMESTATE_REQUEST_DELAY = 400;
+    
     // === Attribute ===
     private final String baseURL;
     private final String gameId;
     private UniquePlayerIdentifier playerId;
+    private long lastPollTime = 0;
 
     
 
@@ -31,6 +35,7 @@ public class ClientNetwork {
     }
     
     public GameState getGameState() {
+        delayForPolling();
         WebClient webClient = WebClient.builder()
                 .baseUrl(baseURL + "/games")
                 .defaultHeader(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_XML_VALUE)
@@ -159,4 +164,29 @@ public class ClientNetwork {
     public void setPlayerId(UniquePlayerIdentifier playerId) {
         this.playerId = playerId;
     }
+
+    private void delayForPolling() {
+        long now = System.currentTimeMillis();
+    
+        if (lastPollTime == 0) {
+            lastPollTime = now;
+            return; 
+        }
+    
+        long elapsed = now - lastPollTime;
+        long sleepTime = GAMESTATE_REQUEST_DELAY - elapsed;
+    
+        if (sleepTime > 0) {
+            try {
+                Thread.sleep(sleepTime);
+            } catch (InterruptedException e) {
+                Thread.currentThread().interrupt();
+                System.err.println("Sleep unterbrochen: " + e.getMessage());
+            }
+        }
+    
+       
+        lastPollTime = System.currentTimeMillis();
+    }
+    
 }
