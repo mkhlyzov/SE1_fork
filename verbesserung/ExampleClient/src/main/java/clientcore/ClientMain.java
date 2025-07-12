@@ -47,9 +47,7 @@ public class ClientMain {
                         System.out.println("🧍 Spieler-ID: " + myPlayerId);
                         System.out.println("📡 Aktueller Status vom Server: " + status);
 
-                        if (status.equals("MustProvideMap")) {
-                            canSendMap = true;
-                        } else if (status.equals("MustAct")) {
+                        if (status.equals("MustAct")) {
                             System.out.println("⚠️ Ich bin schon in der Move-Phase!");
                             canSendMap = true; // trotzdem senden, falls noch nicht gesendet
                         } else if (status.equals("Won") || status.equals("Lost")) {
