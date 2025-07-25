@@ -50,7 +50,7 @@ public class Pathfinder {
     private int getTerrainCost(FullMapNode node) {
         int baseCost = switch (node.getTerrain()) {
             case Grass -> 1;
-            case Mountain -> 3;
+            case Mountain -> 4;
             default -> 9999; // water = invalid
         };
 
