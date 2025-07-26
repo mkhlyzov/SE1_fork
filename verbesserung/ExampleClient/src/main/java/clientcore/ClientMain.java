@@ -12,9 +12,10 @@ import messagesbase.messagesfromserver.PlayerState;
 import network.ClientNetwork;
 import view.ConsoleView;
 import logic.GameHelper;
+import network.INetwork;
 
 public class ClientMain {
-    private ClientNetwork net;
+    private INetwork net;
 
     public ClientMain(String serverURL, String gameId) {
         this.net = new ClientNetwork(serverURL, gameId);

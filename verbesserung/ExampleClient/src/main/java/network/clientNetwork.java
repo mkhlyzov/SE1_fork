@@ -4,19 +4,22 @@ import messagesbase.UniquePlayerIdentifier;
 import messagesbase.ResponseEnvelope;
 import messagesbase.messagesfromclient.ERequestState;
 import messagesbase.messagesfromclient.PlayerRegistration;
+
 import org.springframework.core.ParameterizedTypeReference;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpMethod;
 import org.springframework.http.MediaType;
 import org.springframework.web.reactive.function.BodyInserters;
 import org.springframework.web.reactive.function.client.WebClient;
+
+import messagesbase.messagesfromclient.PlayerHalfMap;
 import reactor.core.publisher.Mono;
 import messagesbase.messagesfromserver.GameState;
 import messagesbase.messagesfromclient.PlayerMove;
 
 
 
-public class ClientNetwork {
+public class ClientNetwork implements INetwork{
 
     private static final int GAMESTATE_REQUEST_DELAY = 400;
     
@@ -27,13 +30,12 @@ public class ClientNetwork {
     private long lastPollTime = 0;
 
     
-
     // === Konstruktor ===
     public ClientNetwork(String baseURL, String gameId) {
         this.baseURL = baseURL;
         this.gameId = gameId;
     }
-    
+    @Override
     public GameState getGameState() {
         delayForPolling();
         WebClient webClient = WebClient.builder()
@@ -57,7 +59,9 @@ public class ClientNetwork {
 
         return result.getData().get();
     }
+
     // === Registrierung implementiert ===
+    @Override
     public void registerPlayer(String studentUAccount) {
         WebClient webClient = WebClient.builder()
                 .baseUrl(baseURL + "/games") // ❗ port NICHT nochmal anhängen
@@ -90,7 +94,8 @@ public class ClientNetwork {
     }
 
     // === Platzhalter-Methoden für später ===
-    public void sendHalfMap(Object halfMapData) {
+    @Override
+    public void sendHalfMap(PlayerHalfMap halfMapData) {
         WebClient webClient = WebClient.builder()
                 .baseUrl(baseURL + "/games")
                 .defaultHeader(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_XML_VALUE)
@@ -124,7 +129,7 @@ public class ClientNetwork {
     public void getGameStatus() {
         System.out.println("📥 Spielstatus wird abgefragt...");
     }
-
+    @Override
     public void sendMove(PlayerMove move) {
         WebClient webClient = WebClient.builder()
             .baseUrl(baseURL + "/games")
@@ -157,6 +162,7 @@ public class ClientNetwork {
         return gameId;
     }
 
+    @Override
     public UniquePlayerIdentifier getPlayerId() {
         return playerId;
     }
