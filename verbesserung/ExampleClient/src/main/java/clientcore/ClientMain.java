@@ -2,23 +2,23 @@ package clientcore;
 
 import java.util.Set;
 
+import logic.GameHelper;
 import logic.MoveStrategy;
 import map.ClientMap;
 import messagesbase.messagesfromclient.PlayerHalfMap;
 import messagesbase.messagesfromclient.PlayerMove;
 import messagesbase.messagesfromserver.GameState;
 import messagesbase.messagesfromserver.PlayerState;
-
 import network.ClientNetwork;
-import view.ConsoleView;
-import logic.GameHelper;
+import network.FakeNetwork;
 import network.INetwork;
+import view.ConsoleView;
 
 public class ClientMain {
     private INetwork net;
 
-    public ClientMain(String serverURL, String gameId) {
-        this.net = new ClientNetwork(serverURL, gameId);
+    public ClientMain(INetwork network) {
+        this.net = network;
     }
 
     public void startGame(String studentId) {
@@ -128,16 +128,20 @@ public class ClientMain {
     
 
     public static void main(String[] args) {
+        INetwork network;
+        String studentId = "kostarievd00"; // 🧑‍🎓 Deinen u:account hier einsetzen
         if (args.length < 3) {
             System.err.println("❗ Missing arguments. Required: [mode] [serverURL] [gameId]");
-            return;
+            // return;
+            network = new FakeNetwork();
         }
-
-        String serverURL = args[1];
-        String gameId = args[2];
-        String studentId = "kostarievd00"; // 🧑‍🎓 Deinen u:account hier einsetzen
-
-        ClientMain main = new ClientMain(serverURL, gameId);
+        else{
+            String gamemode = args[0];
+            String serverURL = args[1];
+            String gameId = args[2];
+            network = new ClientNetwork(serverURL,gameId);
+        }
+        ClientMain main = new ClientMain(network);
         main.startGame(studentId);
     }
 }
