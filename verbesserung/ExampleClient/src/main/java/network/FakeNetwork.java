@@ -19,7 +19,7 @@ public class FakeNetwork implements INetwork{
     }
     @Override
     public GameState getGameState() {
-        return null;
+        return fakeEngine.getState();
     }
     @Override
     public void sendMove(PlayerMove move) {

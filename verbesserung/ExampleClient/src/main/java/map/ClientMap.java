@@ -5,6 +5,7 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Queue;
 import java.util.Random;
+
 import messagesbase.messagesfromclient.ETerrain;
 import messagesbase.messagesfromclient.PlayerHalfMap;
 import messagesbase.messagesfromclient.PlayerHalfMapNode;
@@ -64,7 +65,7 @@ public class ClientMap {
         }
 
         if (grassCount < 30 || waterCount < 10 || mountainCount < 5) {
-            System.out.println("⚠️ Bedingungen nicht erfüllt – Map wird neu generiert...");
+            // System.out.println("⚠️ Bedingungen nicht erfüllt – Map wird neu generiert...");
             return generate();
         }
 
@@ -95,7 +96,7 @@ public class ClientMap {
         }
 
         if (!isMapConnected(nodes)) {
-            System.out.println("🔁 Ungültige Map – wird neu generiert...");
+            // System.out.println("🔁 Ungültige Map – wird neu generiert...");
             return generate();
         }
 

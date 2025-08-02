@@ -43,6 +43,7 @@ public class ClientMain {
             if (state != null) {
                 Set<PlayerState> players = state.getPlayers();
                 for (PlayerState ps : players) {
+                    
                     if (ps.getUniquePlayerID().equals(myPlayerId)) {
                         String status = ps.getState().name();
                         System.out.println("🧍 Spieler-ID: " + myPlayerId);
