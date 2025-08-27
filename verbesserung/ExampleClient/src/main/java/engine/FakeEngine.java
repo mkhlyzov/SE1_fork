@@ -33,7 +33,7 @@ public class FakeEngine {
     private Point treasurePos;      // позиция золота
     private Point playerPos;
     private Point fortPos;
-
+    private EPlayerGameState gameState = EPlayerGameState.MustAct;
     private List<PlayerMove> movesBuffer = new ArrayList<>();
     //
     private boolean treasureWasCollected = false;
@@ -44,9 +44,13 @@ public class FakeEngine {
     }
 
     public void generateMap(PlayerHalfMap halfMapData){
+        ClientMap map = new ClientMap("FakePlayer-2");
+        PlayerHalfMap half2 = map.generate();   
+        half2 = normalizeFortCount(half2);
+        half2 = shiftCoordinates(half2);
 
         halfMapData = normalizeFortCount(halfMapData);
-        halfMapData = shiftCoordinates(halfMapData);
+        // halfMapData = shiftCoordinates(halfMapData);
         treasurePos = addTreasureNearFort(halfMapData);
 
         PlayerHalfMapNode fort = halfMapData.getMapNodes().stream()
@@ -55,46 +59,56 @@ public class FakeEngine {
                 .orElse(null);       
         playerPos = new Point(fort.getX(),fort.getY());
         
-        ClientMap map = new ClientMap(playerid.getUniquePlayerID());
-        PlayerHalfMap half2 = map.generate();   
-        half2 = normalizeFortCount(half2);
-        
-        halfMapData = combineHalfMaps(halfMapData, half2);
+
+        FullMap fullMap = combineHalfMaps(halfMapData, half2);
 
         // currentFullMap = convertToFullMap(halfMapData);
-
+        
         // System.out.println("FakeEngine: Single map generated with " + currentFullMap.getMapNodes().size() + " nodes.");
-        createTerrainArray(halfMapData);
+        createTerrainArray(fullMap);
     }
     
     public void createPlayer()
     {
-        this.playerid = new UniquePlayerIdentifier("FAKE- ");
+        this.playerid = new UniquePlayerIdentifier("FakePlayer-1");
     }
 
     public void applyMove(PlayerMove move){
-       int dx = 0, dy = 0;
-       switch(move.getMove()){
-        case Up -> dy = -1;
-        case Down -> dy = 1;
-        case Left -> dx = -1;
-        case Right -> dx = 1;
-       }
-       Point newPos = new Point(playerPos.x + dx, playerPos.y + dy);
-       if (newPos.x < 0 || newPos.x >= WIDTH || newPos.y < 0 || newPos.y >= HEIGHT) 
-       {
-         return;
-       } 
+        int dx = 0, dy = 0;
 
-       if (terrainGrid[newPos.x][newPos.y] == ETerrain.Water) {
-        return;
-       }
-       playerPos = newPos;
+        switch(move.getMove()){
+            case Up -> dy = -1;
+            case Down -> dy = 1;
+            case Left -> dx = -1;
+            case Right -> dx = 1;
+        }
+        Point current = playerPos;
+        Point newPos = new Point(current.x + dx, current.y + dy);
+       
+        resetBufferIfDirectionChanged(move);
+        movesBuffer.add(move);
 
-       if(playerPos.equals(treasurePos))
-       {
-            treasureWasCollected = true;
-       }
+        int required = stepCost(current, newPos);
+        if(movesBuffer.size() >= required)
+        {
+            playerPos = newPos;
+            if(playerPos.equals(treasurePos))
+            {
+                treasureWasCollected = true;
+            }
+            clearBufferWhenFull(required);
+        }
+
+        if (!inBounds(playerPos) || isWater(playerPos)) 
+        { 
+            gameState = EPlayerGameState.Lost;
+        }
+        
+        if(treasureWasCollected)
+        {
+            gameState = EPlayerGameState.Won;
+        }
+
         try {
             Thread.sleep(100);
         } catch (InterruptedException e) {
@@ -103,13 +117,21 @@ public class FakeEngine {
         }
     }
 
+    
+    
+
     public UniquePlayerIdentifier getPlayerId(){
         return playerid;
     }
 
 
     public GameState getState() {
-        PlayerState myPlayer = new PlayerState("Fake","Player","fake_user",EPlayerGameState.MustAct,playerid,treasureWasCollected);
+        PlayerState myPlayer = new PlayerState(
+            "Fake", "Player", "fake_user",
+            gameState,
+            playerid,
+            treasureWasCollected
+        );
         Set <PlayerState> players = Set.of(myPlayer);
 
         if (terrainGrid == null) 
@@ -160,22 +182,22 @@ public class FakeEngine {
     //     return new FullMap(nodes);
     // }
 
-    private void createTerrainArray(PlayerHalfMap half)
+    private void createTerrainArray(FullMap fullMap)
     {
-        WIDTH = half.getMapNodes().stream()
-        .mapToInt(PlayerHalfMapNode::getX)
+        WIDTH = fullMap.getMapNodes().stream()
+        .mapToInt(FullMapNode::getX)
         .max()
         .orElse(0) + 1;
         //x_Coordinates: 0,1,2,3,4,5,6,7,8,9
         // WIDTH = 10
-        HEIGHT = half.getMapNodes().stream()
-        .mapToInt(PlayerHalfMapNode::getY)
+        HEIGHT = fullMap.getMapNodes().stream()
+        .mapToInt(FullMapNode::getY)
         .max()
         .orElse(0) + 1;
         //y_Coordinates: 0,1,2,3,4,5,6,7,8,9
         // HEIGHT = 10
         terrainGrid = new ETerrain[WIDTH][HEIGHT]; 
-        for (PlayerHalfMapNode node : half.getMapNodes()) {
+        for (FullMapNode node : fullMap.getMapNodes()) {
             terrainGrid[node.getX()][node.getY()] = node.getTerrain();
         }
     }
@@ -250,13 +272,13 @@ public class FakeEngine {
     
     private PlayerHalfMap shiftCoordinates(PlayerHalfMap halfMapData){
         boolean makeSquare = new Random().nextBoolean();
-        List<PlayerHalfMapNode> newNodes = new ArrayList<>(halfMapData.getMapNodes());
+        List<PlayerHalfMapNode> newNodes = new ArrayList<>();
         if (makeSquare) {
             for (PlayerHalfMapNode node : halfMapData.getMapNodes()) {
                 newNodes.add(new PlayerHalfMapNode(
                     node.getX(),
                     node.getY() + 5,
-                    false,
+                    node.isFortPresent(),
                     node.getTerrain()
                 ));
             }
@@ -266,7 +288,7 @@ public class FakeEngine {
                 newNodes.add(new PlayerHalfMapNode(
                     node.getX() + 10,
                     node.getY(),
-                    false,
+                    node.isFortPresent(),
                     node.getTerrain()
                 ));
             }
@@ -275,17 +297,92 @@ public class FakeEngine {
     }
 
 
-    private PlayerHalfMap combineHalfMaps(PlayerHalfMap half1, PlayerHalfMap half2) {
-        List<PlayerHalfMapNode> combined = new ArrayList<>(half1.getMapNodes());
-        for(PlayerHalfMapNode node: half2.getMapNodes()) {
-            combined.add(new PlayerHalfMapNode(
-                node.getX(),
-                node.getY(),
-                node.isFortPresent(),
-                node.getTerrain()
+    private FullMap combineHalfMaps(PlayerHalfMap half1, PlayerHalfMap half2) {
+        // List<PlayerHalfMapNode> combined = new ArrayList<>(half1.getMapNodes());
+        // for(PlayerHalfMapNode node: half2.getMapNodes()) {
+        //     combined.add(new PlayerHalfMapNode(
+        //         node.getX(),
+        //         node.getY(),
+        //         node.isFortPresent(),
+        //         node.getTerrain()
+        //     ));
+        // }
+        // // return new FullMap(combined);
+        // return new PlayerHalfMap(half1.getUniquePlayerID(), combined);
+
+        List<PlayerHalfMapNode> combinedNodes = new ArrayList<>();
+        combinedNodes.addAll(half1.getMapNodes());
+        combinedNodes.addAll(half2.getMapNodes());
+        
+        
+        List<FullMapNode> fullMapNodes = new ArrayList<>();
+
+        for (PlayerHalfMapNode node : combinedNodes) {
+            // EPlayerPositionState playerState = (node.getX() == playerPos.x && node.getY() == playerPos.y)
+            //         ? EPlayerPositionState.MyPlayerPosition
+            //         : EPlayerPositionState.NoPlayerPresent;
+            // EPlayerPositionState playerState = (playerPos.equals(p)) 
+            //     ? EPlayerPositionState.MyPlayerPosition 
+            //     : EPlayerPositionState.NoPlayerPresent;
+
+            // ETreasureState treasureState = (node.getX() == treasurePos.x && node.getY() == treasurePos.y && !treasureWasCollected)
+            //         ? ETreasureState.MyTreasureIsPresent
+            //         : ETreasureState.NoOrUnknownTreasureState;
+
+            // EFortState fortState = (node.getX() == fortPos.x && node.getY() == fortPos.y)
+            //         ? EFortState.MyFortPresent
+            //         : EFortState.NoOrUnknownFortState;
+
+            fullMapNodes.add(new FullMapNode(
+                    node.getTerrain(),
+                    EPlayerPositionState.NoPlayerPresent,
+                    ETreasureState.NoOrUnknownTreasureState,
+                    EFortState.NoOrUnknownFortState,
+                    node.getX(),
+                    node.getY()
             ));
         }
-        // return new FullMap(combined);
-        return new PlayerHalfMap(half1.getUniquePlayerID(), combined);
+
+        return new FullMap(fullMapNodes);
     }
+
+       
+    private ETerrain getTerrain(int x, int y) {
+        return terrainGrid[x][y];           // terrain[x][y]
+    }
+
+    
+    private boolean inBounds(Point p) {
+        return p.x >= 0 && p.x < WIDTH && p.y >= 0 && p.y < HEIGHT;
+    }
+    private boolean isWater(Point p) {
+        return getTerrain(p.x, p.y) == ETerrain.Water;
+    }
+
+    
+    private int enterCost(ETerrain t) {           // Grass=1, Mountain=2
+        return (t == ETerrain.Mountain) ? 2 : 0;
+    }
+    private int leaveCost(ETerrain t) {           // Grass=1, Mountain=2
+        return (t == ETerrain.Mountain) ? 2 : 1;
+    }
+    private int stepCost(Point from, Point to) {
+        return leaveCost(getTerrain(from.x, from.y)) + enterCost(getTerrain(to.x, to.y));
+    }
+
+    
+    private void resetBufferIfDirectionChanged(PlayerMove current) {
+        if (!movesBuffer.isEmpty()) {
+            PlayerMove last = movesBuffer.get(movesBuffer.size() - 1);
+            if (last.getMove() != current.getMove()) {
+                movesBuffer.clear();              
+            }
+        }
+    }
+    private void clearBufferWhenFull(int required) {
+        if (movesBuffer.size() >= required) {
+            movesBuffer.clear();                  // clear after a completed step
+        }
+    }
+
 }

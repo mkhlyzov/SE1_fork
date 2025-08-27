@@ -1,19 +1,25 @@
 package logic;
 
+//import java.io.FileWriter;
+//import java.io.IOException;
+//import java.io.PrintWriter;
+//import java.time.LocalDateTime;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.Map;
+import java.util.Queue;
+import java.util.Set;
+
 import messagesbase.UniquePlayerIdentifier;
 import messagesbase.messagesfromclient.EMove;
 import messagesbase.messagesfromclient.ETerrain;
 import messagesbase.messagesfromclient.PlayerMove;
-import messagesbase.messagesfromserver.*;
-
- //import java.io.FileWriter;
- //import java.io.IOException;
- //import java.io.PrintWriter;
- //import java.time.LocalDateTime;
-import java.util.*;
-import messagesbase.messagesfromclient.ETerrain;
-
-import logic.GameHelper;
+import messagesbase.messagesfromserver.EFortState;
+import messagesbase.messagesfromserver.ETreasureState;
+import messagesbase.messagesfromserver.FullMap;
+import messagesbase.messagesfromserver.FullMapNode;
 
 public class MoveStrategy {
 
@@ -165,6 +171,10 @@ public class MoveStrategy {
         GameHelper gameHelper,
         int x1, int y1, int x2, int y2
     ) {
+        x1 = 0; y1 = 0;
+        x2 = gameHelper.getMaxX();
+        y2 = gameHelper.getMaxY();
+
         FullMap map = gameHelper.getMap();
         FullMapNode start = gameHelper.getMyPosition();
         if (start == null) return null;
