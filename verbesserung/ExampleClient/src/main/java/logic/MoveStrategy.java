@@ -171,9 +171,7 @@ public class MoveStrategy {
         GameHelper gameHelper,
         int x1, int y1, int x2, int y2
     ) {
-        x1 = 0; y1 = 0;
-        x2 = gameHelper.getMaxX();
-        y2 = gameHelper.getMaxY();
+        
 
         FullMap map = gameHelper.getMap();
         FullMapNode start = gameHelper.getMyPosition();

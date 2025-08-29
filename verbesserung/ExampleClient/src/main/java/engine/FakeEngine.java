@@ -33,33 +33,46 @@ public class FakeEngine {
     private Point treasurePos;      // позиция золота
     private Point playerPos;
     private Point fortPos;
+    private Point enemyFortPos;
     private EPlayerGameState gameState = EPlayerGameState.MustAct;
     private List<PlayerMove> movesBuffer = new ArrayList<>();
     //
     private boolean treasureWasCollected = false;
     private boolean treasureWasObserved = false;
+    private boolean enemyFortWasObserved = false;
 
     public FakeEngine(){
 
     }
 
     public void generateMap(PlayerHalfMap halfMapData){
+        halfMapData = normalizeFortCount(halfMapData);
+
         ClientMap map = new ClientMap("FakePlayer-2");
         PlayerHalfMap half2 = map.generate();   
         half2 = normalizeFortCount(half2);
-        half2 = shiftCoordinates(half2);
-
-        halfMapData = normalizeFortCount(halfMapData);
-        // halfMapData = shiftCoordinates(halfMapData);
+        
+        Random r = new Random();
+        if (r.nextInt(2) == 0) {
+            halfMapData = shiftCoordinates(halfMapData);
+        } else {
+            half2 = shiftCoordinates(half2);
+        }
+        
         treasurePos = addTreasureNearFort(halfMapData);
 
         PlayerHalfMapNode fort = halfMapData.getMapNodes().stream()
                 .filter(PlayerHalfMapNode::isFortPresent)
                 .findFirst()
-                .orElse(null);       
+                .orElse(null);      
+        fortPos = new Point(fort.getX(), fort.getY());
         playerPos = new Point(fort.getX(),fort.getY());
         
-
+        PlayerHalfMapNode enemyFort = half2.getMapNodes().stream()
+                .filter(PlayerHalfMapNode::isFortPresent)
+                .findFirst()
+                .orElse(null);
+        enemyFortPos = new Point(enemyFort.getX(), enemyFort.getY());
         FullMap fullMap = combineHalfMaps(halfMapData, half2);
 
         // currentFullMap = convertToFullMap(halfMapData);
@@ -92,8 +105,9 @@ public class FakeEngine {
         if(movesBuffer.size() >= required)
         {
             playerPos = newPos;
-            if(playerPos.equals(treasurePos))
-            {
+            updateObjectivesVisibility(playerPos);
+
+            if(playerPos.equals(treasurePos)) {
                 treasureWasCollected = true;
             }
             clearBufferWhenFull(required);
@@ -104,7 +118,7 @@ public class FakeEngine {
             gameState = EPlayerGameState.Lost;
         }
         
-        if(treasureWasCollected)
+        if(treasureWasCollected && playerPos.equals(enemyFortPos))
         {
             gameState = EPlayerGameState.Won;
         }
@@ -117,7 +131,30 @@ public class FakeEngine {
         }
     }
 
-    
+    private void updateObjectivesVisibility(Point pos) {
+        ETerrain currentTerrain = getTerrain(pos.x, pos.y);
+        if (currentTerrain == ETerrain.Mountain) {
+            for (int dx = -1; dx <= 1; dx++) {
+                for (int dy = -1; dy <= 1; dy++) {
+                    Point neighbour = new Point(pos.x + dx, pos.y + dy);
+                    if (!inBounds(neighbour)) continue;
+                    if(treasurePos.equals(neighbour)){
+                        treasureWasObserved = true;
+                    }
+                    if(enemyFortPos.equals(neighbour)){
+                        enemyFortWasObserved = true;
+                    }
+                }
+            }
+        } else {
+            if(enemyFortPos.equals(pos)) {
+                enemyFortWasObserved = true;
+            }
+            if(treasurePos.equals(pos)) {
+                treasureWasObserved = true;
+            }
+        }
+    }
     
 
     public UniquePlayerIdentifier getPlayerId(){
@@ -149,7 +186,9 @@ public class FakeEngine {
                 ETreasureState treasureState = (treasurePos.equals(p) && !treasureWasCollected && treasureWasObserved) ? ETreasureState.MyTreasureIsPresent : ETreasureState.NoOrUnknownTreasureState;
                 EPlayerPositionState positionState = (playerPos.equals(p)) ? EPlayerPositionState.MyPlayerPosition : EPlayerPositionState.NoPlayerPresent;
 
-                EFortState fortState = (fortPos.equals(p)) ? EFortState.MyFortPresent : EFortState.NoOrUnknownFortState;
+                // EFortState fortState = (fortPos.equals(p)) ? EFortState.MyFortPresent : EFortState.NoOrUnknownFortState;
+
+                EFortState fortState = fortPos.equals(p) ? EFortState.MyFortPresent : ((enemyFortPos.equals(p) && enemyFortWasObserved) ? EFortState.EnemyFortPresent : EFortState.NoOrUnknownFortState);
 
                 updatedNodes.add(new FullMapNode(terrain,positionState,treasureState,fortState,x,y));
             }
@@ -210,8 +249,7 @@ public class FakeEngine {
         
             Random r = new Random();
             PlayerHalfMapNode keep = forts.get(r.nextInt(forts.size()));
-            fortPos = new Point(keep.getX(),keep.getY());
-            // List<PlayerHalfMapNode> nodes = new ArrayList<>(half.getMapNodes());
+            
 
             for (int i = 0; i < nodes.size(); i++) {
                 PlayerHalfMapNode n = nodes.get(i);
