@@ -3,7 +3,8 @@ package clientcore;
 import java.util.Set;
 
 import logic.GameHelper;
-import logic.MoveStrategy;
+import logic.IStrategy;
+import logic.StrategyAlwaysClosest;
 import map.ClientMap;
 import messagesbase.messagesfromclient.PlayerHalfMap;
 import messagesbase.messagesfromclient.PlayerMove;
@@ -16,9 +17,14 @@ import view.ConsoleView;
 
 public class ClientMain {
     private INetwork net;
+    private IStrategy strategy;
 
     public ClientMain(INetwork network) {
         this.net = network;
+        this.strategy = new StrategyAlwaysClosest();
+        // StrategyAlwaysClosest
+        // StrategyTravelingSalesman
+        // StrategyBruteForce
     }
 
     public void startGame(String studentId) {
@@ -85,7 +91,6 @@ public class ClientMain {
     }
 
     public void startMovePhase() {
-        MoveStrategy strategy = new MoveStrategy();
         ConsoleView view = new ConsoleView();
         GameHelper gameHelper = new GameHelper(net.getPlayerId());
     
@@ -131,10 +136,16 @@ public class ClientMain {
     public static void main(String[] args) {
         INetwork network;
         String studentId = "kostarievd00"; // 🧑‍🎓 Deinen u:account hier einsetzen
+
+
         if (args.length < 3) {
             System.err.println("❗ Missing arguments. Required: [mode] [serverURL] [gameId]");
             // return;
-            network = new FakeNetwork();
+            if (args.length > 0) {
+                network = new FakeNetwork(Integer.parseInt(args[0]));
+            } else {
+                network = new FakeNetwork(0);
+            }
         }
         else{
             String gamemode = args[0];

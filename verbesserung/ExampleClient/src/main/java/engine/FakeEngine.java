@@ -234,12 +234,12 @@ public class FakeEngine {
             gameState = EPlayerGameState.Won;
         }
 
-        try {
-            Thread.sleep(100);
-        } catch (InterruptedException e) {
-            Thread.currentThread().interrupt();
-            System.err.println("Sleep unterbrochen: " + e.getMessage());
-        }
+        // try {
+        //     Thread.sleep(100);
+        // } catch (InterruptedException e) {
+        //     Thread.currentThread().interrupt();
+        //     System.err.println("Sleep unterbrochen: " + e.getMessage());
+        // }
     }
     
     private void updateObjectivesVisibility(Point pos) {

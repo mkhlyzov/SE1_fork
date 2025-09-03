@@ -21,12 +21,11 @@ import messagesbase.messagesfromserver.ETreasureState;
 import messagesbase.messagesfromserver.FullMap;
 import messagesbase.messagesfromserver.FullMapNode;
 
-public class MoveStrategy {
+public class StrategyAlwaysClosest implements IStrategy{
 
     private int myXmin, myXmax, myYmin, myYmax;
     private int enemyXmin, enemyXmax, enemyYmin, enemyYmax;
     private boolean isInitialized = false;
-   
    
     private void initialize(GameHelper gameHelper) {
         FullMap map = gameHelper.getMap();
@@ -78,7 +77,7 @@ public class MoveStrategy {
         }
     }
 
-    
+    @Override
     public PlayerMove calculateNextMove(GameHelper gameHelper) {
         initialize(gameHelper);
         FullMap map = gameHelper.getMap();

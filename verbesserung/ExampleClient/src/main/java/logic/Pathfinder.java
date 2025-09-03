@@ -7,6 +7,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.PriorityQueue;
+
 import messagesbase.messagesfromclient.ETerrain;
 import messagesbase.messagesfromserver.FullMap;
 import messagesbase.messagesfromserver.FullMapNode;
@@ -49,7 +50,7 @@ public class Pathfinder {
 
     private int getTerrainCost(FullMapNode node) {
         int baseCost = switch (node.getTerrain()) {
-            case Grass -> 1;
+            case Grass -> 2;
             case Mountain -> 4;
             default -> 9999; // water = invalid
         };

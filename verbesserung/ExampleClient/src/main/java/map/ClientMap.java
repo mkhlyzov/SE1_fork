@@ -11,8 +11,6 @@ import messagesbase.messagesfromclient.PlayerHalfMap;
 import messagesbase.messagesfromclient.PlayerHalfMapNode;
 
 public class ClientMap {
-
-    private final List<PlayerHalfMapNode> myNodes = new ArrayList<>();
     private final String playerId;
 
     public ClientMap(String playerId) {
@@ -26,82 +24,74 @@ public class ClientMap {
         int width = 10;
         int height = 5;
 
-        int grassCount = 0;
-        int waterCount = 0;
-        int mountainCount = 0;
-        int waterTop = 0, waterBottom = 0, waterLeft = 0, waterRight = 0;
+        while(true){
+            nodes.clear();
+            int grassCount = 0;
+            int waterCount = 0;
+            int mountainCount = 0;
+            int waterTop = 0, waterBottom = 0, waterLeft = 0, waterRight = 0;
 
-        for (int y = 0; y < height; y++) {
-            for (int x = 0; x < width; x++) {
-                ETerrain terrain;
+            for (int y = 0; y < height; y++) {
+                for (int x = 0; x < width; x++) {
+                    ETerrain terrain;
 
-                boolean isEdgeTop = y == 0;
-                boolean isEdgeBottom = y == height - 1;
-                boolean isEdgeLeft = x == 0;
-                boolean isEdgeRight = x == width - 1;
+                    boolean isEdgeTop = y == 0;
+                    boolean isEdgeBottom = y == height - 1;
+                    boolean isEdgeLeft = x == 0;
+                    boolean isEdgeRight = x == width - 1;
 
-                ETerrain proposedTerrain = randomTerrain(rand);
+                    ETerrain proposedTerrain = randomTerrain(rand);
 
-                if (proposedTerrain == ETerrain.Water && ((isEdgeTop && waterTop >= 2) ||
-                        (isEdgeBottom && waterBottom >= 2) || (isEdgeLeft && waterLeft >= 2) || (isEdgeRight && waterRight >= 2))) {
-                    terrain = chooseNonWater(rand);
-                } else {
-                    terrain = proposedTerrain;
+                    if (proposedTerrain == ETerrain.Water && ((isEdgeTop && waterTop >= 2) ||
+                            (isEdgeBottom && waterBottom >= 2) || (isEdgeLeft && waterLeft >= 2) || (isEdgeRight && waterRight >= 2))) {
+                        terrain = chooseNonWater(rand);
+                    } else {
+                        terrain = proposedTerrain;
+                    }
+
+                    if (terrain == ETerrain.Water) {
+                        waterCount++;
+                        if (isEdgeTop) waterTop++;
+                        if (isEdgeBottom) waterBottom++;
+                        if (isEdgeLeft) waterLeft++;
+                        if (isEdgeRight) waterRight++;
+                    }
+                    if (terrain == ETerrain.Grass) grassCount++;
+                    if (terrain == ETerrain.Mountain) mountainCount++;
+
+                    // PlayerHalfMapNode node = new PlayerHalfMapNode(x, y, false, terrain);
+                    nodes.add(new PlayerHalfMapNode(x,y,false,terrain));
                 }
-
-                if (terrain == ETerrain.Water) {
-                    waterCount++;
-                    if (isEdgeTop) waterTop++;
-                    if (isEdgeBottom) waterBottom++;
-                    if (isEdgeLeft) waterLeft++;
-                    if (isEdgeRight) waterRight++;
-                }
-                if (terrain == ETerrain.Grass) grassCount++;
-                if (terrain == ETerrain.Mountain) mountainCount++;
-
-                PlayerHalfMapNode node = new PlayerHalfMapNode(x, y, false, terrain);
-                nodes.add(node);
             }
-        }
 
-        if (grassCount < 30 || waterCount < 10 || mountainCount < 5) {
-            // System.out.println("⚠️ Bedingungen nicht erfüllt – Map wird neu generiert...");
-            return generate();
-        }
+            if (grassCount < 30 || waterCount < 10 || mountainCount < 5) {
+                // System.out.println("⚠️ Bedingungen nicht erfüllt – Map wird neu generiert...");
+                continue;
+            }
 
-        // 🏰 Place the fort near the center (x 3-6, y 1-3)
-        PlayerHalfMapNode fortNode = null;
-        int countfort = 0;
-        for (int i = 0; i < 1000 && countfort < 6; ++i){
-            int idx = rand.nextInt(nodes.size());
-            PlayerHalfMapNode node = nodes.get(idx);
-            if (node.getTerrain() == ETerrain.Grass && node.getX() >= 3 && node.getX() <= 6 && node.getY() >= 1 && node.getY() <= 3 && !node.isFortPresent()) {
-                fortNode = new PlayerHalfMapNode(node.getX(), node.getY(), true, ETerrain.Grass);
+            // 🏰 Place the fort near the center (x 3-6, y 1-3)
+            int countfort = 0;
+            for (int i = 0; i < 1000 && countfort < 6; ++i){
+                int idx = rand.nextInt(nodes.size());
+                PlayerHalfMapNode node = nodes.get(idx);
+                if (node.getTerrain() == ETerrain.Grass)
+                    continue;
+                if (node.getX() >= 3 && node.getX() <= 6 && node.getY() >= 1 && node.getY() <= 3 && !node.isFortPresent())
+                    continue;
+                PlayerHalfMapNode fortNode = new PlayerHalfMapNode(node.getX(), node.getY(), true, ETerrain.Grass);
                 nodes.set(idx, fortNode);
                 countfort++;
                 System.out.println("Coordinates of Fort " + node.getX() + node.getY());
             }
-        }
-        if(countfort < 6) return generate();
+            if(countfort < 6) continue;
 
-        // 🌟 Place the treasure close to the fort (within 2-3 moves)
-        for (PlayerHalfMapNode node : nodes) {
-            int dist = Math.abs(node.getX() - fortNode.getX()) + Math.abs(node.getY() - fortNode.getY());
-            if (dist >= 2 && dist <= 4 && node.getTerrain() == ETerrain.Grass) {
-                // Artificially treat it later as containing the treasure
-                // Server will recognize based on halfmap-combination
-                // So it's enough that bot finds it near the start
-                break; // No real treasure placement needed in HalfMap phase
+            
+            if (!isMapConnected(nodes)) {
+                // System.out.println("🔁 Ungültige Map – wird neu generiert...");
+                continue;
             }
+            break;
         }
-
-        if (!isMapConnected(nodes)) {
-            // System.out.println("🔁 Ungültige Map – wird neu generiert...");
-            return generate();
-        }
-
-        myNodes.clear();
-        myNodes.addAll(nodes);
 
         return new PlayerHalfMap(playerId, nodes);
     }
@@ -163,10 +153,6 @@ public class ClientMap {
         }
 
         return connectedCount == walkables.size();
-    }
-
-    public List<PlayerHalfMapNode> getMyNodes() {
-        return myNodes;
     }
 }
 
