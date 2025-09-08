@@ -4,7 +4,7 @@ import java.util.Set;
 
 import logic.GameHelper;
 import logic.IStrategy;
-import logic.StrategyAlwaysClosest;
+import logic.StrategyNearestNeighbour;
 import map.ClientMap;
 import messagesbase.messagesfromclient.PlayerHalfMap;
 import messagesbase.messagesfromclient.PlayerMove;
@@ -21,7 +21,7 @@ public class ClientMain {
 
     public ClientMain(INetwork network) {
         this.net = network;
-        this.strategy = new StrategyAlwaysClosest();
+        this.strategy = new StrategyNearestNeighbour();
         // StrategyAlwaysClosest
         // StrategyTravelingSalesman
         // StrategyBruteForce

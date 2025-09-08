@@ -313,6 +313,8 @@ public class FakeEngine {
     }
        
     private ETerrain getTerrain(int x, int y) {
+        if (x < 0 || x >= WIDTH || y < 0 || y >= HEIGHT)
+            return null;
         return terrainGrid[x][y];           // terrain[x][y]
     }
     
@@ -324,6 +326,7 @@ public class FakeEngine {
     }
 
     private int enterCost(ETerrain t) {
+        if (t == null) return 1;
         return switch (t) {
             case ETerrain.Grass -> 1;
             case ETerrain.Mountain -> 2;
@@ -331,6 +334,7 @@ public class FakeEngine {
         };
     }
     private int leaveCost(ETerrain t) {
+        if (t == null) return 1;
         return switch (t) {
             case ETerrain.Grass -> 1;
             case ETerrain.Mountain -> 2;

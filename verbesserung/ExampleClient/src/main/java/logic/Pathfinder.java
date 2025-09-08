@@ -29,6 +29,7 @@ public class Pathfinder {
     private List<FullMapNode> getNeighbors(FullMapNode node) {
         List<FullMapNode> neighbors = new ArrayList<>();
         int[][] directions = {{0, 1}, {1, 0}, {-1, 0}, {0, -1}};
+        //                   {Down,    Right,  Left,    Up}
         for (int[] dir : directions) {
             int nx = node.getX() + dir[0];
             int ny = node.getY() + dir[1];
