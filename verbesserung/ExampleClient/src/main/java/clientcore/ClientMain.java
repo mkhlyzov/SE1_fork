@@ -22,9 +22,9 @@ public class ClientMain {
     public ClientMain(INetwork network) {
         this.net = network;
         this.strategy = new StrategyNearestNeighbour();
-        // StrategyAlwaysClosest
-        // StrategyTravelingSalesman
-        // StrategyBruteForce
+        // this.strategy = new StrategyAlwaysClosest();
+        // this.strategy = new StrategyManual();
+
     }
 
     public void startGame(String studentId) {

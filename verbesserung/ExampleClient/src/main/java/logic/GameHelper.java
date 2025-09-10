@@ -1,19 +1,19 @@
 package logic;
 
+import java.awt.Point;
+import java.util.ArrayList;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Set;
 
 import messagesbase.UniquePlayerIdentifier;
 import messagesbase.messagesfromclient.ETerrain;
-import messagesbase.messagesfromserver.EFortState;
 import messagesbase.messagesfromserver.EPlayerPositionState;
 import messagesbase.messagesfromserver.ETreasureState;
 import messagesbase.messagesfromserver.FullMap;
 import messagesbase.messagesfromserver.FullMapNode;
 import messagesbase.messagesfromserver.GameState;
 import messagesbase.messagesfromserver.PlayerState;
-
-import messagesbase.messagesfromserver.*;
 
 
 public class GameHelper {
@@ -24,6 +24,9 @@ public class GameHelper {
     private String rememberGoldPosition = null;
 
     private boolean isInitialized = false;
+
+    private List<Point> playerPosHistory = new ArrayList<>();
+    
 
     public GameHelper(UniquePlayerIdentifier playerId) {
         this.playerId = playerId;
@@ -74,12 +77,30 @@ public class GameHelper {
             .orElse(false);
     }
 
+    public boolean playerRecentlyMoved() {
+        
+        System.out.println("Size of Array: " + playerPosHistory.size());
+
+        int size = playerPosHistory.size();
+        if (size < 2) {
+            return true;
+        }
+        
+        Point previous = playerPosHistory.get(size - 2);
+        Point current = playerPosHistory.get(size -  1);
+
+        return !current.equals(previous);
+    }
+
     public void update(GameState gameState) {
         currentGameState = gameState;
+        Point currentPlayerPos = new Point(getMyPosition().getX(),getMyPosition().getY());
+        playerPosHistory.add(currentPlayerPos);
         FullMap map = gameState.getMap();
         boolean hasTreasureNow = hasTreasure();
         int maxX = getMaxX();
         int maxY = getMaxY();
+
         for (FullMapNode node : map.getMapNodes()) {
             String key = key(node);
             if(node.getTreasureState() == ETreasureState.MyTreasureIsPresent){
@@ -88,7 +109,6 @@ public class GameHelper {
             if(node.getPlayerPositionState() == EPlayerPositionState.MyPlayerPosition || node.getPlayerPositionState() == EPlayerPositionState.BothPlayerPosition)
             {
                 visitedFields.add(key);
-
                 if(hasTreasureNow && !lastHadTreasure){
                     rememberGoldPosition = key;
                 }

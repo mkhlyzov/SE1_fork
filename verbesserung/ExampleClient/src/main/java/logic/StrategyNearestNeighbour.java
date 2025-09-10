@@ -38,6 +38,7 @@ public class StrategyNearestNeighbour implements IStrategy {
         FullMapNode peek = plannedTour.peek();
         
         if (myPosition == null) {
+            System.out.println("myPosition is null. sending EMove.Right");
             return PlayerMove.of(playerId, EMove.Right);
         }
         
@@ -51,6 +52,14 @@ public class StrategyNearestNeighbour implements IStrategy {
             plannedTour.clear();
         }
         // если тура нет — строим новый
+        gameHelper.playerRecentlyMoved();
+        gameHelper.playerRecentlyMoved();
+        if (gameHelper.playerRecentlyMoved()){
+            System.out.println("playerRecentlyMoved event triggered");
+            plannedTour.clear();
+        } else {
+            System.out.println("playerRecentlyMoved event NOT triggered");
+        }
         if (plannedTour.isEmpty()) {
             List<FullMapNode> goals = collectGoals(map, gameHelper, hasTreasure);
             plannedTour = new LinkedList<>(bestNearestNeighbourTour(map, myPosition, goals));
@@ -102,9 +111,7 @@ public class StrategyNearestNeighbour implements IStrategy {
         // второй шаг - вниз
         // третий шаг - вниз. на этом шаге координата меняется
         
-        if (next.equals(goal)) {
-            plannedTour.poll(); // достигли цели
-        }
+        
 
         // EMove move = calculateMove(myPosition, next);
         // lastMove = move;
