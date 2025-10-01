@@ -66,7 +66,7 @@ public class StrategyNearestNeighbour implements IStrategy {
         }
         if (plannedTour.isEmpty()) {
             List<FullMapNode> goals = collectGoals(map, gameHelper, hasTreasure);
-            plannedTour = new LinkedList<>(bestNearestNeighbourTour(map, myPosition, goals));
+            plannedTour = new LinkedList<>(bestNearestNeighbourTour(map, myPosition, goals,25));
         }
 
         // if (plannedTour.isEmpty()) {
@@ -207,21 +207,24 @@ public class StrategyNearestNeighbour implements IStrategy {
     }
 
     /** NN-тур, выбираем лучший старт */
-    private List<FullMapNode> bestNearestNeighbourTour(FullMap map, FullMapNode start, List<FullMapNode> goals) {
+    private List<FullMapNode> bestNearestNeighbourTour(FullMap map, FullMapNode start, List<FullMapNode> goals, int noiseRepeats) {
         if (goals.isEmpty()) return Collections.emptyList();
         Pathfinder pathfinder = new Pathfinder(map);
 
         int bestCost = Integer.MAX_VALUE;
         List<FullMapNode> bestTour = new ArrayList<>();
 
-        for (FullMapNode g : goals) {
-            List<FullMapNode> tour = nearestNeighbourTour(map, g, new HashSet<>(goals));
-            int cost = computeTourCost(pathfinder, start, tour);
-            if (cost < bestCost) {
-                bestCost = cost;
-                bestTour = tour;
+        for(int i = 0; i < noiseRepeats;i++)
+        {
+            for (FullMapNode g : goals) {
+                List<FullMapNode> tour = nearestNeighbourTour(map, g, new HashSet<>(goals));
+                int cost = computeTourCost(pathfinder, start, tour);
+                if (cost < bestCost) {
+                    bestCost = cost;
+                    bestTour = tour;
+                }
             }
-        }
+        }    
         System.out.print("Best Tour: ");
         for(FullMapNode t: bestTour){
             System.out.print("(" + t.getX() + ", " + t.getY() + ") ");
@@ -257,16 +260,16 @@ public class StrategyNearestNeighbour implements IStrategy {
        
         class PQItem {
             final FullMapNode node;
-            final int cost;
-            PQItem(FullMapNode n, int c) { node = n; cost = c; }
+            final double cost;
+            PQItem(FullMapNode n, double c) { node = n; cost = c; }
         }
 
         PriorityQueue<PQItem> pq =
-            new PriorityQueue<>(Comparator.comparingInt(it -> it.cost));
-        Map<String, Integer> best = new HashMap<>();
+            new PriorityQueue<>(Comparator.comparingDouble((it -> it.cost)));
+        Map<String, Double> best = new HashMap<>();
 
         String sk = key(start);
-        best.put(sk, 0);
+        best.put(sk, 0.);
         pq.add(new PQItem(start, 0));
 
         while (!pq.isEmpty()) {
@@ -278,10 +281,11 @@ public class StrategyNearestNeighbour implements IStrategy {
             if (goals.contains(cur.node)) return cur.node;
 
             for (FullMapNode nb : getNeighbors(cur.node, map)) {
-                int newCost = cur.cost + stepCost(cur.node, nb);
+                double noise = (Math.random() - 0.5) * 0.01; // -0.005 ... 0.005 // 0
+                double newCost = cur.cost + stepCost(cur.node, nb) + noise;
                 String nk = key(nb);
-                if (newCost < best.getOrDefault(nk, Integer.MAX_VALUE)) {
-                    best.put(nk, newCost);
+                if (newCost < best.getOrDefault(nk, Double.MAX_VALUE)) {
+                    best.put(nk,newCost);
                     pq.add(new PQItem(nb, newCost));
                 }
             }
