@@ -2,9 +2,13 @@ package logic;
 
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.Comparator;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Map;
+import java.util.PriorityQueue;
 import java.util.Queue;
 import java.util.Set;
 
@@ -244,23 +248,47 @@ public class StrategyNearestNeighbour implements IStrategy {
         return tour;
     }
 
+    
+    
+    
+    
     /** BFS для поиска ближайшего кандидата */
     private FullMapNode bfsNearest(FullMapNode start, Set<FullMapNode> goals, FullMap map) {
-        Queue<FullMapNode> queue = new LinkedList<>();
-        Set<String> visited = new HashSet<>();
-        queue.add(start);
-        visited.add(key(start));
+       
+        class PQItem {
+            final FullMapNode node;
+            final int cost;
+            PQItem(FullMapNode n, int c) { node = n; cost = c; }
+        }
 
-        while (!queue.isEmpty()) {
-            FullMapNode cur = queue.poll();
-            if (goals.contains(cur)) return cur;
+        PriorityQueue<PQItem> pq =
+            new PriorityQueue<>(Comparator.comparingInt(it -> it.cost));
+        Map<String, Integer> best = new HashMap<>();
 
-            for (FullMapNode nb : getNeighbors(cur, map)) {
-                if (visited.add(key(nb))) queue.add(nb);
+        String sk = key(start);
+        best.put(sk, 0);
+        pq.add(new PQItem(start, 0));
+
+        while (!pq.isEmpty()) {
+            PQItem cur = pq.poll();
+            String ck = key(cur.node);
+
+
+            
+            if (goals.contains(cur.node)) return cur.node;
+
+            for (FullMapNode nb : getNeighbors(cur.node, map)) {
+                int newCost = cur.cost + stepCost(cur.node, nb);
+                String nk = key(nb);
+                if (newCost < best.getOrDefault(nk, Integer.MAX_VALUE)) {
+                    best.put(nk, newCost);
+                    pq.add(new PQItem(nb, newCost));
+                }
             }
         }
-        return null;
-    }
+        return null; 
+    } 
+
 
     /** Подсчёт стоимости тура */
     private int computeTourCost(Pathfinder pathfinder, FullMapNode start, List<FullMapNode> tour) {
