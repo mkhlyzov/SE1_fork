@@ -175,7 +175,7 @@ public class StrategyNearestNeighbour implements IStrategy {
             if (goals.isEmpty()) {
                 for (FullMapNode n : map.getMapNodes()) {
                     if (!helper.isVisited(n) &&
-                        n.getTerrain() != ETerrain.Water &&
+                        n.getTerrain() != ETerrain.Water && n.getTerrain() != ETerrain.Mountain &&
                         insideEnemy(n)
                     ) {
                         goals.add(n);
@@ -189,7 +189,7 @@ public class StrategyNearestNeighbour implements IStrategy {
             if (goals.isEmpty()) {
                 for (FullMapNode n : map.getMapNodes()) {
                     if (!helper.isVisited(n) &&
-                        n.getTerrain() != ETerrain.Water &&
+                        n.getTerrain() != ETerrain.Water && n.getTerrain() != ETerrain.Mountain &&
                         insideMine(n)
                     ) {
                         goals.add(n);
