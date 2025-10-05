@@ -66,7 +66,7 @@ public class ClientMap {
                     nodes.add(new PlayerHalfMapNode(x,y,false,terrain));
                 }
             }
-
+            
             if (grassCount < mingrassCount || waterCount < minwaterCount || mountainCount < minmountainCount) {
                 // System.out.println("⚠️ Bedingungen nicht erfüllt – Map wird neu generiert...");
                 continue;
@@ -81,13 +81,15 @@ public class ClientMap {
                     continue;
                 // if (node.getX() >= 3 && node.getX() <= 6 && node.getY() >= 1 && node.getY() <= 3 && !node.isFortPresent())
                 //     continue;
+                if(node.isFortPresent())
+                    continue;
                 PlayerHalfMapNode fortNode = new PlayerHalfMapNode(node.getX(), node.getY(), true, ETerrain.Grass);
                 nodes.set(idx, fortNode);
                 countfort++;
                 System.out.println("Coordinates of Fort " + node.getX() + node.getY());
             }
             if(countfort < 6) continue;
-
+            
             
             if (!isMapConnected(nodes)) {
                 // System.out.println("🔁 Ungültige Map – wird neu generiert...");
