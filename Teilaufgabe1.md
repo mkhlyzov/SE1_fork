@@ -300,11 +300,11 @@ Legende:
 ### Sequenzdiagramm 1
 
 [Sequenzdiagramm 1 hier samt, bei Bedarf, Beschreibung beziehungsweise Erläuterung einfügen]
-
+![Sequenzdiagramm](TemplateImages/Sequenzdiagramm_3.svg)
 ### Sequenzdiagramm 2
 
 [Sequenzdiagramm 2 hier samt, bei Bedarf, Beschreibung beziehungsweise Erläuterung einfügen]
-
+![Sequenzdiagramm](TemplateImages/Sequenzdiagramm_5.svg)
 
 
 ## Aufgabe 4: Quellen dokumentieren
