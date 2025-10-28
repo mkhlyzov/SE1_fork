@@ -72,6 +72,7 @@
    - A4 Rundenzeit DARF NICHT ueberschritten werden (<= 5 s/Aktion).
    - A5 Maximale Spielzeit MUSS eingehalten werden (<= 320 Aktionen/10 min).
    - A6 Client MUSS serverkompatibel sein (Nachrichtenformat/Protokoll).
+
 - **Relevante Business Rules**: 
 
    - Rundenbasiert: Pro Runde genau eine Aktion; Aktion nur, wenn „ an der Reihe “.
@@ -91,7 +92,7 @@
 - Karte wurde erzeugt (Kartenhaelften uebertragen/zusammengefuegt).
 - Client ist laut Status an der Reihe.
 
-**Hauptsächlicher Ablauf:**
+**Hauptsaechlicher Ablauf:**
 
 1. Impuls: Client fragt Spielstatus ab (Zugrecht).
    Ergebnis: Server bestaetigt „an der Reihe“.
@@ -120,7 +121,7 @@
 - Es wurden bereits mehrere Bewegungsbefehle in eine Richtung gesendet (z. B. nach links), die Ausfuehrung ist aber noch nicht - vollstaendig abgeschlossen.
 - Es sind < 8 eigene Aktionen absolviert (Gegnerposition kann noch zufaellig wirken).
 
-**Hauptsächlicher Ablauf:**
+**Hauptsaechlicher Ablauf:**
 
 1. Impuls: Client fragt Spielstatus ab (Zugrecht).
    Ergebnis: Server bestätigt „an der Reihe“.
@@ -155,7 +156,7 @@
 
 - Fehlerfall A: Bewegung wuerde Wasser betreten (oder Off-Map verlassen)
 
-**Hauptsächlicher Ablauf:**
+**Hauptsaechlicher Ablauf:**
 
    1.   Impuls: Client sendet eine Bewegung, deren Zielfeld Wasser oder ausserhalb der Karte ist.
         Ergebnis: Server erkennt Regelverstoss. Betritt die Spielfigur Wasser bzw. verlaesst die Karte, verliert die KI sofort.
@@ -171,7 +172,7 @@
 
 - Fehlerfall B: Client sendet Aktion, obwohl er nicht an der Reihe ist
 
-**Hauptsächlicher Ablauf:**
+**Hauptsaechlicher Ablauf:**
 
   1. Impuls: Client ueberspringt die Statuspruefung oder ignoriert sie und sendet eine Bewegung, obwohl der Gegner an der Reihe ist.
      Ergebnis: Server stellt Regelverstoss fest; Clients, die diese und andere Spielregeln nicht einhalten, werden bestraft (Verlust).
@@ -185,7 +186,7 @@
 
 - Fehlerfall C: Zeitlimit pro Aktion (5s) wird ueberschritten
 
-**Hauptsächlicher Ablauf:**
+**Hauptsaechlicher Ablauf:**
   1. Impuls: Client benoetigt fuer die naechste Bewegungsentscheidung/-sendung laenger als 5 Sekunden.
      Ergebnis: Die aktive KI verliert automatisch (Zeitlimitverletzung).
   
@@ -397,12 +398,88 @@ Dieses Szenario stellt den Siegzug dar: Der Schatz ist bereits im Besitz des Cli
 
 ### Quellen dokumentieren - Aufgabe 3: Architektur entwerfen, modellieren und validieren
 
-- **Kurzbeschreibung der Übernommenen Teile**: *Was & Wo im Projekt, In welchem Umfang (Idee, Konzept, Texte, Grafik etc.) mit und ohne Anpassungen, etc.*
-- **Quellen der Übernommenen Teile**: *Folien, Bücher, Namen der Quell-Studierenden, URLs zu Webseiten, KI Prompts, etc.*
+- **Kurzbeschreibung der uebernommenen Teile**
+  
+  - Architekturgrundlagen (Dreischichtmodell: Netzwerk / Logik / Darstellung)
+  
+  - Formulierungen zu Schichten, Klassenbeziehungen und Verantwortlichkeiten.
+
+  - Konzept zur Aufteilung in Makro- und Mikroarchitektur.
+
+  - Begriffe und Strukturierung nach SE1-Vorlesung (Analyse–Entwurf–Implementierung).
+
+  - Anpassung und Konkretisierung auf eigenes Projekt (Client für das Schatzspiel).
+
+- **Quellen der uebernommenen Teile**
+  
+  - Lehrunterlagen der LV Software Engineering I
+  
+    - [Software Engineering I | Anforderungsanalyse_Unterlagen.pdf]
+
+    - [Software Engineering I | Entwurf_Unterlagen.pdf]
+
+  - Netzwerkprotokoll-Dokumentation (bereitgestellt über Moodle / LV-Webseite)
+
+  - Eigene Anpassung und Erweiterung der Inhalte auf das eigene Projekt
 
 
 ## Aufgabe 4: Quellen dokumentieren
 
-Dokumentieren Sie Ihre Quellen. Dies ist für Sie wichtig, um die Einstufung einer Arbeit als Plagiat zu vermeiden. Geben Sie hierzu Ihre Quellen in den jeweils vorgesehenen Bereichen direkt bei Beginn der jeweiligen Aufgaben an. Inhalte, die direkt aus dem Moodle Kurs dieses Semesters der LV Software Engineering 1 stammen, können zur Vereinfachung weggelassen werden. Alle anderen Inhalte sind zu zitieren. Die Vorgabe des Studienpräses der Universität Wien lautet: *"Alle fremden Gedanken, die in die eigene Arbeit einfließen, müssen durch Quellenangaben belegt werden."* 
+
+# Anforderungsanalyse
+
+**Kurzbeschreibung der übernommenen Teile**
+
+ - Begrifflichkeit und Struktur (funktional/nicht-funktional/Designbedingung), Validierungskriterien und Formulierungsschema fuer Anforderungen.
+
+ - Einzelne Regelinhalte (Zeitlimit 5 s, max. 320 Zuege/10 min, Sichtbarkeit, Terrainregeln) aus der Spielidee/Protokollbeschreibung.
+
+**Quellen der übernommenen Teile**
+
+ - Dokument Spielidee (bereitgestellt zur Aufgabe).
+
+ - Netzwerkprotokoll-Beschreibung (HTTP/XML, Endpunkte, Statuslogik).
+
+ - Vorlesungsfolien Software Engineering I | Anforderungsanalyse_Unterlagen.pdf (Begriffe & Qualitaet von Requirements).
+
+ - Eigene Ausarbeitung und Strukturierung der Anforderungen auf Basis dieser Quellen.
+
+
+# Anforderungsdokumentation
+
+**Kurzbeschreibung der uebernommenen Teile**
+
+- Aufbau der Doku (Name, Priorität, Business Rules, Impuls/Ergebnis-Listen, Benutzerstories, UI-Mockup, externe Schnittstellen).
+
+- Wortlaute einzelner Regeln (orthogonale Bewegung, Wasser/Off-Map ⇒ Niederlage, Berg-Kosten).
+
+**Quellen der uebernommenen Teile**
+
+- Spielidee/Protokoll (Regeln, Sichtbarkeit, Rundenlogik).
+
+- Vorlesungsfolien SE I | Anforderungsanalyse_Unterlagen.pdf (User-Stories, Szenarien).
+
+- Eigene Ausarbeitung der Szenarien, UI-Mockup, Beispiele und Texte.
+
+
+# Architektur entwerfen, modellieren und validieren
+
+**Kurzbeschreibung der übernommenen Teile**
+
+- Dreischichtmodell (Netzwerk / Logik / Darstellung) als Strukturprinzip.
+
+- Vorgehen Makro- vs. Mikroarchitektur; Einsatz Sequenzdiagramme zur Validierung.
+
+- Benennung generischer Rollen/Methoden (getGameState, sendMove) gemass Protokollidee.
+
+**Quellen der uebernommenen Teile**
+
+- Vorlesungsfolien SE I | Entwurf_Unterlagen.pdf(Schichten, Entwurfsprinzipien, Sequenzdiagramme zur Validierung).
+
+- Netzwerkprotokoll-Beschreibung (Kommunikationsmuster Request/Response, XML-Payload).
+
+- Tool: Visual Paradigm Community Edition (Erstellung der UML-Diagramme).
+
+- Eigene Modellierung der Klassen/Beziehungen/Methoden; eigene Sequenzen für Szenario 3 & 5.
 
 
