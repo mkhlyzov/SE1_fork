@@ -292,24 +292,113 @@ Legende:
 
 ## Aufgabe 3: Architektur entwerfen, modellieren und validieren
 
+### Klassendiagramm
+
+Das Klassendiagramm zeigt die Architektur des Clients in drei Schichten:
+
+1. Netzwerk (INetwork, ClientNetwork):
+  - ClientNetwork implementiert INetwork und kapselt die REST-aehnliche HTTP/XML-Kommunikation (Registrierung, Kartenhaelfte, Bewegung, Status). Diese Schicht bietet eine einheitliche Schnittstelle fuer die uebrige Anwendung.
+
+2. Spiellogik / KI (IStrategy, StrategyManual, StrategyNearestNeighbour, StrategyAlwaysClosest, Pathfinder, GameHelper, Node):
+
+  - IStrategy definiert das Strategien-Interface; konkrete Strategien waehlen die naechste Aktion.
+
+  - Pathfinder berechnet Wege (auf Basis von Node-Strukturen).
+
+  - GameHelper buendelt Spielkontext und Regellogik (z. B. Zeit-/Rundeninformationen, Terrain-/Grenzpruefungen, Heuristiken), die Strategien und Steuerung wiederverwenden.
+
+3. Darstellung / Zustand (ClientMap, ConsoleView):
+  
+  - ClientMap haelt den Spielzustand (Karte, Sicht, Positionen).
+
+  - ConsoleView rendert die Karte in der CLI und beruecksichtigt die Sichtbarkeitsregeln (Schatz/gegnerische Burg erst nach Aufdeckung).
+
+Steuerung: ClientMain koordiniert den Ablauf: Er haelt Referenzen auf INetwork, IStrategy und ClientMap, fragt ueber INetwork den Server, berechnet ueber die Strategie die naechste Bewegung und triggert die Aktualisierung der ConsoleView.
+
+
+![Klassendiagramm](Teilaufgabe1/TemplateImages/Klassendiagramm.svg)
+
+
+### Sequenzdiagramm 1
+
+- Beschreibung – Sequenzdiagramm Szenario 3
+  (Client hat den Schatz noch nicht gefunden)
+
+- Dieses Sequenzdiagramm beschreibt den Ablauf einer regulaeren Bewegungsaktion waehrend der Spielphase, in der der Client den Schatz noch nicht gefunden hat:
+
+1. ClientMain fragt ueber INetwork den aktuellen Spielstatus mit getGameState() ab.
+   - Der Server liefert den Status zurueck (GameState).
+
+2. ClientMain aktualisiert daraufhin den lokalen Spielzustand ueber GameHelper.update(GameState).
+
+3. ClientMain ruft ConsoleView.render(GameHelper) auf, um den aktuellen Spielzustand in der CLI darzustellen.
+
+4. ClientMain initiiert ueber IStrategy die Berechnung der naechsten Bewegung (calculateNextMove(GameHelper)).
+   
+   - Die Strategie waehlt eine Richtung basierend auf dem aktuellen Karten- und Sichtzustand — hier z. B. Emove.RIGHT.
+
+5. ClientMain sendet die berechnete Bewegung (PlayerMove) ueber INetwork.sendMove(PlayerMove) an den Server.
+
+6. Anschließend wird der Spielstatus erneut ueber getGameState() abgefragt und vom Server zurueckgegeben.
+
+7. ClientMain aktualisiert den Spielzustand erneut (GameHelper.update(GameState)).
+
+8. Abschließend rendert ConsoleView die neue Spielsituation nach der Bewegung in der CLI.
+
+- Zusammenfassung:
+
+Dieses Szenario zeigt einen Standardzug, bei dem die KI noch auf Schatzsuche ist. Der Spielstatus wird abgefragt, Strategie berechnet die Bewegung, der Zug wird uebertragen und die Darstellung aktualisiert.
+
+
+
+![Sequenzdiagramm](Teilaufgabe1/TemplateImages/Sequenzdiagramm_3.svg)
+
+
+### Sequenzdiagramm 2
+
+ - Beschreibung – Sequenzdiagramm Szenario 5
+
+ - (Client hat Schatz bereits gefunden, steht unter gegnerischer Burg auf Bergfeld)
+
+ - Dieses Sequenzdiagramm zeigt den Ablauf, wenn der Client bereits den Schatz gefunden hat und unterhalb der gegnerischen Burg auf einem Bergfeld steht. 
+ 
+ - Ziel: Sieg durch Erreichen der gegnerischen Burg.
+
+ 1. ClientMain fragt ueber INetwork den aktuellen Spielstatus mit getGameState() ab.
+    
+    - Der Server liefert den Status zurueck (GameState).
+
+ 2. ClientMain aktualisiert den lokalen Zustand ueber GameHelper.update(GameState).
+
+
+ 3. ConsoleView.render(GameHelper) gibt die aktuelle Spielsituation aus.
+
+
+ 4. ClientMain ruft die Strategie ueber IStrategy.calculateNextMove(GameHelper) auf.
+    
+    - Die Strategie erkennt die nahegelegene gegnerische Burg und waehlt Emove.UP, um das Ziel zu erreichen.
+
+ 5. ClientMain sendet den berechneten Spielzug ueber INetwork.sendMove(PlayerMove) an den Server.
+
+ 6. Der Spielstatus wird erneut abgefragt (getGameState()), der Server liefert eine Antwort mit GameState(status = Finished, won = true).
+
+ 7. Der lokale Zustand wird nochmals aktualisiert (GameHelper.update(GameState)).
+
+ 8. ConsoleView.render(GameHelper) zeigt den Endzustand (Burg betreten, Spielende) an.
+
+ 9. ClientMain ruft printGameResult(true) auf und beendet den Client gemaess Spielvorgaben.
+
+➡ Zusammenfassung:
+
+Dieses Szenario stellt den Siegzug dar: Der Schatz ist bereits im Besitz des Clients. Die Bewegung fuehrt direkt zur gegnerischen Burg. Nach Ausfuehrung des Zugs meldet der Server Spielende (Status Finished), der Client aktualisiert und zeigt das Endergebnis an.
+
+![Sequenzdiagramm](Teilaufgabe1/TemplateImages/Sequenzdiagramm_5.svg)
+
+
 ### Quellen dokumentieren - Aufgabe 3: Architektur entwerfen, modellieren und validieren
 
 - **Kurzbeschreibung der Übernommenen Teile**: *Was & Wo im Projekt, In welchem Umfang (Idee, Konzept, Texte, Grafik etc.) mit und ohne Anpassungen, etc.*
 - **Quellen der Übernommenen Teile**: *Folien, Bücher, Namen der Quell-Studierenden, URLs zu Webseiten, KI Prompts, etc.*
-
-### Klassendiagramm
-
-[Klassendiagramm hier samt, bei Bedarf, Beschreibung beziehungsweise Erläuterung einfügen]
-![Klassendiagramm](Teilaufgabe1/TemplateImages/Klassendiagramm.svg)
-
-### Sequenzdiagramm 1
-
-[Sequenzdiagramm 1 hier samt, bei Bedarf, Beschreibung beziehungsweise Erläuterung einfügen]
-![Sequenzdiagramm](Teilaufgabe1/TemplateImages/Sequenzdiagramm_3.svg)
-### Sequenzdiagramm 2
-
-[Sequenzdiagramm 2 hier samt, bei Bedarf, Beschreibung beziehungsweise Erläuterung einfügen]
-![Sequenzdiagramm](Teilaufgabe1/TemplateImages/Sequenzdiagramm_5.svg)
 
 
 ## Aufgabe 4: Quellen dokumentieren
