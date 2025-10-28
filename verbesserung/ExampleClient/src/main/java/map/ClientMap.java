@@ -11,8 +11,8 @@ import messagesbase.messagesfromclient.PlayerHalfMap;
 import messagesbase.messagesfromclient.PlayerHalfMapNode;
 
 public class ClientMap {
+    private final int FORTCOUNT = 1;
     private final String playerId;
-
     public ClientMap(String playerId) {
         this.playerId = playerId;
     }
@@ -74,7 +74,7 @@ public class ClientMap {
 
             // 🏰 Place the fort near the center (x 3-6, y 1-3)
             int countfort = 0;
-            for (int i = 0; i < 1000 && countfort < 6; ++i){
+            for (int i = 0; i < 1000 && countfort < FORTCOUNT; ++i){
                 int idx = rand.nextInt(nodes.size());
                 PlayerHalfMapNode node = nodes.get(idx);
                 if (node.getTerrain() != ETerrain.Grass)
@@ -88,7 +88,7 @@ public class ClientMap {
                 countfort++;
                 System.out.println("Coordinates of Fort " + node.getX() + node.getY());
             }
-            if(countfort < 6) continue;
+            if(countfort < FORTCOUNT) continue;
             
             
             if (!isMapConnected(nodes)) {
