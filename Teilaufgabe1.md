@@ -295,16 +295,16 @@ Legende:
 ### Klassendiagramm
 
 [Klassendiagramm hier samt, bei Bedarf, Beschreibung beziehungsweise Erläuterung einfügen]
-![Klassendiagramm](TemplateImages/Klassendiagramm.svg)
+![Klassendiagramm](Teilaufgabe1/TemplateImages/Klassendiagramm.svg)
 
 ### Sequenzdiagramm 1
 
 [Sequenzdiagramm 1 hier samt, bei Bedarf, Beschreibung beziehungsweise Erläuterung einfügen]
-![Sequenzdiagramm](TemplateImages/Sequenzdiagramm_3.svg)
+![Sequenzdiagramm](Teilaufgabe1/TemplateImages/Sequenzdiagramm_3.svg)
 ### Sequenzdiagramm 2
 
 [Sequenzdiagramm 2 hier samt, bei Bedarf, Beschreibung beziehungsweise Erläuterung einfügen]
-![Sequenzdiagramm](TemplateImages/Sequenzdiagramm_5.svg)
+![Sequenzdiagramm](Teilaufgabe1/TemplateImages/Sequenzdiagramm_5.svg)
 
 
 ## Aufgabe 4: Quellen dokumentieren
