@@ -219,7 +219,7 @@
 
 Legende:
 
-🏰 = eigene Burg
+🏰 = eigener Burg
 
 🟦 = Wasser (verboten)
 
@@ -229,9 +229,11 @@ Legende:
 
 💰 = Schatz (falls aufgedeckt)
 
-🧍 = Spielfigur
+🧍 = eigene Spielfigur
 
-🏯 = gegnerische Burg
+🏯 = gegnerischer Burg
+
+🧑‍🎤 = gegnerische Spielfigur
 
 
 
