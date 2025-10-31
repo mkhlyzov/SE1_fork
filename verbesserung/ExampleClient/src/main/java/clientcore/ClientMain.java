@@ -97,8 +97,6 @@ public class ClientMain {
         while (true) {
             GameState state = net.getGameState();
             boolean myTurnToMove = false;
-            gameHelper.update(state);
-            view.render(gameHelper);  // 🗺️ Konsolenkarte ausgeben
 
             if (state != null) {
                 for (PlayerState ps : state.getPlayers()) {
@@ -122,8 +120,25 @@ public class ClientMain {
             }
             //System.out.println("The value of variable myTurnTomove = " + myTurnToMove);
             if (myTurnToMove) {
+                gameHelper.update(state);
+                view.render(gameHelper);  // 🗺️ Konsolenkarte ausgeben
+                long t0 = System.nanoTime();
                 PlayerMove move = strategy.calculateNextMove(gameHelper);
-                net.sendMove(move);
+                long t1 = System.nanoTime();
+                double dt1_0 = (t1 - t0) / 1000000;
+                System.out.println("Execution time of function calculateNextMove takes in ms = " + dt1_0);
+                try {
+                    net.sendMove(move);
+                    long t2 = System.nanoTime();
+                    double dt2_1 = (t2 - t1) / 1000000;
+                    System.out.println("Execution time of function sendMove takes in ms = " + dt2_1);
+                }
+                catch (Exception e) {
+                    long t2 = System.nanoTime();
+                    double dt2_1 = (t2 - t1) / 1000000;
+                    System.out.println("Execution time of function sendMove takes in ms = " + dt2_1);
+                    throw e;
+                }
             } else {
                 System.out.println("⏳ Warte auf meinen Zug...");
             }
@@ -157,3 +172,19 @@ public class ClientMain {
         main.startGame(studentId);
     }
 }
+
+
+// 1 м = 100 см
+
+// 1 м = 1000 мм
+
+// 1 м = 10^9 нм
+
+// 5000 нм = 5000 * 10^-9 м = 5 * 10^-6 м
+
+
+// 1 с = 10^3 мс
+
+
+// 1 с = 10^9 нс
+

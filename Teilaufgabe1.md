@@ -12,46 +12,46 @@
 
 ## Aufgabe 1: Anforderungsanalyse
 
-
+### Typ der Anforderung: funktional
 
 **Anforderung 1**
 
-- **Anforderung**: [Spielerregistrierung MUSS moeglich sein – Ein Client MUSS sich nach Spielstart beim Server registrieren, um am Spiel teilzunehmen]
+- **Anforderung**: [Spielerregistrierung muss moeglich sein – Ein Client muss sich nach Spielstart beim Server registrieren, um am Spiel teilzunehmen]
 - **Bezugsquelle**: [Spielidee: „Nach Start des Clients registrieren sich die KIs fuer das Spiel am Server …“ (ca. Z. 11–13)]
 
 **Anforderung 2**
 
-- **Anforderung**: [Kartenhaelfte MUSS uebertragen werden - Der Client MUSS nach erfolgreicher Registrierung eine zufaellig erzeugte Kartenhaelfte an den Server senden.]
+- **Anforderung**: [Kartenhaelfte muss uebertragen werden - Der Client muss nach erfolgreicher Registrierung eine zufaellig erzeugte Kartenhaelfte an den Server senden.]
 - **Bezugsquelle**: [Spielidee: „… erstellen/tauschen danach mit dem Server Kartenhaelften aus.“ (ca. Z. 13–14)
 ]
 
 **Anforderung 3**
 
-- **Anforderung**: [Spielfigur MUSS bewegt werden koennen – Die KI MUSS in der Lage sein, ihre Spielfigur ueber die Spielkarte zu bewegen, um Felder aufzudecken.]
+- **Anforderung**: [Spielfigur muss bewegt werden koennen – Die KI muss in der Lage sein, ihre Spielfigur ueber die Spielkarte zu bewegen, um Felder aufzudecken.]
 - **Bezugsquelle**: [Spielidee: „Um den Schatz zu finden, bewegen beide KIs ihre Spielfigur ueber die Karte und decken dabei … Kartenfelder auf.“ (ca. Z. 34–37)]
 
 ### Typ der Anforderung: nicht funktional
 
 **Anforderung 4**
 
-- **Anforderung**: [Rundenzeit DARF NICHT ueberschritten werden – Die KI DARF NICHT laenger als 5 Sekunden fuer eine Spielaktion benoetigen.]
+- **Anforderung**: [Rundenzeit darf nicht ueberschritten werden – Die KI darf nicht laenger als 5 Sekunden fuer eine Spielaktion benoetigen.]
 - **Bezugsquelle**: [Spielidee: „Fuer jede dieser rundenbasierten Spielaktionen hat die KI maximal 5 Sekunden Bedenkzeit.“ (ca. Z. 85–86)]
 
 **Anforderung 5**
 
-- **Anforderung**: [Maximale Spielzeit MUSS eingehalten werden – Ein Spiel MUSS nach maximal 320 Spielaktionen oder 10 Minuten beendet werden.]
+- **Anforderung**: [Maximale Spielzeit muss eingehalten werden – Ein Spiel muss nach maximal 320 Spielaktionen oder 10 Minuten beendet werden.]
 - **Bezugsquelle**: [Spielidee: „… dass ein Spiel insgesamt nicht laenger als 320 Spielaktionen (und damit 320 Runden) dauern darf … Insgesamt dauert ein Spiel maximal 10 Minuten.“ (ca Z. 80–88)]
 
 **Anforderung 6**
 
-- **Anforderung**: [Client MUSS serverkompatibel sein – Der Client MUSS ausschliesslich die vom Protokoll definierten Nachrichtenstrukturen verwenden, um Kompatibilitaet sicherzustellen]
+- **Anforderung**: [Client muss serverkompatibel sein – Der Client muss ausschliesslich die vom Protokoll definierten Nachrichtenstrukturen verwenden, um Kompatibilitaet sicherzustellen]
 - **Bezugsquelle**: [Netzwerkprotokoll: „… standardisiertes Netzwerkprotokoll … ermoeglicht Ihnen … gegen andere Studierende anzutreten.“ (ca. Z. 10–15)]
 
 ### Typ der Anforderung: Designbedingung
 
 **Anforderung 7**
 
-- **Anforderung**: [Die Implementierung MUSS in Java erfolgen – Die KI-Implementierung MUSS vollstaendig in der vom Institut vorgegebenen Programmiersprache Java erfolgen. Andere Programmiersprachen oder Frameworks DÜRFEN NICHT verwendet werden.]
+- **Anforderung**: [Die Implementierung muss in Java erfolgen – Die KI-Implementierung muss vollstaendig in der vom Institut vorgegebenen Programmiersprache Java erfolgen. Andere Programmiersprachen oder Frameworks duerfen nicht verwendet werden.]
 - **Bezugsquelle**: [Technische Uebungsvorgaben / Netzwerkbibliothek: https://homepage.univie.ac.at/kristof.boehmer/SE1/Network_Library/Documentation/]
 
 
@@ -65,22 +65,22 @@
 ### Anforderungsüberblick
 
 - **Name**: [Spielfigur bewegen]
-- **Beschreibung und Priorität**: [Der Client MUSS Bewegungskommandos fuer die eigene Spielfigur absetzen koennen, um sich orthogonal feldweise ueber die Karte zu bewegen und dabei Felder aufzudecken. Die Anforderung ist Hoch, da ohne Bewegung weder Schatz noch gegnerische Burg gefunden werden koennen.]
+- **Beschreibung und Priorität**: [Der Client muss Bewegungskommandos fuer die eigene Spielfigur absetzen koennen, um sich orthogonal feldweise ueber die Karte zu bewegen und dabei Felder aufzudecken. Die Anforderung ist Hoch, da ohne Bewegung weder Schatz noch gegnerische Burg gefunden werden koennen.]
 - **Relevante Anforderungen**:
-   - A1 Registrierung MUSS moeglich sein (Zugriff auf Spiel ueberhaupt).
-   - A2 Kartenhaelfte MUSS uebertragen werden (Karte entsteht aus beiden Haelften).
-   - A4 Rundenzeit DARF NICHT ueberschritten werden (<= 5 s/Aktion).
-   - A5 Maximale Spielzeit MUSS eingehalten werden (<= 320 Aktionen/10 min).
-   - A6 Client MUSS serverkompatibel sein (Nachrichtenformat/Protokoll).
+   - A1 Registrierung muss moeglich sein (Zugriff auf Spiel ueberhaupt).
+   - A2 Kartenhaelfte muss uebertragen werden (Karte entsteht aus beiden Haelften).
+   - A4 Rundenzeit darf nicht ueberschritten werden (<= 5 s/Aktion).
+   - A5 Maximale Spielzeit muss eingehalten werden (<= 320 Aktionen/10 min).
+   - A6 Client muss serverkompatibel sein (Nachrichtenformat/Protokoll).
 
 - **Relevante Business Rules**: 
 
    - Rundenbasiert: Pro Runde genau eine Aktion; Aktion nur, wenn „ an der Reihe “.
    - Zeitlimits: <= 5 s Bedenkzeit je Aktion; Spiel <= 320 Aktionen/<= 10 min.
-   - Bewegungsrestriktionen: nur horizontal/vertikal zu benachbarten Feldern; Wasser DARF NICHT betreten werden (sofortige Niederlage); Kartenflucht (Off-Map) fuehrt ebenfalls zum Verlust.
+   - Bewegungsrestriktionen: nur horizontal/vertikal zu benachbarten Feldern; Wasser darf nicht betreten werden (sofortige Niederlage); Kartenflucht (Off-Map) fuehrt ebenfalls zum Verlust.
    - Terrainkosten & Effekte: Wiese 1 Aktion (aufdecken/ggf. Schatz aufnehmen); Berg 2 Aktionen hinein + 2 hinaus; beim Betreten Berg werden versteckte Schaetze/Burgen in Reichweite 1 (auch diagonal) aufgedeckt.
    - Sichtbarkeit: Zu Beginn sind Terrain, eigene Burg, Spielerpositionen sichtbar; Schatz & gegnerische Burg werden erst beim Aufdecken sichtbar. Gegnerposition ist in den ersten 8 eigenen Aktionen zufaellig.
-   - Statuspruefung: Client MUSS vor Aktionsversand pruefen, ob er an der Reihe ist (Status-/Turn-Nachricht). 
+   - Statuspruefung: Client muss vor Aktionsversand pruefen, ob er an der Reihe ist (Status-/Turn-Nachricht). 
 
 ### Impuls/Ergebnis - Typisches Szenario
 

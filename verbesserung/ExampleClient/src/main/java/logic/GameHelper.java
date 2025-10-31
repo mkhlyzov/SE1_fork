@@ -79,7 +79,7 @@ public class GameHelper {
 
     public boolean playerRecentlyMoved() {
         
-        System.out.println("Size of Array: " + playerPosHistory.size());
+        // System.out.println("Size of Array: " + playerPosHistory.size());
 
         int size = playerPosHistory.size();
         if (size < 2) {
