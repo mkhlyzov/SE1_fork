@@ -208,13 +208,16 @@ public class StrategyNearestNeighbour implements IStrategy {
 
     /** NN-тур, выбираем лучший старт */
     private List<FullMapNode> bestNearestNeighbourTour(FullMap map, FullMapNode start, List<FullMapNode> goals, int noiseRepeats) {
+        long t0 = System.nanoTime();
+        long timeBudget = 4500;
         if (goals.isEmpty()) return Collections.emptyList();
         Pathfinder pathfinder = new Pathfinder(map);
 
         int bestCost = Integer.MAX_VALUE;
         List<FullMapNode> bestTour = new ArrayList<>();
 
-        for(int i = 0; i < noiseRepeats;i++)
+        // for(int i = 0; i < noiseRepeats;i++)
+        while((System.nanoTime() - t0) / 1000000 < timeBudget)
         {
             for (FullMapNode g : goals) {
                 List<FullMapNode> tour = nearestNeighbourTour(map, g, new HashSet<>(goals));
@@ -223,7 +226,11 @@ public class StrategyNearestNeighbour implements IStrategy {
                     bestCost = cost;
                     bestTour = tour;
                 }
+                // if((System.nanoTime() - t0) / 1000000 >= timeBudget)
+                //     break; 
             }
+            // if((System.nanoTime() - t0) / 1000000 >= timeBudget)
+            //         break; 
         }    
         System.out.print("Best Tour: ");
         for(FullMapNode t: bestTour){
