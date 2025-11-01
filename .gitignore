@@ -24,3 +24,4 @@ gradle-app.setting
 
 # Log files
 logs
+logs*

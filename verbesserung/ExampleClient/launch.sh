@@ -27,9 +27,11 @@ rm "map_log.txt"
 fi
 
 java -jar "$JAR_PATH" dummy "$SERVER_URL" "$game_id"
+# java -Xmx200M -Xms96M -Djava.security.manager -Djava.security.policy==http://swe1.wst.univie.ac.at:18235/policy -Dsun.misc.URLClassPath.disableJarChecking=true -jar "$JAR_PATH" TR "$SERVER_URL" "$game_id"
 
 if [ $? -ne 0 ]; then
 echo "Iteration $i: Java program encountered an error."
 fi
 
 echo "Game finished."
+

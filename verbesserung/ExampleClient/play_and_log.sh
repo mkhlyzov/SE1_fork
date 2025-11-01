@@ -30,15 +30,12 @@ for ((i=1; i<=N; i++)); do
   echo "Iteration $i: Retrieved GameID: $game_id"
 
   # Define the output log file name
-  output_log="output_${i}.log"
+  output_log="${LOGS_DIR}/output_${i}.txt"
 
   echo "Iteration $i: Launching Java program..."
 
-  # delete old logs
-  if [ -f "map_log.txt" ]; then
-    rm "map_log.txt"
-  fi
-
+ 
+  #  we redirect stdout to file and then redirect stderr to stdout
   java -jar "$JAR_PATH" dummy "$SERVER_URL" "$game_id" > "$output_log" 2>&1
 
   if [ $? -ne 0 ]; then
@@ -46,19 +43,6 @@ for ((i=1; i<=N; i++)); do
     continue
   fi
 
-  # Define the new names for the logs
-  new_output_log="${LOGS_DIR}/output_${i}.log"
-  new_map_log="${LOGS_DIR}/map_log_${i}.txt"
-
-  # Move and rename the output log
-  mv "$output_log" "$new_output_log"
-
-  # Move and rename the map_log.txt if it exists
-  if [ -f "map_log.txt" ]; then
-    mv "map_log.txt" "$new_map_log"
-  else
-    echo "Iteration $i: Warning: map_log.txt not found."
-  fi
 
   echo "Iteration $i: Logs saved to $LOGS_DIR."
 done
