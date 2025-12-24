@@ -23,6 +23,14 @@ public class GameHelper {
     private boolean lastHadTreasure = false;
     private String rememberGoldPosition = null;
 
+    private int myXmin;
+    private int myXmax;
+    private int myYmin;
+    private int myYmax;
+    private int enemyXmin;
+    private int enemyXmax;
+    private int enemyYmin;
+    private int enemyYmax;
     private boolean isInitialized = false;
 
     private List<Point> playerPosHistory = new ArrayList<>();
@@ -94,6 +102,7 @@ public class GameHelper {
 
     public void update(GameState gameState) {
         currentGameState = gameState;
+        initializeMapCoordinates();
         Point currentPlayerPos = new Point(getMyPosition().getX(),getMyPosition().getY());
         playerPosHistory.add(currentPlayerPos);
         FullMap map = gameState.getMap();
@@ -128,5 +137,91 @@ public class GameHelper {
             }
         }
         lastHadTreasure = hasTreasureNow;
+    }
+
+
+
+    private void initializeMapCoordinates() {
+        if(isInitialized)
+            return;
+        
+        FullMap map = this.getMap();
+        FullMapNode myPosition = this.getMyPosition();
+        int maxX = this.getMaxX();  // 9 or 19
+        int maxY = this.getMaxY();  // 9 or 4
+        int playerX = myPosition.getX();
+        int playerY = myPosition.getY();
+
+        if (maxX == 9 && maxY == 9) {
+            // 10x10 — split horizontally
+            myXmin = 0; myXmax = 10;
+            myYmin = 0; myYmax = 5;
+
+            if (myXmin <= playerX && playerX < myXmax && myYmin <= playerY && playerY < myYmax) {
+                enemyXmin = 0; enemyXmax = 10;
+                enemyYmin = 5; enemyYmax = 10;
+            } else {
+                myXmin = 0; myXmax = 10;
+                myYmin = 5; myYmax = 10;
+
+                enemyXmin = 0; enemyXmax = 10;
+                enemyYmin = 0; enemyYmax = 5;
+            }
+        } else if (maxX == 19 && maxY == 4) {
+            // 20x5 — split vertically
+            myXmin = 0; myXmax = 10;
+            myYmin = 0; myYmax = 5;
+
+            if (myXmin <= playerX && playerX < myXmax && myYmin <= playerY && playerY < myYmax) {
+                enemyXmin = 10; enemyXmax = 20;
+                enemyYmin = 0; enemyYmax = 5;
+            } else {
+                myXmin = 10; myXmax = 20;
+                myYmin = 0; myYmax = 5;
+
+                enemyXmin = 0; enemyXmax = 10;
+                enemyYmin = 0; enemyYmax = 5;
+            }
+        } else {
+            System.err.println("Unknown map format (" + (maxX + 1) + " x " + (maxY + 1) + ")");
+        }
+        isInitialized = true;
+        
+    }
+
+    public boolean insideMine(FullMapNode n) {
+        return n.getX() >= myXmin && n.getX() < myXmax && n.getY() >= myYmin && n.getY() < myYmax;
+    }
+
+    public boolean insideEnemy(FullMapNode n) {
+        return n.getX() >= enemyXmin && n.getX() < enemyXmax && n.getY() >= enemyYmin && n.getY() < enemyYmax;
+    }
+
+    public List<FullMapNode> getNeighbours4(FullMapNode node) {
+        List<FullMapNode> neighbours = new ArrayList<>();
+        for(FullMapNode n: this.getMap().getMapNodes())
+        {
+            int dx = n.getX() - node.getX();
+            int dy = n.getY() - node.getY();
+            if((dx*dx + dy*dy) == 1 && n.getTerrain() != ETerrain.Water)
+            {
+                neighbours.add(n);
+            }
+        }
+        return neighbours;
+    }
+
+    public List<FullMapNode> getNeighbours8(FullMapNode node) {
+        List<FullMapNode> neighbours = new ArrayList<>();
+        for(FullMapNode n: this.getMap().getMapNodes())
+        {
+            int dx = n.getX() - node.getX();
+            int dy = n.getY() - node.getY();
+            if((dx*dx + dy*dy) <= 2 && n.getTerrain() != ETerrain.Water)
+            {
+                neighbours.add(n);
+            }
+        }
+        return neighbours;
     }
 }
