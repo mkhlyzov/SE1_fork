@@ -13,16 +13,24 @@ import messagesbase.messagesfromclient.PlayerHalfMapNode;
 public class ClientMap {
     private final int FORTCOUNT = 1;
     private final String playerId;
+    private final int height;
+    private final int width;
+
     public ClientMap(String playerId) {
         this.playerId = playerId;
+        this.height = 5;
+        this.width = 10;
     }
-
+    public ClientMap(String playerId,int height,int width)
+    {
+        this.playerId = playerId;
+        this.height = height;
+        this.width = width;
+    }
     public PlayerHalfMap generate() {
         List<PlayerHalfMapNode> nodes = new ArrayList<>();
         Random rand = new Random();
 
-        int width = 10;
-        int height = 5;
         int total = width * height;
         int mingrassCount = (int)Math.floor(total * 0.48);
         int minwaterCount = (int)Math.floor(total * 0.14);
@@ -113,8 +121,7 @@ public class ClientMap {
     }
 
     private boolean isMapConnected(List<PlayerHalfMapNode> mapNodes) {
-        int width = 10;
-        int height = 5;
+        
 
         boolean[][] visited = new boolean[height][width];
         List<PlayerHalfMapNode> walkables = new ArrayList<>();
@@ -159,5 +166,23 @@ public class ClientMap {
 
         return connectedCount == walkables.size();
     }
+
+    public int getHeight()
+    {
+        return height;
+    }
+
+    public int getWidth()
+    {
+        return width;
+    }
+    
+    
 }
 
+
+// Extended map borders ( Change Request ): The client has visited medieval fortresses and therefore desires stronger defensive measures. Therefore, the old rule regarding water at the map half edges is replaced by: 
+// At least 40% of the fields on each edge of a map half must be accessible.
+// At least 20% of the fields on each edge of a map half must be inaccessible.
+// The client providing the second half of the map takes the other client's half into account as follows:
+// At least 40% of the fields on each edge must allow a successful switch from the new second half of the map to the previous first half.
