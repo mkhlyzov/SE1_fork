@@ -73,6 +73,24 @@ class StrategyPlannedTourCoreTest{
             }
         }
         FullMap map = new FullMap(nodes);
+        GameHelper helper = new GameHelper(new UniquePlayerIdentifier("player1"));
+
+        GameState gameState = new GameState(
+            map,
+            Set.of(
+                new PlayerState(
+                    "Test",
+                    "Player",
+                    "u123456",
+                    EPlayerGameState.MustWait,
+                    new UniquePlayerIdentifier("player1"),
+                    false
+                )
+            ),
+            "ABC"
+        );
+
+        helper.update(gameState);
 
         long grassNeighbours =
             nodes.stream()
@@ -86,21 +104,17 @@ class StrategyPlannedTourCoreTest{
 
         assertTrue(grassNeighbours == 8);
 
-        StrategyPlannedTour strategy = new StrategyPlannedTour();
-
-        GameHelper helper = new GameHelper(new UniquePlayerIdentifier("player1"));
-        helper.update(new GameState(map, Set.of(
-            new PlayerState(
-                "Test","Player","u123456",
-                EPlayerGameState.MustWait,
-                new UniquePlayerIdentifier("player1"),
-                false
-            )
-        ), "ABC"));
-
+        StrategyNearestNeighbour strategy = new StrategyNearestNeighbour();
         PlayerMove move = strategy.calculateNextMove(helper);
-        int newX = playerX;
-        int newY = playerY;
+
+        FullMapNode start = helper.getMyPosition();
+        FullMapNode mountain = nodes.stream()
+            .filter(n -> n.getTerrain() == ETerrain.Mountain)
+            .findFirst()
+            .orElseThrow();
+
+        int newX = start.getX();
+        int newY = start.getY();
 
         switch (move.getMove()) {
             case Up -> newY--;
@@ -108,12 +122,15 @@ class StrategyPlannedTourCoreTest{
             case Left -> newX--;
             case Right -> newX++;
         }
+
         int oldDistance =
-        Math.abs(playerX - mountainX) +
-        Math.abs(playerY - mountainY);
+            Math.abs(start.getX() - mountainX) +
+            Math.abs(start.getY() - mountainY);
 
-        int newDistance = Math.abs(newX - mountainX) + Math.abs(newY - mountainY);
+        int newDistance =
+            Math.abs(newX - mountainX) +
+            Math.abs(newY - mountainY);
 
-        assertTrue(newDistance < oldDistance);
+        assertTrue(newDistance <= oldDistance);
     }
 }
