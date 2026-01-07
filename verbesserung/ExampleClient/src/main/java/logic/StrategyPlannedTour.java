@@ -22,10 +22,10 @@ import messagesbase.messagesfromserver.FullMapNode;
 public class StrategyPlannedTour implements IStrategy {
 
     private List<Integer> exploration_progress = new ArrayList();
-   
+    
 
-    
-    
+   
+   
     @Override
     public PlayerMove calculateNextMove(GameHelper gameHelper) {
         Set<FullMapNode> goals = collectGoals(gameHelper);
@@ -125,7 +125,7 @@ public class StrategyPlannedTour implements IStrategy {
     
    
 
-    private FullMapNode closestByBFS(FullMapNode start, Set<FullMapNode> goals, GameHelper gameHelper)
+    FullMapNode closestByBFS(FullMapNode start, Set<FullMapNode> goals, GameHelper gameHelper)
     {
         class PQItem
         {
@@ -145,7 +145,7 @@ public class StrategyPlannedTour implements IStrategy {
         while(!pq.isEmpty())
         {
             PQItem cur = pq.poll();
-            if(goals.contains(cur.node))
+            if(goals.contains(cur.node) && !gameHelper.isVisited(cur.node))
             {
                 return cur.node;
             }
@@ -156,7 +156,7 @@ public class StrategyPlannedTour implements IStrategy {
             for(FullMapNode nb: nbs)
             {
                 if (!isPassable(nb)) continue;
-                
+
                 
                 int newCost = cur.cost + terrainTransitionCost(cur.node, nb);
 
@@ -186,7 +186,7 @@ public class StrategyPlannedTour implements IStrategy {
     
 
 
-    private List<FullMapNode> continiousPathBFS(FullMapNode start, FullMapNode finish, GameHelper gameHelper, Set<FullMapNode> goals) 
+    List<FullMapNode> continiousPathBFS(FullMapNode start, FullMapNode finish, GameHelper gameHelper, Set<FullMapNode> goals) 
     {
             
         // --- small helper class for the priority queue ---
@@ -217,7 +217,7 @@ public class StrategyPlannedTour implements IStrategy {
             {
                 if (!isPassable(nb)) continue;
 
-                double reward = goals.contains(nb)? -(1/(goals.size()*2)): 0.0;
+                double reward = goals.contains(nb)? -(1./(goals.size()*2)): 0.0;
                 int stepCost = terrainTransitionCost(cur.node, nb);
                 double newCost = cur.cost + (double)stepCost + reward; // + noise
 
@@ -230,7 +230,10 @@ public class StrategyPlannedTour implements IStrategy {
                 }
             }
         }
-
+        if(!parent.containsKey(finish)){
+            return List.of();
+        }
+        
         LinkedList<FullMapNode> path = new LinkedList<>();
         FullMapNode walk = finish;
         

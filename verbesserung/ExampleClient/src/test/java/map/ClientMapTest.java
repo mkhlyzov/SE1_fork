@@ -15,7 +15,7 @@ import messagesbase.messagesfromclient.PlayerHalfMapNode;
 
 public class ClientMapTest {
 
-    private final int NUM_MAP_GENERATIONS = 100;
+    private final int NUM_MAP_GENERATIONS = 1000;
     @Test
     void halfMapCorrectDimensions() {
         for(int i = 0; i < NUM_MAP_GENERATIONS; i++)
