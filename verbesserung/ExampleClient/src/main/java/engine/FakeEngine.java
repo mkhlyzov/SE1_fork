@@ -4,11 +4,12 @@ package engine;
 
 import java.awt.Point;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Random;
 import java.util.Set;
 
-import map.ClientMap;
 import messagesbase.UniquePlayerIdentifier;
 import messagesbase.messagesfromclient.ETerrain;
 import messagesbase.messagesfromclient.PlayerHalfMap;
@@ -24,62 +25,76 @@ import messagesbase.messagesfromserver.GameState;
 import messagesbase.messagesfromserver.PlayerState;
 
 public class FakeEngine {
-
-    private UniquePlayerIdentifier playerid;
-
     private ETerrain[][] terrainGrid;
     private int WIDTH;
     private int HEIGHT; 
 
-    private Point playerPos;
-    private Point treasurePos;
-    private Point fortPos;
-    private Point enemyFortPos;
-    private boolean treasureWasCollected = false;
-    private boolean treasureWasObserved = false;
-    private boolean enemyFortWasObserved = false;
+    private Map<String, PlayerData> players = new HashMap<>();
 
-    private List<PlayerMove> movesBuffer = new ArrayList<>();
-    private EPlayerGameState gameState = EPlayerGameState.MustAct;
+
+    private static class PlayerData {
+        UniquePlayerIdentifier playerId;
+        PlayerHalfMap halfMapData;
+
+        Point position;
+        Point fortPosition;
+        Point treasurePosition;
+        boolean treasureCollected = false;
+        boolean treasureObserved = false;
+        boolean enemyFortObserved = false;
+        EPlayerGameState state = EPlayerGameState.MustWait;
+        List<PlayerMove> moveBuffer = new ArrayList<>();
+    }
 
     public FakeEngine(){}
 
-    public void createPlayer() {
-        this.playerid = new UniquePlayerIdentifier("FakePlayer-1");
+    public void registerPlayer(
+        String playerId,
+        PlayerHalfMap halfMapData
+    ) {
+        PlayerData data = new PlayerData();
+        data.playerId = new UniquePlayerIdentifier(playerId);
+        data.halfMapData = halfMapData;
+        players.put(playerId, data);
+
+        if (players.size() == 2) {
+            generateFullMap();
+            for (PlayerData pd : players.values()) {
+                pd.state = EPlayerGameState.MustAct;
+            }
+        }
     }
 
-    public void generateMap(PlayerHalfMap halfMapData){
-        ClientMap map = new ClientMap("FakePlayer-2");
-        PlayerHalfMap half2 = map.generate();   
-        half2 = normalizeFortCount(half2);
+    private void generateFullMap(){
+        assert players.size() == 2 : "Exactly 2 players should be registered to generate the full map.";
 
-        halfMapData = normalizeFortCount(halfMapData);
-        
-        if (new Random().nextBoolean()) {
-            halfMapData = shiftCoordinates(halfMapData);
-        } else {
-            half2 = shiftCoordinates(half2);
+        List<PlayerData> values = new ArrayList<>(players.values());
+        if (!values.isEmpty()) {
+            PlayerData pd = values.get(new Random().nextInt(values.size()));
+            
+            PlayerHalfMap halfMap = pd.halfMapData;
+            pd.halfMapData = shiftCoordinates(halfMap);
         }
         
-        treasurePos = addTreasureNearFort(halfMapData);
-        if (treasurePos == null) {
-            gameState = EPlayerGameState.Lost;
-            System.err.println("Could not place Treasuere on the map");
+        for (PlayerData pd: players.values()) {
+            PlayerHalfMap half = pd.halfMapData;
+            pd.treasurePosition = addTreasureNearFort(half);
+            if (pd.treasurePosition == null) {
+                pd.state = EPlayerGameState.Lost;
+                System.err.println("Could not place Treasuere on the map");
+            }
+
+            PlayerHalfMapNode fortNode = half.getMapNodes().stream()
+                    .filter(PlayerHalfMapNode::isFortPresent)
+                    .findFirst()
+                    .orElse(null);      
+            pd.fortPosition = new Point(fortNode.getX(), fortNode.getY());
+            pd.position = new Point(fortNode.getX(),fortNode.getY());
         }
 
-        PlayerHalfMapNode fort = halfMapData.getMapNodes().stream()
-                .filter(PlayerHalfMapNode::isFortPresent)
-                .findFirst()
-                .orElse(null);      
-        fortPos = new Point(fort.getX(), fort.getY());
-        playerPos = new Point(fort.getX(),fort.getY());
-        
-        PlayerHalfMapNode enemyFort = half2.getMapNodes().stream()
-                .filter(PlayerHalfMapNode::isFortPresent)
-                .findFirst()
-                .orElse(null);
-        enemyFortPos = new Point(enemyFort.getX(), enemyFort.getY());
-        FullMap fullMap = combineHalfMaps(halfMapData, half2);
+        PlayerHalfMap half1 = values.get(0).halfMapData;
+        PlayerHalfMap half2 = values.get(1).halfMapData;
+        FullMap fullMap = combineHalfMaps(half1, half2);
         createTerrainArray(fullMap);
     }
 
@@ -128,7 +143,7 @@ public class FakeEngine {
                 ));
             }
         }
-        return new PlayerHalfMap(halfMapData.getUniquePlayerID(),newNodes);
+        return new PlayerHalfMap(halfMapData.getUniquePlayerID(), newNodes);
     }
 
     private Point addTreasureNearFort(PlayerHalfMap half) {
@@ -276,17 +291,30 @@ public class FakeEngine {
         }
     }
     
-    public GameState getState() {
+    public GameState getState(String playerId) {
+        PlayerData pd = players.get(playerId);
+        PlayerData pd_enemy = players.values().stream().filter(p -> !p.playerId.equals(playerId)).findFirst().orElse(null);
+
         PlayerState myPlayer = new PlayerState(
-            "Fake", "Player", "fake_user",
-            gameState,
-            playerid,
-            treasureWasCollected
+            "Fake", "Player", playerId,
+            pd.state,
+            pd.playerId,
+            pd.treasureCollected
         );
+        
         Set <PlayerState> players = Set.of(myPlayer);
 
         if (terrainGrid == null) 
-            return new GameState(players,"ABC");
+            return new GameState(players, "ABC");
+
+        Point treasurePos = pd.treasurePosition;
+        Boolean treasureWasCollected = pd.treasureCollected;
+        Boolean treasureWasObserved = pd.treasureObserved;
+
+        Point playerPos = pd.position;
+        Point fortPos = pd.fortPosition;
+        Point enemyFortPos = pd_enemy.fortPosition;
+        Boolean enemyFortWasObserved = pd.enemyFortObserved;
 
         List <FullMapNode> mapNodes = new ArrayList<>();
         for(int x = 0; x < WIDTH; x++) {
@@ -306,10 +334,6 @@ public class FakeEngine {
        
         FullMap map = new FullMap(mapNodes);
         return new GameState(map, players, "ABC");
-    }
-
-    public UniquePlayerIdentifier getPlayerId() {
-        return playerid;
     }
        
     private ETerrain getTerrain(int x, int y) {

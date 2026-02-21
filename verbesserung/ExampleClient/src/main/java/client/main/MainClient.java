@@ -1,7 +1,10 @@
 package client.main;
 
-
 import clientcore.ClientMain;
+import engine.GameSimulator;
+import network.ClientNetwork;
+import network.INetwork;
+
 public class MainClient {
 	
 	// ADDITIONAL TIPS ON THIS MATTER ARE GIVEN THROUGHOUT THE TUTORIAL SESSION!
@@ -20,7 +23,12 @@ public class MainClient {
 	 * when and how.
 	 */
 	public static void main(String[] args) {
-		ClientMain.main(args);
+		if (args.length < 3) {
+			GameSimulator.main(args);
+		} else {
+			ClientMain.main(args);
+		}
+
     }
 	
 }
