@@ -21,8 +21,6 @@ import messagesbase.messagesfromserver.FullMapNode;
 
 public class StrategyPlannedTour implements IStrategy {
 
-    private List<Integer> exploration_progress = new ArrayList();
-    
 
    
    
@@ -54,7 +52,29 @@ public class StrategyPlannedTour implements IStrategy {
         return  bestTour;
     }
 
-    
+    private double computeTourScore(List<FullMapNode> tour)
+    {
+        /*
+           Assumptions about tour
+           1. On the first place in tour must be a plater position;
+           2. Tour must be continious;
+           3. Tour should cover all goals;
+         */
+        List<Integer> exploration_progress = new ArrayList<>();
+        Set<FullMapNode> visited = new HashSet<>();
+        int explored = 0;
+        for(FullMapNode n:tour)
+        {
+             if(!visited.contains(n))
+             {
+                explored++;
+                visited.add(n);
+             }
+             exploration_progress.add(explored);
+        }
+        return 5.54168;   
+    }
+
     private Set<FullMapNode> collectGoals(GameHelper gameHelper){
         /*  
             In order to find gold and enemy castle agent has to explore the map.
@@ -255,7 +275,5 @@ public class StrategyPlannedTour implements IStrategy {
 
 
     
-
-
 
 }

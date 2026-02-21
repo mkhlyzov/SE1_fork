@@ -207,7 +207,7 @@ public class StrategyNearestNeighbour implements IStrategy {
     }
 
     /** NN-тур, выбираем лучший старт */
-    private List<FullMapNode> bestNearestNeighbourTour(FullMap map, FullMapNode start, List<FullMapNode> goals, int noiseRepeats) {
+    List<FullMapNode> bestNearestNeighbourTour(FullMap map, FullMapNode start, List<FullMapNode> goals, int noiseRepeats) {
         long t0 = System.nanoTime();
         long timeBudget = 4500;
         if (goals.isEmpty()) return Collections.emptyList();
@@ -373,4 +373,9 @@ public class StrategyNearestNeighbour implements IStrategy {
         if (to.getY() < from.getY()) return EMove.Up;
         return EMove.Right;
     }
-}
+
+    public Queue<FullMapNode> get_plannedTour()
+    {
+        return plannedTour;
+    }
+}   
