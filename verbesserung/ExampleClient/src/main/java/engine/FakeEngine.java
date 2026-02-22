@@ -31,7 +31,6 @@ public class FakeEngine {
 
     private Map<String, PlayerData> players = new HashMap<>();
 
-
     private static class PlayerData {
         UniquePlayerIdentifier playerId;
         PlayerHalfMap halfMapData;
@@ -47,6 +46,15 @@ public class FakeEngine {
     }
 
     public FakeEngine(){}
+
+    public Boolean isFinished() {
+        for (PlayerData pd : players.values()) {
+            if (pd.state == EPlayerGameState.Won) {
+                return true;
+            }
+        }
+        return false;
+    }
 
     public void registerPlayer(
         String playerId,
@@ -216,37 +224,39 @@ public class FakeEngine {
     }
     
     public void applyMove(PlayerMove move){
-        int dx = 0, dy = 0;
+        PlayerData pd = players.get(move.getUniquePlayerID());
+        PlayerData pd_enemy = players.values().stream().filter(p -> !p.playerId.getUniquePlayerID().equals(move.getUniquePlayerID())).findFirst().orElse(null);
 
+        int dx = 0, dy = 0;
         switch(move.getMove()){
             case Up -> dy = -1;
             case Down -> dy = 1;
             case Left -> dx = -1;
             case Right -> dx = 1;
         }
-        Point currentPos = playerPos;
+        Point currentPos = pd.position;
         Point newPos = new Point(currentPos.x + dx, currentPos.y + dy);
        
         resetBufferIfDirectionChanged(move);
-        movesBuffer.add(move);
+        pd.moveBuffer.add(move);
 
         int stepsNeededToMove = stepCost(currentPos, newPos);
-        if(movesBuffer.size() >= stepsNeededToMove)
+        if(pd.moveBuffer.size() >= stepsNeededToMove)
         {
-            movesBuffer.clear();
-            playerPos = newPos;
+            pd.moveBuffer.clear();
+            pd.position = newPos;
             
-            updateObjectivesVisibility(playerPos);
+            updateObjectivesVisibility(move.getUniquePlayerID());
         }
 
-        if (!inBounds(playerPos) || isWater(playerPos)) { 
-            gameState = EPlayerGameState.Lost;
+        if (!inBounds(pd.position) || isWater(pd.position)) { 
+            pd.state = EPlayerGameState.Lost;
         }
-        if(playerPos.equals(treasurePos)) {
-            treasureWasCollected = true;
+        if(pd.position.equals(pd.treasurePosition)) {
+            pd.treasureCollected = true;
         }
-        if(treasureWasCollected && playerPos.equals(enemyFortPos)) {
-            gameState = EPlayerGameState.Won;
+        if(pd.treasureCollected && pd.position.equals(pd_enemy.fortPosition)) {
+            pd.state = EPlayerGameState.Won;
         }
 
         // try {
@@ -257,32 +267,39 @@ public class FakeEngine {
         // }
     }
     
-    private void updateObjectivesVisibility(Point pos) {
+    private void updateObjectivesVisibility(String playerId) {
+        PlayerData pd = players.get(playerId);
+        PlayerData pd_enemy = players.values().stream().filter(p -> !p.playerId.getUniquePlayerID().equals(playerId)).findFirst().orElse(null);
+        Point pos = pd.position;
+
         ETerrain currentTerrain = getTerrain(pos.x, pos.y);
         if (currentTerrain == ETerrain.Mountain) {
             for (int dx = -1; dx <= 1; dx++) {
                 for (int dy = -1; dy <= 1; dy++) {
                     Point neighbour = new Point(pos.x + dx, pos.y + dy);
                     if (!inBounds(neighbour)) continue;
-                    if(treasurePos.equals(neighbour)){
-                        treasureWasObserved = true;
+                    if(pd.treasurePosition.equals(neighbour)){
+                        pd.treasureObserved = true;
                     }
-                    if(enemyFortPos.equals(neighbour)){
-                        enemyFortWasObserved = true;
+                    if(pd_enemy.fortPosition.equals(neighbour)){
+                        pd.enemyFortObserved = true;
                     }
                 }
             }
         } else {
-            if(enemyFortPos.equals(pos)) {
-                enemyFortWasObserved = true;
+            if(pd_enemy.fortPosition.equals(pos)) {
+                pd.enemyFortObserved = true;
             }
-            if(treasurePos.equals(pos)) {
-                treasureWasObserved = true;
+            if(pd.treasurePosition.equals(pos)) {
+                pd.treasureCollected = true;
             }
         }
     }
 
     private void resetBufferIfDirectionChanged(PlayerMove current) {
+        PlayerData pd = players.get(current.getUniquePlayerID());
+        List<PlayerMove> movesBuffer = pd.moveBuffer; // ???
+
         if (!movesBuffer.isEmpty()) {
             PlayerMove last = movesBuffer.get(movesBuffer.size() - 1);
             if (last.getMove() != current.getMove()) {
@@ -293,7 +310,7 @@ public class FakeEngine {
     
     public GameState getState(String playerId) {
         PlayerData pd = players.get(playerId);
-        PlayerData pd_enemy = players.values().stream().filter(p -> !p.playerId.equals(playerId)).findFirst().orElse(null);
+        PlayerData pd_enemy = players.values().stream().filter(p -> !p.playerId.getUniquePlayerID().equals(playerId)).findFirst().orElse(null);
 
         PlayerState myPlayer = new PlayerState(
             "Fake", "Player", playerId,
@@ -301,11 +318,17 @@ public class FakeEngine {
             pd.playerId,
             pd.treasureCollected
         );
+        PlayerState enemyPlayer = new PlayerState(
+            "Fake", "Player", pd_enemy.playerId.getUniquePlayerID(),
+            pd_enemy.state,
+            pd_enemy.playerId,
+            pd_enemy.treasureCollected
+        );
         
-        Set <PlayerState> players = Set.of(myPlayer);
+        Set <PlayerState> players_set = Set.of(myPlayer, enemyPlayer);
 
         if (terrainGrid == null) 
-            return new GameState(players, "ABC");
+            return new GameState(players_set, "ABC");
 
         Point treasurePos = pd.treasurePosition;
         Boolean treasureWasCollected = pd.treasureCollected;
@@ -323,7 +346,20 @@ public class FakeEngine {
 
                 ETerrain terrain = terrainGrid[x][y];
                 ETreasureState treasureState = (treasurePos.equals(p) && !treasureWasCollected && treasureWasObserved) ? ETreasureState.MyTreasureIsPresent : ETreasureState.NoOrUnknownTreasureState;
-                EPlayerPositionState positionState = (playerPos.equals(p)) ? EPlayerPositionState.MyPlayerPosition : EPlayerPositionState.NoPlayerPresent;
+                
+                EPlayerPositionState positionState;
+                if (pd.position.equals(p)) {
+                    if (pd_enemy.position.equals(p)) {
+                        positionState = EPlayerPositionState.BothPlayerPosition;
+                    } else {
+                        positionState = EPlayerPositionState.MyPlayerPosition;
+                    }
+                } else if (pd_enemy.position.equals(p)) {
+                    positionState = EPlayerPositionState.EnemyPlayerPosition;
+                } else {
+                    positionState = EPlayerPositionState.NoPlayerPresent;
+                }
+                
                 EFortState fortState = fortPos.equals(p) ? EFortState.MyFortPresent : ((enemyFortPos.equals(p) && enemyFortWasObserved) ? EFortState.EnemyFortPresent : EFortState.NoOrUnknownFortState);
 
                 mapNodes.add(new FullMapNode(
@@ -333,7 +369,7 @@ public class FakeEngine {
         }
        
         FullMap map = new FullMap(mapNodes);
-        return new GameState(map, players, "ABC");
+        return new GameState(map, players_set, "ABC");
     }
        
     private ETerrain getTerrain(int x, int y) {
