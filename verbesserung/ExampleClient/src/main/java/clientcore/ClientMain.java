@@ -11,7 +11,6 @@ import messagesbase.messagesfromclient.PlayerMove;
 import messagesbase.messagesfromserver.GameState;
 import messagesbase.messagesfromserver.PlayerState;
 import network.ClientNetwork;
-import network.FakeNetwork;
 import network.INetwork;
 import view.ConsoleView;
 
@@ -155,12 +154,7 @@ public class ClientMain {
 
         if (args.length < 3) {
             System.err.println("❗ Missing arguments. Required: [mode] [serverURL] [gameId]");
-            // return;
-            if (args.length > 0) {
-                network = new FakeNetwork(Integer.parseInt(args[0]));
-            } else {
-                network = new FakeNetwork(0);
-            }
+            return;
         }
         else{
             String gamemode = args[0];
