@@ -21,64 +21,75 @@ import messagesbase.messagesfromserver.FullMapNode;
 
 public class StrategyPlannedTour implements IStrategy {
 
-
     private List<FullMapNode> plannedTour = new LinkedList<>();
-   
 
+    
+    public List<FullMapNode> get_plannedTour(){
+        return plannedTour;
+    }
+   
     @Override
     public PlayerMove calculateNextMove(GameHelper gameHelper) {
-        
-
         Set<FullMapNode> goals = collectGoals(gameHelper);
-        updateBestTour(gameHelper,goals,25);
+        updateBestTour(gameHelper, goals, 25);
+        
         return PlayerMove.of(
             gameHelper.getPlayerId(), 
             calculateMove(plannedTour.get(0), plannedTour.get(1))
         );
-    }
-
-
-    
+    }  
 
     public void updateBestTour(GameHelper gameHelper,Set<FullMapNode> goals, int noiseRepeats)
     {
         assert !goals.isEmpty();
         List <FullMapNode> bestTour = null; 
-        double bestCost = Double.MAX_VALUE;
+        double bestScore = -1.0;
 
-        for (int restart = 0; restart < noiseRepeats; restart++)
-        {
-            List<FullMapNode> remaining = new ArrayList<>(goals);
-            List<FullMapNode> tour = new ArrayList<>();
-            FullMapNode currentPos = gameHelper.getMyPosition();
-        }    
+        for (int restart = 0; restart < noiseRepeats; restart++) {
+            for (FullMapNode anchor: goals) {
+                List<FullMapNode> tour = generateFullTourThroughAnchor(gameHelper, anchor, goals);
+                double score = computeTourScore_v1(tour, goals, 0.97);
+                if (score > bestScore) {
+                    bestScore = score;
+                    bestTour = tour;
+                }
+            }
+        }
+
+        plannedTour = bestTour;
     }
 
-    // private double computeTourScore(List<FullMapNode> tour)
-    // {
-    //     /*
-    //        Assumptions about tour
-    //        1. On the first place in tour must be a plater position;
-    //        2. Tour must be continious;
-    //        3. Tour should cover all goals;
-    //      */
-    //     List<Integer> exploration_progress = new ArrayList<>();
-    //     Set<FullMapNode> visited = new HashSet<>();
-    //     int explored = 0;
-    //     for(FullMapNode n:tour)
-    //     {
-    //          if(!visited.contains(n))
-    //          {
-    //             explored++;
-    //             visited.add(n);
-    //          }
-    //          exploration_progress.add(explored);
-    //     }
-    //     return 5.54168;   
-    // }
+    List<FullMapNode> generateFullTourThroughAnchor(
+        GameHelper gameHelper,
+        FullMapNode anchor,
+        Set<FullMapNode> goals
+    ) {
+        Set<FullMapNode> goalsRemaining = new HashSet<>(goals);
+        FullMapNode pPos = gameHelper.getMyPosition();
 
-    public List<FullMapNode> get_plannedTour(){
-        return plannedTour;
+        List<FullMapNode> tour = new ArrayList<>();
+        tour.add(pPos);
+        FullMapNode current = pPos;
+        FullMapNode next = anchor;
+
+        while (!goalsRemaining.isEmpty()) {
+            List<FullMapNode> path = continiousPathBFS(current, next, gameHelper, goalsRemaining);
+            
+            // unpdate goals visibility assuming ALL nodes are Grass.
+            // Mountains logic is NOT implemented yet
+            for (FullMapNode n : path) {
+                if (goalsRemaining.contains(n)) {
+                    goalsRemaining.remove(n);
+                }
+            }
+            path.remove(0);
+            tour.addAll(path);
+            
+            current = next;
+            next = closestByBFS(current, goalsRemaining, gameHelper);
+        }
+
+        return tour;
     }
 
     public double computeTourScore_v1(List<FullMapNode> tour,Set<FullMapNode> goals,double gamma)
@@ -142,7 +153,6 @@ public class StrategyPlannedTour implements IStrategy {
 
         return score;
     }
-
 
     public double computeTourScore_v2(List<FullMapNode> tour,Set<FullMapNode> goals, GameHelper gameHelper,double gamma)
     {
@@ -264,7 +274,6 @@ public class StrategyPlannedTour implements IStrategy {
         return goals;
     }
 
-    
     private EMove calculateMove(FullMapNode from, FullMapNode to) {
         int dx = to.getX() - from.getX();
         int dy = to.getY() - from.getY();
@@ -276,10 +285,7 @@ public class StrategyPlannedTour implements IStrategy {
         else return EMove.Up;
     }
 
-    
-   
-
-    FullMapNode closestByBFS(FullMapNode start, Set<FullMapNode> goals, GameHelper gameHelper)
+    public FullMapNode closestByBFS(FullMapNode start, Set<FullMapNode> goals, GameHelper gameHelper)
     {
         class PQItem
         {
@@ -325,24 +331,17 @@ public class StrategyPlannedTour implements IStrategy {
         }
         return null;
     }
-
-
     
     private boolean isPassable(FullMapNode node) {
-
         return node.getTerrain() != ETerrain.Water;
-
     }
 
-
-    
-
-    
-
-
-    List<FullMapNode> continiousPathBFS(FullMapNode start, FullMapNode finish, GameHelper gameHelper, Set<FullMapNode> goals) 
-    {
-            
+    public List<FullMapNode> continiousPathBFS(
+        FullMapNode start,
+        FullMapNode finish,
+        GameHelper gameHelper,
+        Set<FullMapNode> goals
+    ) {
         // --- small helper class for the priority queue ---
         class PQItem {
             final FullMapNode node;
@@ -400,7 +399,6 @@ public class StrategyPlannedTour implements IStrategy {
         return path;
     }
 
-
     private int terrainTransitionCost(FullMapNode from, FullMapNode to) {
         int dx = to.getX() - from.getX();
         int dy = to.getY() - from.getY();
@@ -410,8 +408,4 @@ public class StrategyPlannedTour implements IStrategy {
         int toCost = (to.getTerrain() == ETerrain.Mountain) ? 2 : 1;
         return fromCost + toCost;
     }
-
-
-    
-
 }

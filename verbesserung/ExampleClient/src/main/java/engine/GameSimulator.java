@@ -3,6 +3,7 @@ package engine;
 import logic.GameHelper;
 import logic.IStrategy;
 import logic.StrategyAlwaysClosest;
+import logic.StrategyPlannedTour;
 import map.ClientMap;
 import messagesbase.UniquePlayerIdentifier;
 import messagesbase.messagesfromclient.PlayerHalfMap;
@@ -20,8 +21,8 @@ public class GameSimulator {
     public static void main(String[] args) {
         System.out.println("Game simulation started...");
 
-        singlePlayer(args);
-        //multiPlayer(args);
+        // singlePlayer(args);
+        multiPlayer(args);
 
         // Add game logic and interactions here
         System.out.println("Game simulation ended.");
@@ -34,7 +35,8 @@ public class GameSimulator {
         String playerId_2 = "player_2";
 
         // IStrategy strategy_1 = new StrategyNearestNeighbour();
-        IStrategy strategy_1 = new StrategyAlwaysClosest();
+        // IStrategy strategy_1 = new StrategyAlwaysClosest();
+        IStrategy strategy_1 = new StrategyPlannedTour();
 
         ClientMap mapGenerator_1 = new ClientMap(playerId_1);
         PlayerHalfMap halfMapData_1 = mapGenerator_1.generate();
@@ -70,8 +72,9 @@ public class GameSimulator {
         String playerId_1 = "player_1";
         String playerId_2 = "player_2";
 
+        // IStrategy strategy_1 = new StrategyAlwaysClosest();
         // IStrategy strategy_1 = new StrategyNearestNeighbour();
-        IStrategy strategy_1 = new StrategyAlwaysClosest();
+        IStrategy strategy_1 = new StrategyPlannedTour();
         IStrategy strategy_2 = new StrategyAlwaysClosest();
 
         ClientMap mapGenerator_1 = new ClientMap(playerId_1);
