@@ -28,7 +28,7 @@ public class FakeEngine {
     private ETerrain[][] terrainGrid;
     private int WIDTH;
     private int HEIGHT; 
-
+    private static final int HIDE_POSITION_NUM_TURNS = 8;
     private Map<String, PlayerData> players = new HashMap<>();
 
     private static class PlayerData {
@@ -43,6 +43,7 @@ public class FakeEngine {
         boolean enemyFortObserved = false;
         EPlayerGameState state = EPlayerGameState.MustWait;
         List<PlayerMove> moveBuffer = new ArrayList<>();
+        int numMovesApplied = 0;
     }
 
     public FakeEngine(){}
@@ -239,6 +240,7 @@ public class FakeEngine {
        
         resetBufferIfDirectionChanged(move);
         pd.moveBuffer.add(move);
+        pd.numMovesApplied++;
 
         int stepsNeededToMove = stepCost(currentPos, newPos);
         if(pd.moveBuffer.size() >= stepsNeededToMove)
@@ -338,6 +340,13 @@ public class FakeEngine {
         Point fortPos = pd.fortPosition;
         Point enemyFortPos = pd_enemy.fortPosition;
         Boolean enemyFortWasObserved = pd.enemyFortObserved;
+        boolean hideEnemy = pd_enemy.numMovesApplied < HIDE_POSITION_NUM_TURNS;
+        Point enemyPos = pd_enemy.position;
+        if(hideEnemy)
+        {
+            Random r = new Random();
+            enemyPos = new Point(r.nextInt(WIDTH),r.nextInt(HEIGHT));
+        }
 
         List <FullMapNode> mapNodes = new ArrayList<>();
         for(int x = 0; x < WIDTH; x++) {
@@ -349,12 +358,12 @@ public class FakeEngine {
                 
                 EPlayerPositionState positionState;
                 if (pd.position.equals(p)) {
-                    if (pd_enemy.position.equals(p)) {
+                    if (enemyPos.equals(p)) {
                         positionState = EPlayerPositionState.BothPlayerPosition;
                     } else {
                         positionState = EPlayerPositionState.MyPlayerPosition;
                     }
-                } else if (pd_enemy.position.equals(p)) {
+                } else if (enemyPos.equals(p)) {
                     positionState = EPlayerPositionState.EnemyPlayerPosition;
                 } else {
                     positionState = EPlayerPositionState.NoPlayerPresent;

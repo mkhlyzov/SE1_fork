@@ -20,8 +20,8 @@ public class GameSimulator {
     public static void main(String[] args) {
         System.out.println("Game simulation started...");
 
-        // singlePlayer(args);
-        multiPlayer(args);
+        singlePlayer(args);
+        //multiPlayer(args);
 
         // Add game logic and interactions here
         System.out.println("Game simulation ended.");

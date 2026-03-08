@@ -9,6 +9,7 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.PriorityQueue;
+import java.util.Queue;
 import java.util.Set;
 
 import messagesbase.messagesfromclient.EMove;
@@ -22,7 +23,7 @@ import messagesbase.messagesfromserver.FullMapNode;
 public class StrategyPlannedTour implements IStrategy {
 
 
-   
+   private Queue<FullMapNode> plannedTour = new LinkedList<>();
    
     @Override
     public PlayerMove calculateNextMove(GameHelper gameHelper) {
@@ -52,27 +53,159 @@ public class StrategyPlannedTour implements IStrategy {
         return  bestTour;
     }
 
-    private double computeTourScore(List<FullMapNode> tour)
+    // private double computeTourScore(List<FullMapNode> tour)
+    // {
+    //     /*
+    //        Assumptions about tour
+    //        1. On the first place in tour must be a plater position;
+    //        2. Tour must be continious;
+    //        3. Tour should cover all goals;
+    //      */
+    //     List<Integer> exploration_progress = new ArrayList<>();
+    //     Set<FullMapNode> visited = new HashSet<>();
+    //     int explored = 0;
+    //     for(FullMapNode n:tour)
+    //     {
+    //          if(!visited.contains(n))
+    //          {
+    //             explored++;
+    //             visited.add(n);
+    //          }
+    //          exploration_progress.add(explored);
+    //     }
+    //     return 5.54168;   
+    // }
+
+    public Queue<FullMapNode> get_plannedTour(){
+        return plannedTour;
+    }
+
+    public double computeTourScore_v1(List<FullMapNode> tour,Set<FullMapNode> goals,double gamma)
     {
         /*
-           Assumptions about tour
-           1. On the first place in tour must be a plater position;
-           2. Tour must be continious;
-           3. Tour should cover all goals;
-         */
-        List<Integer> exploration_progress = new ArrayList<>();
+        Assumptions:
+        1. First element is player position
+        2. Tour is continuous
+        3. Tour covers goals
+        */
+
+        if (tour == null || tour.size() < 2)
+            return 0.0;
+
+       
+
         Set<FullMapNode> visited = new HashSet<>();
-        int explored = 0;
-        for(FullMapNode n:tour)
+        visited.add(tour.get(0)); // старт уже посещён
+
+        double score = 0.0;
+        int cumulativeCost = 0;
+
+        for (int i = 1; i < tour.size(); i++)
         {
-             if(!visited.contains(n))
-             {
-                explored++;
-                visited.add(n);
-             }
-             exploration_progress.add(explored);
+            FullMapNode from = tour.get(i - 1);
+            FullMapNode to   = tour.get(i);
+
+            // добавляем стоимость перехода
+            cumulativeCost += terrainTransitionCost(from, to);
+
+            // reward = 1 если клетка новая
+            if (goals.contains(to) && !visited.contains(to) && to.getTerrain() != ETerrain.Mountain)
+            {
+                score += Math.pow(gamma, cumulativeCost);
+                visited.add(to);
+            }
+
+            if(to.getTerrain() == ETerrain.Mountain)
+            {
+                for(FullMapNode neighbour: goals)
+                {
+                    if(neighbour.equals(to)) continue;
+
+                    int dx = neighbour.getX() - to.getX(); 
+                    int dy = neighbour.getY() - to.getY();
+                   
+                    if(dx * dx + dy * dy > 2) continue;
+
+                    int dxAbs = Math.abs(dx);
+                    int dyAbs = Math.abs(dy);
+
+                    int steps = dxAbs + dyAbs;
+
+                    int extraSteps = 3 + 2 * (steps - 1);
+                   
+                    score += Math.pow(gamma, cumulativeCost + extraSteps);
+                    visited.add(neighbour);
+                }    
+            }    
         }
-        return 5.54168;   
+
+        return score;
+    }
+
+
+    public double computeTourScore_v2(List<FullMapNode> tour,Set<FullMapNode> goals, GameHelper gameHelper,double gamma)
+    {
+        /*
+        Assumptions:
+        1. First element is player position
+        2. Tour is continuous
+        3. Tour covers goals
+        */
+
+        if (tour == null || tour.size() < 2)
+            return 0.0;
+
+        
+
+        Set<FullMapNode> visited = new HashSet<>();
+        visited.add(tour.get(0)); // старт уже посещён
+
+        double score = 0.0;
+        int cumulativeCost = 0;
+
+        for (int i = 1; i < tour.size(); i++)
+        {
+            FullMapNode from = tour.get(i - 1);
+            FullMapNode to   = tour.get(i);
+
+            // добавляем стоимость перехода
+            cumulativeCost += terrainTransitionCost(from, to);
+
+            // reward = 1 если клетка новая
+            if (goals.contains(to) && !visited.contains(to) && to.getTerrain() != ETerrain.Mountain)
+            {
+                score += Math.pow(gamma, cumulativeCost);
+                visited.add(to);
+            }
+
+            if(to.getTerrain() == ETerrain.Mountain)
+            {
+                for(FullMapNode neighbour: goals)
+                {
+                    if(neighbour.equals(to)) continue;
+
+                    int dx = neighbour.getX() - to.getX(); 
+                    int dy = neighbour.getY() - to.getY();
+
+                    if(dx * dx + dy * dy > 2) continue;
+
+                    if(!visited.contains(neighbour))
+                    {
+                        List<FullMapNode> path = continiousPathBFS(to, neighbour, gameHelper, goals);
+
+                        int extraSteps = 0;
+
+                        for(int j = 1; j < path.size(); j++)
+                            extraSteps += terrainTransitionCost(path.get(j-1), path.get(j));
+
+                        score += Math.pow(gamma, cumulativeCost + extraSteps);
+                        visited.add(neighbour);
+                    }
+                }
+            }
+        }
+
+        return score;
     }
 
     private Set<FullMapNode> collectGoals(GameHelper gameHelper){
@@ -268,6 +401,10 @@ public class StrategyPlannedTour implements IStrategy {
 
 
     private int terrainTransitionCost(FullMapNode from, FullMapNode to) {
+        int dx = to.getX() - from.getX();
+        int dy = to.getY() - from.getY();
+        assert dx * dx + dy * dy == 1;
+
         int fromCost = (from.getTerrain() == ETerrain.Mountain) ? 2 : 1;
         int toCost = (to.getTerrain() == ETerrain.Mountain) ? 2 : 1;
         return fromCost + toCost;

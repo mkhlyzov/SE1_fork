@@ -7,8 +7,8 @@ import java.util.Queue;
 import java.util.Random;
 import java.util.Set;
 
+import static org.junit.Assert.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
-import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 
 import messagesbase.UniquePlayerIdentifier;
@@ -27,15 +27,39 @@ class StrategyPlannedTourCoreTest{
 
     private final int NUM_TEST_REPEATS = 100;
 
-    @Disabled
+    
+    public GameHelper generateGameHelper(FullMap map)
+    {
+        GameHelper helper = new GameHelper(new UniquePlayerIdentifier("player1"));
+
+            GameState gameState = new GameState(
+                map,
+                Set.of(
+                    new PlayerState(
+                        "Test",
+                        "Player",
+                        "u123456",
+                        EPlayerGameState.MustWait,
+                        new UniquePlayerIdentifier("player1"),
+                        false
+                    )
+                ),
+                "ABC"
+            );
+
+        helper.update(gameState);
+
+        return helper;
+    }
+
     @Test
     void CharacterMovesTowardsMountains() {
     
         for(int i = 0; i < NUM_TEST_REPEATS; i++)
         {    
-            Random r= new Random();
-            int maxX = 5 + r.nextInt(16);
-            int maxY = 5 + r.nextInt(16);
+            Random r = new Random();
+            int maxX = r.nextBoolean() ? 10 : 20;
+            int maxY = 100 / maxX;
             assertTrue(maxX >= 5 && maxX <= 20);
             assertTrue(maxY >= 5 && maxY <= 20);
             
@@ -113,27 +137,10 @@ class StrategyPlannedTourCoreTest{
 
             assertTrue(grassNeighbours == 8);
             
-            GameHelper helper = new GameHelper(new UniquePlayerIdentifier("player1"));
-
-            GameState gameState = new GameState(
-                map,
-                Set.of(
-                    new PlayerState(
-                        "Test",
-                        "Player",
-                        "u123456",
-                        EPlayerGameState.MustWait,
-                        new UniquePlayerIdentifier("player1"),
-                        false
-                    )
-                ),
-                "ABC"
-            );
-
-            helper.update(gameState);
+            GameHelper helper = generateGameHelper(map);
 
 
-            StrategyNearestNeighbour strategy = new StrategyNearestNeighbour();
+            IStrategy strategy = new StrategyPlannedTour();
             PlayerMove move = strategy.calculateNextMove(helper);
 
 
@@ -161,15 +168,17 @@ class StrategyPlannedTourCoreTest{
     }
 
 
-
+    
     @Test
     void BestTourReachesMountainAtOptimalStep() {
 
         for (int i = 0; i < NUM_TEST_REPEATS; i++) {
 
             Random r = new Random();
-            int maxX = 5 + r.nextInt(16);
-            int maxY = 5 + r.nextInt(16);
+            // int maxX = 5 + r.nextInt(16);
+            // int maxY = 5 + r.nextInt(16);
+            int maxX = r.nextBoolean() ? 10 : 20;
+            int maxY = 100 / maxX;
 
             int mountainX = r.nextInt(maxX);
             int mountainY = r.nextInt(maxY);
@@ -217,21 +226,9 @@ class StrategyPlannedTourCoreTest{
             assertTrue(playerNode != null);
 
             FullMap map = new FullMap(nodes);
-            GameHelper helper = new GameHelper(new UniquePlayerIdentifier("player1"));
+            GameHelper helper = generateGameHelper(map);
 
-            GameState gameState = new GameState(
-                map,
-                Set.of(new PlayerState(
-                    "Test","Player","u123456",
-                    EPlayerGameState.MustWait,
-                    new UniquePlayerIdentifier("player1"),
-                    false
-                )),
-                "ABC"
-            );
-            helper.update(gameState);
-
-            StrategyNearestNeighbour strategy = new StrategyNearestNeighbour();
+            StrategyPlannedTour strategy = new StrategyPlannedTour();
 
             strategy.calculateNextMove(helper);
             // === получаем тур целей ===
@@ -247,6 +244,150 @@ class StrategyPlannedTourCoreTest{
         }
     }
 
-
     
+
+    @Test
+    public void TestComputeTourCost_v1()
+    {
+        FullMapNode A = new FullMapNode(ETerrain.Water,EPlayerPositionState.NoPlayerPresent,ETreasureState.NoOrUnknownTreasureState,EFortState.NoOrUnknownFortState,0,0);
+        FullMapNode B = new FullMapNode(ETerrain.Grass,EPlayerPositionState.NoPlayerPresent,ETreasureState.NoOrUnknownTreasureState,EFortState.NoOrUnknownFortState,1,0);
+        FullMapNode C = new FullMapNode(ETerrain.Grass,EPlayerPositionState.NoPlayerPresent,ETreasureState.NoOrUnknownTreasureState,EFortState.NoOrUnknownFortState,2,0);
+        FullMapNode D = new FullMapNode(ETerrain.Grass,EPlayerPositionState.NoPlayerPresent,ETreasureState.NoOrUnknownTreasureState,EFortState.NoOrUnknownFortState,3,0);
+        FullMapNode E = new FullMapNode(ETerrain.Grass,EPlayerPositionState.NoPlayerPresent,ETreasureState.NoOrUnknownTreasureState,EFortState.NoOrUnknownFortState,0,1);
+        FullMapNode F = new FullMapNode(ETerrain.Grass,EPlayerPositionState.NoPlayerPresent,ETreasureState.NoOrUnknownTreasureState,EFortState.NoOrUnknownFortState,1,1);
+        FullMapNode G = new FullMapNode(ETerrain.Grass,EPlayerPositionState.NoPlayerPresent,ETreasureState.NoOrUnknownTreasureState,EFortState.NoOrUnknownFortState,2,1);
+        FullMapNode H = new FullMapNode(ETerrain.Grass,EPlayerPositionState.MyPlayerPosition,ETreasureState.NoOrUnknownTreasureState,EFortState.NoOrUnknownFortState,3,1);
+        StrategyPlannedTour strategy = new StrategyPlannedTour();
+        Set<FullMapNode> goals = Set.of(D,E,F,G,B,C);
+        List<FullMapNode> tour = List.of(H,G,F,E,F,B,C,D);
+        double score = strategy.computeTourScore_v1(tour,goals,0.99);
+        double expected = 5.54168;
+        assertEquals(score,expected,1e-5);
+    }
+    @Test
+    public void TestComputeTourCost_v2()
+    {
+        FullMapNode A = new FullMapNode(ETerrain.Water,EPlayerPositionState.NoPlayerPresent,ETreasureState.NoOrUnknownTreasureState,EFortState.NoOrUnknownFortState,0,0);
+        FullMapNode B = new FullMapNode(ETerrain.Grass,EPlayerPositionState.NoPlayerPresent,ETreasureState.NoOrUnknownTreasureState,EFortState.NoOrUnknownFortState,1,0);
+        FullMapNode C = new FullMapNode(ETerrain.Grass,EPlayerPositionState.NoPlayerPresent,ETreasureState.NoOrUnknownTreasureState,EFortState.NoOrUnknownFortState,2,0);
+        FullMapNode D = new FullMapNode(ETerrain.Grass,EPlayerPositionState.NoPlayerPresent,ETreasureState.NoOrUnknownTreasureState,EFortState.NoOrUnknownFortState,3,0);
+        FullMapNode E = new FullMapNode(ETerrain.Grass,EPlayerPositionState.NoPlayerPresent,ETreasureState.NoOrUnknownTreasureState,EFortState.NoOrUnknownFortState,0,1);
+        FullMapNode F = new FullMapNode(ETerrain.Grass,EPlayerPositionState.NoPlayerPresent,ETreasureState.NoOrUnknownTreasureState,EFortState.NoOrUnknownFortState,1,1);
+        FullMapNode G = new FullMapNode(ETerrain.Grass,EPlayerPositionState.NoPlayerPresent,ETreasureState.NoOrUnknownTreasureState,EFortState.NoOrUnknownFortState,2,1);
+        FullMapNode H = new FullMapNode(ETerrain.Grass,EPlayerPositionState.MyPlayerPosition,ETreasureState.NoOrUnknownTreasureState,EFortState.NoOrUnknownFortState,3,1);
+        StrategyPlannedTour strategy = new StrategyPlannedTour();
+        Set<FullMapNode> goals = Set.of(D,E,F,G,B,C);
+        List<FullMapNode> tour = List.of(H,G,F,E,F,B,C,D);
+        FullMap map = new FullMap(List.of(A,B,C,D,E,F,G,H));
+        GameHelper helper = generateGameHelper(map);
+        double score = strategy.computeTourScore_v2(tour,goals,helper,0.99);
+        double expected = 5.54168;
+        assertEquals(score,expected,1e-5);
+    }
+    
+    @Test
+    public void TestComputeTourCostOnlyGoals_v1()
+    {
+        FullMapNode A = new FullMapNode(ETerrain.Water,EPlayerPositionState.NoPlayerPresent,ETreasureState.NoOrUnknownTreasureState,EFortState.NoOrUnknownFortState,0,0);
+        FullMapNode B = new FullMapNode(ETerrain.Grass,EPlayerPositionState.NoPlayerPresent,ETreasureState.NoOrUnknownTreasureState,EFortState.NoOrUnknownFortState,1,0);
+        FullMapNode C = new FullMapNode(ETerrain.Grass,EPlayerPositionState.NoPlayerPresent,ETreasureState.NoOrUnknownTreasureState,EFortState.NoOrUnknownFortState,2,0);
+        FullMapNode D = new FullMapNode(ETerrain.Grass,EPlayerPositionState.NoPlayerPresent,ETreasureState.NoOrUnknownTreasureState,EFortState.NoOrUnknownFortState,3,0);
+        FullMapNode E = new FullMapNode(ETerrain.Grass,EPlayerPositionState.NoPlayerPresent,ETreasureState.NoOrUnknownTreasureState,EFortState.NoOrUnknownFortState,0,1);
+        FullMapNode F = new FullMapNode(ETerrain.Grass,EPlayerPositionState.NoPlayerPresent,ETreasureState.NoOrUnknownTreasureState,EFortState.NoOrUnknownFortState,1,1);
+        FullMapNode G = new FullMapNode(ETerrain.Grass,EPlayerPositionState.NoPlayerPresent,ETreasureState.NoOrUnknownTreasureState,EFortState.NoOrUnknownFortState,2,1);
+        FullMapNode H = new FullMapNode(ETerrain.Grass,EPlayerPositionState.MyPlayerPosition,ETreasureState.NoOrUnknownTreasureState,EFortState.NoOrUnknownFortState,3,1);
+        StrategyPlannedTour strategy = new StrategyPlannedTour();
+        Set<FullMapNode> goals = Set.of(D,E,F,G);
+        List<FullMapNode> tour = List.of(H,G,F,E,F,B,C,D);
+        double score = strategy.computeTourScore_v1(tour,goals,0.99);
+        double expected = 3.75092;
+        assertEquals(score,expected,1e-5);
+    }
+    @Test
+    public void TestComputeTourCostOnlyGoals_v2()
+    {
+        FullMapNode A = new FullMapNode(ETerrain.Water,EPlayerPositionState.NoPlayerPresent,ETreasureState.NoOrUnknownTreasureState,EFortState.NoOrUnknownFortState,0,0);
+        FullMapNode B = new FullMapNode(ETerrain.Grass,EPlayerPositionState.NoPlayerPresent,ETreasureState.NoOrUnknownTreasureState,EFortState.NoOrUnknownFortState,1,0);
+        FullMapNode C = new FullMapNode(ETerrain.Grass,EPlayerPositionState.NoPlayerPresent,ETreasureState.NoOrUnknownTreasureState,EFortState.NoOrUnknownFortState,2,0);
+        FullMapNode D = new FullMapNode(ETerrain.Grass,EPlayerPositionState.NoPlayerPresent,ETreasureState.NoOrUnknownTreasureState,EFortState.NoOrUnknownFortState,3,0);
+        FullMapNode E = new FullMapNode(ETerrain.Grass,EPlayerPositionState.NoPlayerPresent,ETreasureState.NoOrUnknownTreasureState,EFortState.NoOrUnknownFortState,0,1);
+        FullMapNode F = new FullMapNode(ETerrain.Grass,EPlayerPositionState.NoPlayerPresent,ETreasureState.NoOrUnknownTreasureState,EFortState.NoOrUnknownFortState,1,1);
+        FullMapNode G = new FullMapNode(ETerrain.Grass,EPlayerPositionState.NoPlayerPresent,ETreasureState.NoOrUnknownTreasureState,EFortState.NoOrUnknownFortState,2,1);
+        FullMapNode H = new FullMapNode(ETerrain.Grass,EPlayerPositionState.MyPlayerPosition,ETreasureState.NoOrUnknownTreasureState,EFortState.NoOrUnknownFortState,3,1);
+        StrategyPlannedTour strategy = new StrategyPlannedTour();
+        Set<FullMapNode> goals = Set.of(D,E,F,G);
+        List<FullMapNode> tour = List.of(H,G,F,E,F,B,C,D);
+        FullMap map = new FullMap(List.of(A,B,C,D,E,F,G,H));
+        GameHelper helper = generateGameHelper(map);
+        double score = strategy.computeTourScore_v2(tour,goals,helper,0.99);
+        double expected = 3.75092;
+        assertEquals(score,expected,1e-5);
+    }
+
+    @Test
+    public void TestComputeTourCostMountains_v1()
+    {
+        FullMapNode A = new FullMapNode(ETerrain.Water,EPlayerPositionState.NoPlayerPresent,ETreasureState.NoOrUnknownTreasureState,EFortState.NoOrUnknownFortState,0,0);
+        FullMapNode B = new FullMapNode(ETerrain.Grass,EPlayerPositionState.NoPlayerPresent,ETreasureState.NoOrUnknownTreasureState,EFortState.NoOrUnknownFortState,1,0);
+        FullMapNode C = new FullMapNode(ETerrain.Grass,EPlayerPositionState.NoPlayerPresent,ETreasureState.NoOrUnknownTreasureState,EFortState.NoOrUnknownFortState,2,0);
+        FullMapNode D = new FullMapNode(ETerrain.Grass,EPlayerPositionState.NoPlayerPresent,ETreasureState.NoOrUnknownTreasureState,EFortState.NoOrUnknownFortState,3,0);
+        FullMapNode E = new FullMapNode(ETerrain.Grass,EPlayerPositionState.NoPlayerPresent,ETreasureState.NoOrUnknownTreasureState,EFortState.NoOrUnknownFortState,0,1);
+        FullMapNode F = new FullMapNode(ETerrain.Grass,EPlayerPositionState.NoPlayerPresent,ETreasureState.NoOrUnknownTreasureState,EFortState.NoOrUnknownFortState,1,1);
+        FullMapNode G = new FullMapNode(ETerrain.Mountain,EPlayerPositionState.NoPlayerPresent,ETreasureState.NoOrUnknownTreasureState,EFortState.NoOrUnknownFortState,2,1);
+        FullMapNode H = new FullMapNode(ETerrain.Grass,EPlayerPositionState.MyPlayerPosition,ETreasureState.NoOrUnknownTreasureState,EFortState.NoOrUnknownFortState,3,1);
+        StrategyPlannedTour strategy = new StrategyPlannedTour();
+        Set<FullMapNode> goals = Set.of(D,E,F,G);
+        List<FullMapNode> tour = List.of(H,G,F,E,F,B,C,D);
+        double score = strategy.computeTourScore_v1(tour,goals,0.99);
+        double expected = 2.78696;
+        assertEquals(expected,score,1e-5);
+    }
+    @Test
+    public void TestComputeTourCostMountains_v2()
+    {
+        FullMapNode A = new FullMapNode(ETerrain.Water,EPlayerPositionState.NoPlayerPresent,ETreasureState.NoOrUnknownTreasureState,EFortState.NoOrUnknownFortState,0,0);
+        FullMapNode B = new FullMapNode(ETerrain.Grass,EPlayerPositionState.NoPlayerPresent,ETreasureState.NoOrUnknownTreasureState,EFortState.NoOrUnknownFortState,1,0);
+        FullMapNode C = new FullMapNode(ETerrain.Grass,EPlayerPositionState.NoPlayerPresent,ETreasureState.NoOrUnknownTreasureState,EFortState.NoOrUnknownFortState,2,0);
+        FullMapNode D = new FullMapNode(ETerrain.Grass,EPlayerPositionState.NoPlayerPresent,ETreasureState.NoOrUnknownTreasureState,EFortState.NoOrUnknownFortState,3,0);
+        FullMapNode E = new FullMapNode(ETerrain.Grass,EPlayerPositionState.NoPlayerPresent,ETreasureState.NoOrUnknownTreasureState,EFortState.NoOrUnknownFortState,0,1);
+        FullMapNode F = new FullMapNode(ETerrain.Grass,EPlayerPositionState.NoPlayerPresent,ETreasureState.NoOrUnknownTreasureState,EFortState.NoOrUnknownFortState,1,1);
+        FullMapNode G = new FullMapNode(ETerrain.Mountain,EPlayerPositionState.NoPlayerPresent,ETreasureState.NoOrUnknownTreasureState,EFortState.NoOrUnknownFortState,2,1);
+        FullMapNode H = new FullMapNode(ETerrain.Grass,EPlayerPositionState.MyPlayerPosition,ETreasureState.NoOrUnknownTreasureState,EFortState.NoOrUnknownFortState,3,1);
+        StrategyPlannedTour strategy = new StrategyPlannedTour();
+        Set<FullMapNode> goals = Set.of(D,E,F,G);
+        List<FullMapNode> tour = List.of(H,G,F,E,F,B,C,D);
+        FullMap map = new FullMap(List.of(A,B,C,D,E,F,G,H));
+        GameHelper helper = generateGameHelper(map);
+        double score = strategy.computeTourScore_v2(tour,goals,helper,0.99);
+        double expected = 2.78696;
+        assertEquals(expected,score,1e-5);
+    }
+
+    @Test
+    public void TestComputeTourScoreHard()
+    {
+        FullMapNode A = new FullMapNode(ETerrain.Grass,EPlayerPositionState.NoPlayerPresent,ETreasureState.NoOrUnknownTreasureState,EFortState.NoOrUnknownFortState,0,0);
+        FullMapNode B = new FullMapNode(ETerrain.Grass,EPlayerPositionState.NoPlayerPresent,ETreasureState.NoOrUnknownTreasureState,EFortState.NoOrUnknownFortState,1,0);
+        FullMapNode C = new FullMapNode(ETerrain.Water,EPlayerPositionState.NoPlayerPresent,ETreasureState.NoOrUnknownTreasureState,EFortState.NoOrUnknownFortState,2,0);
+        FullMapNode D = new FullMapNode(ETerrain.Grass,EPlayerPositionState.NoPlayerPresent,ETreasureState.NoOrUnknownTreasureState,EFortState.NoOrUnknownFortState,3,0);
+        FullMapNode E = new FullMapNode(ETerrain.Grass,EPlayerPositionState.NoPlayerPresent,ETreasureState.NoOrUnknownTreasureState,EFortState.NoOrUnknownFortState,0,1);
+        FullMapNode F = new FullMapNode(ETerrain.Water,EPlayerPositionState.NoPlayerPresent,ETreasureState.NoOrUnknownTreasureState,EFortState.NoOrUnknownFortState,1,1);
+        FullMapNode G = new FullMapNode(ETerrain.Mountain,EPlayerPositionState.NoPlayerPresent,ETreasureState.NoOrUnknownTreasureState,EFortState.NoOrUnknownFortState,2,1);
+        FullMapNode H = new FullMapNode(ETerrain.Grass,EPlayerPositionState.NoPlayerPresent,ETreasureState.NoOrUnknownTreasureState,EFortState.NoOrUnknownFortState,3,1);
+        FullMapNode I = new FullMapNode(ETerrain.Grass,EPlayerPositionState.NoPlayerPresent,ETreasureState.NoOrUnknownTreasureState,EFortState.NoOrUnknownFortState,0,2);
+        FullMapNode J = new FullMapNode(ETerrain.Grass,EPlayerPositionState.NoPlayerPresent,ETreasureState.NoOrUnknownTreasureState,EFortState.NoOrUnknownFortState,1,2);
+        FullMapNode K = new FullMapNode(ETerrain.Grass,EPlayerPositionState.NoPlayerPresent,ETreasureState.NoOrUnknownTreasureState,EFortState.NoOrUnknownFortState,2,2);
+        FullMapNode L = new FullMapNode(ETerrain.Grass,EPlayerPositionState.MyPlayerPosition,ETreasureState.NoOrUnknownTreasureState,EFortState.NoOrUnknownFortState,3,2);
+        StrategyPlannedTour strategy = new StrategyPlannedTour();
+        Set<FullMapNode> goals = Set.of(A,B,D,E,G,H,I,J,K);
+        List<FullMapNode> tour = List.of(L,H,G,K,J,I);
+        FullMap map = new FullMap(List.of(A,B,C,D,E,F,G,H,I,J,K,L));
+        GameHelper helper = generateGameHelper(map);
+        double score_099 = strategy.computeTourScore_v2(tour,goals,helper,0.99);
+        double score_097 = strategy.computeTourScore_v2(tour,goals,helper,0.97);
+        double expected_099 = 5.43250;
+        double expected_097 = 4.47128;
+        assertEquals(expected_099,score_099,1e-5);
+        assertEquals(expected_097,score_097,1e-5);
+    }
 }

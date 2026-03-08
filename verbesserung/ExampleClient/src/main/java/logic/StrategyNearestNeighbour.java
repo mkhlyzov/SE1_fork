@@ -374,8 +374,5 @@ public class StrategyNearestNeighbour implements IStrategy {
         return EMove.Right;
     }
 
-    public Queue<FullMapNode> get_plannedTour()
-    {
-        return plannedTour;
-    }
+   
 }   
