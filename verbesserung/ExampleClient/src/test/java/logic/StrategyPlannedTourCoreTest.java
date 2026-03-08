@@ -3,7 +3,6 @@ package logic;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Queue;
 import java.util.Random;
 import java.util.Set;
 
@@ -232,15 +231,15 @@ class StrategyPlannedTourCoreTest{
 
             strategy.calculateNextMove(helper);
             // === получаем тур целей ===
-            Queue<FullMapNode> tour = strategy.get_plannedTour();
+            List<FullMapNode> tour = strategy.get_plannedTour();
             // тур должен содержать гору как цель
             assertTrue(tour.contains(mountainNode));
 
             int distance = Math.abs(playerX - mountainX) + Math.abs(playerY - mountainY);
 
-            assertTrue(tour.peek() == playerNode);
-            List l = new ArrayList<>(tour);
-            assertTrue(l.get(distance) == mountainNode);
+            assertTrue(tour.get(0) == playerNode);
+            
+            assertTrue(tour.get(distance) == mountainNode);
         }
     }
 

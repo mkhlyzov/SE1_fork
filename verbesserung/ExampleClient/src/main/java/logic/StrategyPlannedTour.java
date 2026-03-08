@@ -9,7 +9,6 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.PriorityQueue;
-import java.util.Queue;
 import java.util.Set;
 
 import messagesbase.messagesfromclient.EMove;
@@ -23,21 +22,25 @@ import messagesbase.messagesfromserver.FullMapNode;
 public class StrategyPlannedTour implements IStrategy {
 
 
-   private Queue<FullMapNode> plannedTour = new LinkedList<>();
+    private List<FullMapNode> plannedTour = new LinkedList<>();
    
+
     @Override
     public PlayerMove calculateNextMove(GameHelper gameHelper) {
+        
+
         Set<FullMapNode> goals = collectGoals(gameHelper);
-        FullMap map = gameHelper.getMap();
-        FullMapNode pPos = gameHelper.getMyPosition();
-        List<FullMapNode> tour = findBestTour(map,pPos,goals,25);
-        return null;
+        updateBestTour(gameHelper,goals,25);
+        return PlayerMove.of(
+            gameHelper.getPlayerId(), 
+            calculateMove(plannedTour.get(0), plannedTour.get(1))
+        );
     }
 
 
     
 
-    public List<FullMapNode> findBestTour(FullMap map,FullMapNode pPos, Set<FullMapNode> goals, int noiseRepeats)
+    public void updateBestTour(GameHelper gameHelper,Set<FullMapNode> goals, int noiseRepeats)
     {
         assert !goals.isEmpty();
         List <FullMapNode> bestTour = null; 
@@ -47,10 +50,8 @@ public class StrategyPlannedTour implements IStrategy {
         {
             List<FullMapNode> remaining = new ArrayList<>(goals);
             List<FullMapNode> tour = new ArrayList<>();
-            FullMapNode currentPos = pPos;
-
+            FullMapNode currentPos = gameHelper.getMyPosition();
         }    
-        return  bestTour;
     }
 
     // private double computeTourScore(List<FullMapNode> tour)
@@ -76,7 +77,7 @@ public class StrategyPlannedTour implements IStrategy {
     //     return 5.54168;   
     // }
 
-    public Queue<FullMapNode> get_plannedTour(){
+    public List<FullMapNode> get_plannedTour(){
         return plannedTour;
     }
 
