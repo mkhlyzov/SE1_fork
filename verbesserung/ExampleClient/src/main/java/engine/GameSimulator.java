@@ -107,12 +107,21 @@ public class GameSimulator {
             
             helper_2.update(state_2);
             
-            if (engine.isFinished()) {
-                break;
-            }
-
             PlayerMove move_2 = strategy_2.calculateNextMove(helper_2);
             engine.applyMove(move_2);
+            
+            // if (engine.isFinished()) {
+            //     break;
+            // }
         }
+
+        if (engine.playerHasWon(playerId_1)) {
+            System.out.println("Player 1 WON!");
+        } else if (engine.playerHasWon(playerId_2)) {
+            System.out.println("Player 2 WON!");
+        } else {
+            System.out.println("NULL");
+        }
+
     }
 }

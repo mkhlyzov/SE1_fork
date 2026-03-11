@@ -57,6 +57,25 @@ public class FakeEngine {
         return false;
     }
 
+    public Boolean playerHasWon(String playerId) {
+        PlayerData pd = players.get(playerId);
+        PlayerData pd_enemy = players.values().stream().filter(p -> !p.playerId.getUniquePlayerID().equals(playerId)).findFirst().orElse(null);
+
+        if (
+            pd.state == EPlayerGameState.Won
+            || pd_enemy.state == EPlayerGameState.Lost
+        ) {
+            return true;
+        } else if (
+            pd_enemy.state == EPlayerGameState.Won
+            || pd.state == EPlayerGameState.Lost
+        ) {
+            return false;
+        } else {
+            return null;
+        }
+    }
+
     public void registerPlayer(
         String playerId,
         PlayerHalfMap halfMapData
@@ -177,7 +196,22 @@ public class FakeEngine {
         return new Point(gold.getX(), gold.getY());
     }
 
+
     private FullMap combineHalfMaps(PlayerHalfMap half1, PlayerHalfMap half2) {
+        for (int i = 0; i < 20; i++) {
+            FullMap fullMap = combineHalfMaps_helper(half1, half2);
+            if (mapIsConnected(fullMap)) {
+                return fullMap;
+            }
+        }
+        return null;
+    }
+
+    private Boolean mapIsConnected(FullMap fullMap) {
+        return true;
+    }
+    
+    private FullMap combineHalfMaps_helper(PlayerHalfMap half1, PlayerHalfMap half2) {
         List<PlayerHalfMapNode> combinedNodes = new ArrayList<>();
         combinedNodes.addAll(half1.getMapNodes());
         combinedNodes.addAll(half2.getMapNodes());
@@ -253,12 +287,14 @@ public class FakeEngine {
 
         if (!inBounds(pd.position) || isWater(pd.position)) { 
             pd.state = EPlayerGameState.Lost;
+            // pd_enemy.state = EPlayerGameState.Won;
         }
         if(pd.position.equals(pd.treasurePosition)) {
             pd.treasureCollected = true;
         }
         if(pd.treasureCollected && pd.position.equals(pd_enemy.fortPosition)) {
             pd.state = EPlayerGameState.Won;
+            // pd_enemy.state = EPlayerGameState.Lost;
         }
 
         // try {

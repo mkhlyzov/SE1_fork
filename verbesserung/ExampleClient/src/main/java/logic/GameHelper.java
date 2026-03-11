@@ -3,8 +3,11 @@ package logic;
 import java.awt.Point;
 import java.util.ArrayList;
 import java.util.HashSet;
+import java.util.LinkedList;
 import java.util.List;
+import java.util.Queue;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 import messagesbase.UniquePlayerIdentifier;
 import messagesbase.messagesfromclient.ETerrain;
@@ -102,7 +105,7 @@ public class GameHelper {
 
     public void update(GameState gameState) {
         currentGameState = gameState;
-        initializeMapCoordinates();
+        initialize();
         Point currentPlayerPos = new Point(getMyPosition().getX(),getMyPosition().getY());
         playerPosHistory.add(currentPlayerPos);
         FullMap map = gameState.getMap();
@@ -139,12 +142,47 @@ public class GameHelper {
         lastHadTreasure = hasTreasureNow;
     }
 
-
-
-    private void initializeMapCoordinates() {
+    private void initialize() {
         if(isInitialized)
             return;
-        
+
+        checkAllNodesAreReachable();
+        initializeMapCoordinates();
+
+        isInitialized = true;
+    }
+
+    private void checkAllNodesAreReachable() {
+        /* checkAllGoalsAreReachable
+        Returns True if all Goals are reachable, returns False otherwise
+        */
+
+        Set<FullMapNode> nodesLeft = getMap().getMapNodes().stream()
+            .filter(n -> n.getTerrain() != ETerrain.Water)
+            .collect(Collectors.toSet());
+        Set<FullMapNode> visited = new HashSet<>();
+        Queue<FullMapNode> queue = new LinkedList<>();
+
+        FullMapNode start = getMyPosition();
+        queue.add(start);
+        visited.add(start);
+
+        while (!queue.isEmpty() && !nodesLeft.isEmpty()) {
+            FullMapNode current = queue.poll();
+            visited.add(current);
+            nodesLeft.remove(current);
+
+            for (FullMapNode nb: this.getNeighbours4(current)) {
+                if (!visited.contains(nb)) {
+                    queue.add(nb);
+                }
+            }
+        }
+
+        assert !nodesLeft.isEmpty();
+    }
+
+    private void initializeMapCoordinates() {
         FullMap map = this.getMap();
         FullMapNode myPosition = this.getMyPosition();
         int maxX = this.getMaxX();  // 9 or 19
@@ -184,9 +222,7 @@ public class GameHelper {
             }
         } else {
             System.err.println("Unknown map format (" + (maxX + 1) + " x " + (maxY + 1) + ")");
-        }
-        isInitialized = true;
-        
+        }        
     }
 
     public boolean insideMine(FullMapNode n) {
