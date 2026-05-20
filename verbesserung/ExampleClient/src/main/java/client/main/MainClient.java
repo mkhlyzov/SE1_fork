@@ -1,6 +1,8 @@
 package client.main;
 
+import java.util.logging.Formatter;
 import java.util.logging.Level;
+import java.util.logging.LogRecord;
 import java.util.logging.Logger;
 
 import clientcore.ClientMain;
@@ -33,16 +35,21 @@ public class MainClient {
 		for (var h : root.getHandlers()) {
 			h.setLevel(Level.FINE);
 
-			// h.setFormatter(new Formatter() {
-			// @Override
-			// public String format(LogRecord record) {
-			// return String.format(
-			// "%1$tH:%1$tM:%1$tS.%1$tL %2$s: %3$s%n",
-			// record.getMillis(),
-			// record.getLevel().getName(),
-			// formatMessage(record));
-			// }
-			// });
+			h.setFormatter(new Formatter() {
+				@Override
+				public String format(LogRecord record) {
+					String className = record.getSourceClassName();
+					String methodName = record.getSourceMethodName();
+
+					return String.format(
+							"%1$tH:%1$tM:%1$tS.%1$tL %2$s [%3$s.%4$s] %5$s%n",
+							record.getMillis(),
+							record.getLevel().getName(),
+							className,
+							methodName,
+							formatMessage(record));
+				}
+			});
 		}
 		if (args.length < 3) {
 			GameSimulator.main(args);
