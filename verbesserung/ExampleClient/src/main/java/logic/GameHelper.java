@@ -7,6 +7,7 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Queue;
 import java.util.Set;
+import java.util.logging.Logger;
 import java.util.stream.Collectors;
 
 import messagesbase.UniquePlayerIdentifier;
@@ -20,7 +21,7 @@ import messagesbase.messagesfromserver.PlayerState;
 
 public class GameHelper {
     private Boolean DEBUG = false;
-
+    private static final Logger LOGGER = Logger.getLogger(GameHelper.class.getName());
     private GameState currentGameState;
     private final Set<String> visitedFields = new HashSet<>();
     private final Set<String> observedFields = new HashSet<>();
@@ -291,7 +292,7 @@ public class GameHelper {
                 enemyYmax = 5;
             }
         } else {
-            System.err.println("Unknown map format (" + (maxX + 1) + " x " + (maxY + 1) + ")");
+            LOGGER.severe("Unknown map format (" + (maxX + 1) + " x " + (maxY + 1) + ")");
         }
     }
 

@@ -5,6 +5,7 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Queue;
 import java.util.Random;
+import java.util.logging.Logger;
 
 import messagesbase.messagesfromclient.ETerrain;
 import messagesbase.messagesfromclient.PlayerHalfMap;
@@ -12,6 +13,7 @@ import messagesbase.messagesfromclient.PlayerHalfMapNode;
 import util.RandomManager;
 
 public class ClientMap {
+    private static final Logger LOGGER = Logger.getLogger(ClientMap.class.getName());
     private final int FORTCOUNT = 1;
     private final String playerId;
     private final int height;
@@ -105,7 +107,7 @@ public class ClientMap {
                 PlayerHalfMapNode fortNode = new PlayerHalfMapNode(node.getX(), node.getY(), true, ETerrain.Grass);
                 nodes.set(idx, fortNode);
                 countfort++;
-                System.out.println("Coordinates of Fort " + node.getX() + node.getY());
+                LOGGER.fine("Coordinates of Fort " + node.getX() + ", " + node.getY());
             }
             if (countfort < FORTCOUNT)
                 continue;
@@ -177,7 +179,7 @@ public class ClientMap {
                 PlayerHalfMapNode fortNode = new PlayerHalfMapNode(node.getX(), node.getY(), true, ETerrain.Grass);
                 nodes.set(idx, fortNode);
                 countfort++;
-                System.out.println("Coordinates of Fort " + node.getX() + node.getY());
+                LOGGER.fine("Coordinates of Fort " + node.getX() + ", " + node.getY());
             }
             if (countfort < FORTCOUNT)
                 continue;

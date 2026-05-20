@@ -11,6 +11,8 @@ import java.util.Map;
 import java.util.PriorityQueue;
 import java.util.Queue;
 import java.util.Set;
+import java.util.logging.Logger;
+import java.util.stream.Collectors;
 
 import messagesbase.UniquePlayerIdentifier;
 import messagesbase.messagesfromclient.EMove;
@@ -23,6 +25,7 @@ import messagesbase.messagesfromserver.FullMapNode;
 
 public class StrategyNearestNeighbour implements IStrategy {
 
+    private static final Logger LOGGER = Logger.getLogger(StrategyNearestNeighbour.class.getName());
     private Queue<FullMapNode> plannedTour = new LinkedList<>();
     private int myXmin, myXmax, myYmin, myYmax;
     private int enemyXmin, enemyXmax, enemyYmin, enemyYmax;
@@ -43,12 +46,12 @@ public class StrategyNearestNeighbour implements IStrategy {
         FullMapNode peek = plannedTour.peek();
 
         if (myPosition == null) {
-            System.out.println("myPosition is null. sending EMove.Right");
+            LOGGER.warning("myPosition is null. sending EMove.Right");
             return PlayerMove.of(playerId, EMove.Right);
         }
 
-        System.out.println(myPosition);
-        System.out.println(myXmin + " " + myXmax + " " + myYmin + " " + myYmax);
+        LOGGER.fine("myPosition = " + myPosition);
+        LOGGER.fine("my bounds = " + myXmin + " " + myXmax + " " + myYmin + " " + myYmax);
 
         // check for certain EVENTS and reconstruct route if needed
         if (hasTreasure && peek != null && insideMine(peek)
@@ -59,39 +62,23 @@ public class StrategyNearestNeighbour implements IStrategy {
         gameHelper.playerRecentlyMoved();
         gameHelper.playerRecentlyMoved();
         if (gameHelper.playerRecentlyMoved()) {
-            System.out.println("playerRecentlyMoved event triggered");
+            LOGGER.fine("playerRecentlyMoved event triggered");
             plannedTour.clear();
         } else {
-            System.out.println("playerRecentlyMoved event NOT triggered");
+            LOGGER.fine("playerRecentlyMoved event NOT triggered");
         }
         if (plannedTour.isEmpty()) {
             List<FullMapNode> goals = collectGoals(map, gameHelper, hasTreasure);
             plannedTour = new LinkedList<>(bestNearestNeighbourTour(map, myPosition, goals, 25));
         }
 
-        // if (plannedTour.isEmpty()) {
-        // List<FullMapNode> goals = collectGoals(map, gameHelper, hasTreasure);
-        // FullMapNode nearestNow = bfsNearest(myPosition, new HashSet<>(goals), map);
-        // if (nearestNow != null) {
-        // plannedTour.add(nearestNow);
-        // }
-        // }
-
         if (plannedTour.isEmpty()) {
             return PlayerMove.of(playerId, EMove.Right); // fallback
         }
 
-        // if (lastMove != null && myPosition.getX() == lastX && myPosition.getY() ==
-        // lastY) {
-        // return PlayerMove.of(playerId, lastMove);
-        // }
-
-        System.out.print("planned tour: ");
-        for (FullMapNode t : plannedTour) {
-            System.out.print("(" + t.getX() + ", " + t.getY() + ") ");
-        }
-        System.out.println();
-
+        LOGGER.fine("planned tour: " + plannedTour.stream()
+                .map(t -> "(" + t.getX() + ", " + t.getY() + ")")
+                .collect(Collectors.joining(" ")));
         // Двигаемся к следующей цели
         FullMapNode goal = plannedTour.peek(); // goal = (19, 0)
         Pathfinder pathfinder = new Pathfinder(map);
@@ -120,7 +107,7 @@ public class StrategyNearestNeighbour implements IStrategy {
         // lastY = myPosition.getY();
         // return PlayerMove.of(playerId, move);
 
-        System.out.println("Selected move: " + calculateMove(myPosition, next));
+        LOGGER.fine("Selected move: " + calculateMove(myPosition, next));
 
         return PlayerMove.of(playerId, calculateMove(myPosition, next));
     }
@@ -206,11 +193,10 @@ public class StrategyNearestNeighbour implements IStrategy {
             }
 
         }
-        System.out.print("Goals collected: ");
-        for (FullMapNode g : goals) {
-            System.out.print("(" + g.getX() + ", " + g.getY() + ") ");
-        }
-        System.out.println();
+        LOGGER.fine("Goals collected: " + goals.stream()
+                .map(g -> "(" + g.getX() + ", " + g.getY() + ")")
+                .collect(Collectors.joining(" ")));
+
         return goals;
     }
 
@@ -241,11 +227,10 @@ public class StrategyNearestNeighbour implements IStrategy {
             // if((System.nanoTime() - t0) / 1000000 >= timeBudget)
             // break;
         }
-        System.out.print("Best Tour: ");
-        for (FullMapNode t : bestTour) {
-            System.out.print("(" + t.getX() + ", " + t.getY() + ") ");
-        }
-        System.out.println();
+        LOGGER.fine("Best Tour: " + bestTour.stream()
+                .map(t -> "(" + t.getX() + ", " + t.getY() + ")")
+                .collect(Collectors.joining(" ")));
+
         return bestTour;
     }
 

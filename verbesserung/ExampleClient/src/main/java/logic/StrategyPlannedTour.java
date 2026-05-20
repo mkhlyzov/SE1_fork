@@ -12,6 +12,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.PriorityQueue;
 import java.util.Set;
+import java.util.logging.Logger;
 import java.util.stream.Collectors;
 
 import messagesbase.messagesfromclient.EMove;
@@ -25,7 +26,11 @@ import util.RandomManager;
 
 public class StrategyPlannedTour implements IStrategy {
 
+    private static final Logger LOGGER = Logger.getLogger(StrategyPlannedTour.class.getName());
     private List<FullMapNode> plannedTour = new LinkedList<>();
+
+    public StrategyPlannedTour() {
+    }
 
     public List<FullMapNode> get_plannedTour() {
         return plannedTour;
@@ -39,9 +44,13 @@ public class StrategyPlannedTour implements IStrategy {
             updateBestTour(gameHelper, goals, 25);
         }
 
+        EMove move = calculateMove(plannedTour.get(0), plannedTour.get(1));
+
+        LOGGER.fine("Selected move: " + move);
+
         return PlayerMove.of(
                 gameHelper.getPlayerId(),
-                calculateMove(plannedTour.get(0), plannedTour.get(1)));
+                move);
     }
 
     public void updateBestTour(GameHelper gameHelper, Set<FullMapNode> goals, int noiseRepeats) {
@@ -61,6 +70,12 @@ public class StrategyPlannedTour implements IStrategy {
         }
 
         plannedTour = bestTour;
+
+        LOGGER.fine("Best tour: " + plannedTour.stream()
+                .map(n -> "(" + n.getX() + "," + n.getY() + "," + n.getTerrain() + ")")
+                .collect(Collectors.joining(" ")));
+
+        LOGGER.fine("Best tour score: " + bestScore);
     }
 
     /**
@@ -389,11 +404,9 @@ public class StrategyPlannedTour implements IStrategy {
             }
         }
 
-        System.out.print("Goals collected: ");
-        for (FullMapNode g : goals) {
-            System.out.print("(" + g.getX() + ", " + g.getY() + ") ");
-        }
-        System.out.println();
+        LOGGER.fine(() -> "Goals collected: " + goals.stream()
+                .map(g -> "(" + g.getX() + ", " + g.getY() + ") ")
+                .collect(Collectors.joining(" ")));
         return goals;
     }
 

@@ -11,6 +11,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Queue;
 import java.util.Set;
+import java.util.logging.Logger;
 
 import messagesbase.UniquePlayerIdentifier;
 import messagesbase.messagesfromclient.EMove;
@@ -23,6 +24,7 @@ import messagesbase.messagesfromserver.FullMapNode;
 
 public class StrategyAlwaysClosest implements IStrategy {
 
+    private static final Logger LOGGER = Logger.getLogger(StrategyAlwaysClosest.class.getName());
     private int myXmin, myXmax, myYmin, myYmax;
     private int enemyXmin, enemyXmax, enemyYmin, enemyYmax;
     private boolean isInitialized = false;
@@ -87,7 +89,7 @@ public class StrategyAlwaysClosest implements IStrategy {
                     enemyYmax = 5;
                 }
             } else {
-                System.err.println("❌ Unbekanntes Kartenformat (" + (maxX + 1) + " x " + (maxY + 1) + ")");
+                LOGGER.severe("Unbekanntes Kartenformat (" + (maxX + 1) + " x " + (maxY + 1) + ")");
             }
             isInitialized = true;
         }
@@ -106,28 +108,28 @@ public class StrategyAlwaysClosest implements IStrategy {
         if (playerHasTreasure) {
             goal = findEnemyFort(map);
             if (goal == null) {
-                System.out.println("🔍 Suche Gegnerburg (nur auf feindlicher Seite)");
+                LOGGER.fine("Suche Gegnerburg nur auf feindlicher Seite.");
                 goal = findClosestUndiscoveredNode(
                         gameHelper,
                         enemyXmin, enemyYmin, enemyXmax, enemyYmax);
             } else {
-                System.out.println("Coordinates of  Fort: " + goal.getX() + ", " + goal.getY());
+                LOGGER.fine("Coordinates of Fort: " + goal.getX() + ", " + goal.getY());
             }
         } else {
             goal = findTreasure(map);
             if (goal == null) {
-                System.out.println("🔍 Suche Schatz (egal wo)");
+                LOGGER.fine("Suche Schatz.");
                 goal = findClosestUndiscoveredNode(
                         gameHelper,
                         myXmin, myYmin, myXmax, myYmax);
             } else {
-                System.out.println("Coordinates of  Treasure: " + goal.getX() + ", " + goal.getY());
+                LOGGER.fine("Coordinates of Treasure: " + goal.getX() + ", " + goal.getY());
             }
         }
 
         UniquePlayerIdentifier playerId = gameHelper.getPlayerId();
         if (goal == null || goal == myPosition) {
-            System.out.println("❌ Kein Ziel gefunden – bleibe stehen.");
+            LOGGER.warning("Kein Ziel gefunden – bleibe stehen.");
             return stayClose(myPosition, playerId, map);
         }
 

@@ -5,6 +5,9 @@ import messagesbase.ResponseEnvelope;
 import messagesbase.messagesfromclient.ERequestState;
 import messagesbase.messagesfromclient.PlayerRegistration;
 
+import java.util.logging.Level;
+import java.util.logging.Logger;
+
 import org.springframework.core.ParameterizedTypeReference;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpMethod;
@@ -20,7 +23,7 @@ import messagesbase.messagesfromclient.PlayerMove;
 public class ClientNetwork implements INetwork {
 
     private static final int GAMESTATE_REQUEST_DELAY = 400;
-
+    private static final Logger LOGGER = Logger.getLogger("");
     // === Attribute ===
     private final String baseURL;
     private final String gameId;
@@ -52,7 +55,7 @@ public class ClientNetwork implements INetwork {
         ResponseEnvelope<GameState> result = webAccess.block();
 
         if (result.getState() == ERequestState.Error) {
-            System.err.println("❌ Fehler beim Abrufen des Spielstatus: " + result.getExceptionMessage());
+            LOGGER.severe("Fehler beim Abrufen des Spielstatus: " + result.getExceptionMessage());
             return null;
         }
 
@@ -81,15 +84,13 @@ public class ClientNetwork implements INetwork {
         ResponseEnvelope<UniquePlayerIdentifier> result = webAccess.block();
 
         if (result.getState() == ERequestState.Error) {
-            System.err.println("❌ Fehler bei der Registrierung: " + result.getExceptionMessage());
+            LOGGER.severe("Fehler bei der Registrierung: " + result.getExceptionMessage());
             return;
         }
 
         playerId = result.getData().get();
 
-        // ✅ Exakt dieser Output wie gewünscht
-        System.out.println(playerId);
-        System.out.println("🧓 \"Classic\" approach, but still possible " + playerId + " 🎉");
+        LOGGER.info("Player registered: " + playerId);
     }
 
     // === Platzhalter-Methoden für später ===
@@ -101,7 +102,7 @@ public class ClientNetwork implements INetwork {
                 .defaultHeader(HttpHeaders.ACCEPT, MediaType.APPLICATION_XML_VALUE)
                 .build();
 
-        System.out.println("📤 Sende HalfMap an den Server...");
+        LOGGER.info("Sende HalfMap an den Server...");
 
         Mono<ResponseEnvelope<Object>> webAccess = webClient
                 .method(HttpMethod.POST)
@@ -114,19 +115,19 @@ public class ClientNetwork implements INetwork {
         ResponseEnvelope<Object> result = webAccess.block();
 
         if (result == null) {
-            System.err.println("🚫 Keine Antwort vom Server auf HalfMap-Sendung erhalten.");
+            LOGGER.severe("Keine Antwort vom Server auf HalfMap-Sendung erhalten.");
             return;
         }
 
         if (result.getState() == ERequestState.Error) {
-            System.err.println("❌ Fehler beim Senden der HalfMap: " + result.getExceptionMessage());
+            LOGGER.severe("Fehler beim Senden der HalfMap: " + result.getExceptionMessage());
         } else {
-            System.out.println("✅ HalfMap erfolgreich an Server übermittelt.");
+            LOGGER.info("HalfMap erfolgreich an Server übermittelt.");
         }
     }
 
     public void getGameStatus() {
-        System.out.println("📥 Spielstatus wird abgefragt...");
+        LOGGER.fine("Spielstatus wird abgefragt...");
     }
 
     @Override
@@ -148,9 +149,9 @@ public class ClientNetwork implements INetwork {
         ResponseEnvelope<Object> result = webAccess.block();
 
         if (result.getState() == ERequestState.Error) {
-            System.err.println("❌ Fehler beim Senden des Zuges: " + result.getExceptionMessage());
+            LOGGER.severe("Fehler beim Senden des Zuges: " + result.getExceptionMessage());
         } else {
-            System.out.println("✅ Zug erfolgreich gesendet!");
+            LOGGER.fine("Zug erfolgreich gesendet!");
         }
     }
 
@@ -188,7 +189,7 @@ public class ClientNetwork implements INetwork {
                 Thread.sleep(sleepTime);
             } catch (InterruptedException e) {
                 Thread.currentThread().interrupt();
-                System.err.println("Sleep unterbrochen: " + e.getMessage());
+                LOGGER.log(Level.WARNING, "Sleep unterbrochen.", e);
             }
         }
 

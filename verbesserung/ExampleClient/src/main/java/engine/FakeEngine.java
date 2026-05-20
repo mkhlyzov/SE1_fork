@@ -11,6 +11,7 @@ import java.util.Map;
 import java.util.Queue;
 import java.util.Random;
 import java.util.Set;
+import java.util.logging.Logger;
 
 import messagesbase.UniquePlayerIdentifier;
 import messagesbase.messagesfromclient.ETerrain;
@@ -28,6 +29,8 @@ import messagesbase.messagesfromserver.PlayerState;
 import util.RandomManager;
 
 public class FakeEngine {
+
+    private static final Logger LOGGER = Logger.getLogger(FakeEngine.class.getName());
     private ETerrain[][] terrainGrid;
     private int WIDTH;
     private int HEIGHT;
@@ -131,7 +134,7 @@ public class FakeEngine {
             pd.treasurePosition = addTreasure(currentHalfMap);
             if (pd.treasurePosition == null) {
                 pd.state = EPlayerGameState.Lost;
-                System.err.println("Could not place Treasure on the map");
+                LOGGER.severe("Could not place Treasure on the map");
             }
 
             PlayerHalfMapNode fortNode = findFort(currentHalfMap);

@@ -1,5 +1,8 @@
 package engine;
 
+import java.util.logging.Level;
+import java.util.logging.Logger;
+
 import logic.GameHelper;
 import logic.IStrategy;
 import logic.StrategyAlwaysClosest;
@@ -18,14 +21,15 @@ TODO:
  */
 
 public class GameSimulator {
-    public static void main(String[] args) {
-        System.out.println("Game simulation started...");
 
+    private static final Logger LOGGER = Logger.getLogger(GameSimulator.class.getName());
+
+    public static void main(String[] args) {
+        LOGGER.info("Game simulation started...");
         // singlePlayer(args);
         multiPlayer(args);
 
-        // Add game logic and interactions here
-        System.out.println("Game simulation ended.");
+        LOGGER.info("Game simulation ended.");
     }
 
     public static void singlePlayer(String[] args) {
@@ -75,7 +79,8 @@ public class GameSimulator {
         // IStrategy strategy_1 = new StrategyNearestNeighbour();
         IStrategy strategy_1 = new StrategyPlannedTour();
         IStrategy strategy_2 = new StrategyAlwaysClosest();
-
+        Logger.getLogger(strategy_1.getClass().getName()).setLevel(Level.FINE);
+        Logger.getLogger(strategy_2.getClass().getName()).setLevel(Level.OFF);
         ClientMap mapGenerator_1 = new ClientMap(playerId_1);
         PlayerHalfMap halfMapData_1 = mapGenerator_1.generate();
         engine.registerPlayer(playerId_1, halfMapData_1);
@@ -107,11 +112,12 @@ public class GameSimulator {
         }
 
         if (engine.playerHasWon(playerId_1)) {
-            System.out.println("Player 1 WON!");
+            LOGGER.info("Player 1 WON!");
+
         } else if (engine.playerHasWon(playerId_2)) {
-            System.out.println("Player 2 WON!");
+            LOGGER.info("Player 2 WON!");
         } else {
-            System.out.println("NULL");
+            LOGGER.warning("Winner is NULL.");
         }
 
     }

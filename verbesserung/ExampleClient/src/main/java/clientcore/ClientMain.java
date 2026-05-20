@@ -1,6 +1,7 @@
 package clientcore;
 
 import java.util.Set;
+import java.util.logging.Logger;
 
 import logic.GameHelper;
 import logic.IStrategy;
@@ -15,6 +16,8 @@ import network.INetwork;
 import view.ConsoleView;
 
 public class ClientMain {
+
+    private static final Logger LOGGER = Logger.getLogger(ClientMain.class.getName());
     private INetwork net;
     private IStrategy strategy;
 
@@ -32,7 +35,7 @@ public class ClientMain {
         net.registerPlayer(studentId);
 
         if (net.getPlayerId() == null) {
-            System.err.println("❌ Registrierung fehlgeschlagen, Spiel kann nicht gestartet werden.");
+            LOGGER.severe("Registrierung fehlgeschlagen, Spiel kann nicht gestartet werden.");
             return;
         }
 
@@ -52,15 +55,13 @@ public class ClientMain {
 
                     if (ps.getUniquePlayerID().equals(myPlayerId)) {
                         String status = ps.getState().name();
-                        System.out.println("🧍 Spieler-ID: " + myPlayerId);
-                        System.out.println("📡 Aktueller Status vom Server: " + status);
+                        LOGGER.info("Spieler-ID: " + myPlayerId + "; Aktueller Status vom Server: " + status);
 
                         if (status.equals("MustAct")) {
-                            System.out.println("⚠️ Ich bin schon in der Move-Phase!");
+                            LOGGER.warning("Ich bin schon in der Move-Phase!");
                             canSendMap = true; // trotzdem senden, falls noch nicht gesendet
                         } else if (status.equals("Won") || status.equals("Lost")) {
-                            // Kein Fehler ausgeben, falls das Spiel beendet wurde
-                            System.out.println("🏁 Spiel wurde bereits beendet mit Status: " + status);
+                            LOGGER.info("Spiel wurde bereits beendet mit Status: " + status);
                             return;
                         }
                         break;
@@ -69,15 +70,14 @@ public class ClientMain {
             }
 
             if (canSendMap && !mapSent) {
-                System.out.println("📤 Sende HalfMap jetzt an den Server...");
+                LOGGER.info("Sende HalfMap jetzt an den Server...");
                 PlayerHalfMap halfMap = mapGen.generate();
                 net.sendHalfMap(halfMap);
-                System.out.println("📨 HalfMap wurde an sendHalfMap() übergeben.");
+                LOGGER.fine("HalfMap wurde an sendHalfMap() übergeben.");
                 mapSent = true;
             }
 
-            System.out.println("⏳ Warte auf meinen Zug zum Senden der HalfMap...");
-
+            LOGGER.fine("Warte auf meinen Zug zum Senden der HalfMap...");
             if (mapSent) {
                 break;
             }
@@ -123,20 +123,20 @@ public class ClientMain {
                 PlayerMove move = strategy.calculateNextMove(gameHelper);
                 long t1 = System.nanoTime();
                 double dt1_0 = (t1 - t0) / 1000000;
-                System.out.println("Execution time of function calculateNextMove takes in ms = " + dt1_0);
+                LOGGER.fine("Execution time of function calculateNextMove takes in ms = " + dt1_0);
                 try {
                     net.sendMove(move);
                     long t2 = System.nanoTime();
                     double dt2_1 = (t2 - t1) / 1000000;
-                    System.out.println("Execution time of function sendMove takes in ms = " + dt2_1);
+                    LOGGER.fine("Execution time of function sendMove takes in ms = " + dt2_1);
                 } catch (Exception e) {
                     long t2 = System.nanoTime();
                     double dt2_1 = (t2 - t1) / 1000000;
-                    System.out.println("Execution time of function sendMove takes in ms = " + dt2_1);
+                    LOGGER.fine("Execution time of function sendMove takes in ms = " + dt2_1);
                     throw e;
                 }
             } else {
-                System.out.println("⏳ Warte auf meinen Zug...");
+                LOGGER.fine("Warte auf meinen Zug...");
             }
 
         }
@@ -147,7 +147,7 @@ public class ClientMain {
         String studentId = "kostarievd00"; // 🧑‍🎓 Deinen u:account hier einsetzen
 
         if (args.length < 3) {
-            System.err.println("❗ Missing arguments. Required: [mode] [serverURL] [gameId]");
+            LOGGER.severe("Missing arguments. Required: [mode] [serverURL] [gameId]");
             return;
         } else {
             String gamemode = args[0];

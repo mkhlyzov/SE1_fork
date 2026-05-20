@@ -1,10 +1,14 @@
 package logic;
 
+import java.util.logging.Level;
+import java.util.logging.Logger;
+
 import messagesbase.UniquePlayerIdentifier;
 import messagesbase.messagesfromclient.EMove;
 import messagesbase.messagesfromclient.PlayerMove;
 
 public class StrategyManual implements IStrategy {
+    private static final Logger LOGGER = Logger.getLogger(StrategyManual.class.getName());
 
     @Override
     public PlayerMove calculateNextMove(GameHelper gameHelper) {
@@ -25,12 +29,12 @@ public class StrategyManual implements IStrategy {
                 case 'a' -> PlayerMove.of(playerId, EMove.Left);
                 case 'd' -> PlayerMove.of(playerId, EMove.Right);
                 default -> {
-                    System.out.println("Неверный ввод, двигаюсь вправо по умолчанию.");
+                    LOGGER.warning("Неверный ввод, двигаюсь вправо по умолчанию.");
                     yield PlayerMove.of(playerId, EMove.Right);
                 }
             };
         } catch (Exception e) {
-            e.printStackTrace();
+            LOGGER.log(Level.SEVERE, "Ошибка при чтении ручного ввода.", e);
             return PlayerMove.of(playerId, EMove.Right);
         }
     }

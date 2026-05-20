@@ -4,9 +4,11 @@ import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Random;
+import java.util.logging.Logger;
 
 public class RandomManager {
 
+    private static final Logger LOGGER = Logger.getLogger(RandomManager.class.getName());
     private static Random random;
     private static Long currentSeed;
     private static boolean printSeed = true;
@@ -16,11 +18,10 @@ public class RandomManager {
     }
 
     public static void randomizeSeed() {
-
         currentSeed = System.currentTimeMillis();
         random = new Random(currentSeed);
         if (printSeed) {
-            System.out.println("[RandomManager] New random seed: " + currentSeed);
+            LOGGER.info("[RandomManager] New random seed: " + currentSeed);
         }
     }
 
@@ -28,7 +29,7 @@ public class RandomManager {
         currentSeed = seed;
         random = new Random(seed);
         if (printSeed) {
-            System.out.println("[RandomManager] Seed fixed to: " + seed);
+            LOGGER.info("[RandomManager] Seed fixed to: " + seed);
         }
     }
 
