@@ -4,6 +4,7 @@ import java.awt.Point;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
+import java.util.logging.Logger;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
@@ -28,11 +29,13 @@ import messagesbase.messagesfromserver.FullMap;
 import messagesbase.messagesfromserver.FullMapNode;
 import messagesbase.messagesfromserver.GameState;
 import messagesbase.messagesfromserver.PlayerState;
+import testutils.TestLogger;
 import view.ConsoleView;
 
 class StrategyPlannedTourUtilsTest {
 
     private final int NUM_ROUNDS_HIDDEN = 8;
+    private static final Logger LOGGER = TestLogger.getLogger();
 
     @Test
     void continiousPathBFS_findsSimplePath() {
@@ -392,8 +395,8 @@ class StrategyPlannedTourUtilsTest {
         FullMapNode Pos1 = helper_1.getMyPosition();
         FullMapNode Pos2 = helper_2.getMyPosition();
 
-        System.out.println("Player1 :" + Pos1.getX() + ", " + Pos1.getY());
-        System.out.println("Player2 :" + Pos2.getX() + ", " + Pos2.getY());
+        LOGGER.fine("Player1: " + Pos1.getX() + ", " + Pos1.getY());
+        LOGGER.fine("Player2: " + Pos2.getX() + ", " + Pos2.getY());
 
         Point Pos2_expected = helper_1.getFirstTrueEnemyPosition();
         Point Pos1_expected = helper_2.getFirstTrueEnemyPosition();

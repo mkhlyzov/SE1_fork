@@ -5,9 +5,11 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Random;
 import java.util.Set;
+import java.util.logging.Logger;
+import java.util.stream.Collectors;
 
-import static org.junit.jupiter.api.Assertions.assertNotNull;
-import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertTrue;
 import org.junit.jupiter.api.RepeatedTest;
 import org.junit.jupiter.api.Test;
 
@@ -18,10 +20,12 @@ import messagesbase.messagesfromserver.EPlayerPositionState;
 import messagesbase.messagesfromserver.ETreasureState;
 import messagesbase.messagesfromserver.FullMap;
 import messagesbase.messagesfromserver.FullMapNode;
+import testutils.TestLogger;
 
 class StrategyPlannedTourTest {
 
     private final int NUM_TEST_REPEATS = 100;
+    private static final Logger LOGGER = TestLogger.getLogger();
 
     @RepeatedTest(100)
     public void CharacterMovesTowardsMountains() {
@@ -280,10 +284,9 @@ class StrategyPlannedTourTest {
             strategy.calculateNextMove(helper);
             // === получаем тур целей ===
             List<FullMapNode> tour = strategy.get_plannedTour();
-            for (FullMapNode n : tour) {
-                System.out.print("(" + n.getX() + "," + n.getY() + "," + n.getTerrain() + ") ");
-            }
-            System.out.println();
+            LOGGER.fine("Tour: " + tour.stream()
+                    .map(n -> "(" + n.getX() + "," + n.getY() + "," + n.getTerrain() + ")")
+                    .collect(Collectors.joining(" ")));
             // тур должен содержать гору как цель
             // assertFalse(tour.contains(mountainNode));
             if (!tour.contains(mountainNode)) {
@@ -291,7 +294,7 @@ class StrategyPlannedTourTest {
             }
 
         }
-        System.out.println("NUM_SUCCESS = " + NUM_SUCCESS);
+        LOGGER.fine("NUM_SUCCESS = " + NUM_SUCCESS);
         assertTrue((double) NUM_SUCCESS / NUM_TEST_REPEATS > 0.90);
 
     }
@@ -327,28 +330,23 @@ class StrategyPlannedTourTest {
 
         assertNotNull(bestTour);
 
-        System.out.println("Количество альтернативных туров: " + alternatives.size());
+        LOGGER.fine("Количество альтернативных туров: " + alternatives.size());
 
         for (List<FullMapNode> tour : alternatives) {
             double score = strategy.computeTourScore_v1(tour, goals, 0.97);
-            System.out.print("Alternative tour: ");
-            for (FullMapNode n : tour) {
-                System.out.print("(" + n.getX() + "," + n.getY() + "," + n.getTerrain() + ") ");
-            }
-            System.out.println();
-            System.out.println("Score: " + score);
+            LOGGER.fine("Alternative tour: " + tour.stream()
+                    .map(n -> "(" + n.getX() + "," + n.getY() + "," + n.getTerrain() + ")")
+                    .collect(Collectors.joining(" ")));
+            LOGGER.fine("Score: " + score);
         }
 
         double bestScore = strategy.computeTourScore_v1(bestTour, goals, 0.97);
 
-        System.out.print("Best tour: ");
-
-        for (FullMapNode n : bestTour) {
-            System.out.print("(" + n.getX() + "," + n.getY() + "," + n.getTerrain() + ") ");
-        }
-
-        System.out.println();
-        System.out.println("Best score: " + bestScore);
+        String msg = ("Best tour: " + bestTour.stream()
+                .map(n -> "(" + n.getX() + "," + n.getY() + "," + n.getTerrain() + ")")
+                .collect(Collectors.joining(" ")));
+        LOGGER.fine(msg);
+        LOGGER.fine("Best score: " + bestScore);
     }
 
 }

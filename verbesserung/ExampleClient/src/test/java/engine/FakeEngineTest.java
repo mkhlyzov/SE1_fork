@@ -2,6 +2,7 @@ package engine;
 
 import org.junit.jupiter.api.Test;
 
+import client.main.MainClient;
 import util.RandomManager;
 
 public class FakeEngineTest {
@@ -13,4 +14,8 @@ public class FakeEngineTest {
         simulator.multiPlayer(null);
     }
 
+    @Test
+    public void RunGame() {
+        MainClient.main(new String[0]);
+    }
 }
