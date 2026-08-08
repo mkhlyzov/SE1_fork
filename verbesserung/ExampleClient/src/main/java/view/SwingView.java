@@ -151,6 +151,7 @@ package view;
 
 import java.awt.BorderLayout;
 import java.awt.Color;
+import java.awt.Dimension;
 import java.awt.Font;
 import java.awt.FontMetrics;
 import java.awt.Graphics;
@@ -215,11 +216,11 @@ public class SwingView extends JFrame {
             int rows = gameHelper.getMaxY() + 1;
 
             if (rows == 10 && cols == 10) {
-                setSize(500, 500 + 50);
+                gamePanel.setPreferredSize(new Dimension(500, 500));
             } else if (rows == 5 && cols == 20) {
-                setSize(1000, 250 + 50);
+                gamePanel.setPreferredSize(new Dimension(1000, 250));
             }
-
+            pack();
             setResizable(false);
             gamePanel.updateMap(gameHelper);
 
