@@ -13,6 +13,7 @@ import messagesbase.messagesfromclient.PlayerHalfMap;
 import messagesbase.messagesfromclient.PlayerMove;
 import messagesbase.messagesfromserver.GameState;
 import view.ConsoleView;
+import view.SwingView;
 
 /*
 TODO:
@@ -91,7 +92,8 @@ public class GameSimulator {
 
         GameHelper helper_1 = new GameHelper(new UniquePlayerIdentifier(playerId_1));
         GameHelper helper_2 = new GameHelper(new UniquePlayerIdentifier(playerId_2));
-        ConsoleView view = new ConsoleView();
+        // ConsoleView view = new ConsoleView();
+        SwingView view = new SwingView();
 
         while (true) {
             GameState state_1 = engine.getState(playerId_1);
@@ -100,7 +102,10 @@ public class GameSimulator {
             helper_1.update(state_1);
             helper_2.update(state_2);
             view.render(helper_1);
-
+            try {
+                Thread.sleep(100);
+            } catch (InterruptedException e) {
+            }
             if (engine.isFinished()) {
                 break;
             }
@@ -113,9 +118,11 @@ public class GameSimulator {
 
         if (engine.playerHasWon(playerId_1)) {
             LOGGER.info("Player 1 WON!");
+            view.printGameResult(true);
 
         } else if (engine.playerHasWon(playerId_2)) {
             LOGGER.info("Player 2 WON!");
+            view.printGameResult(false);
         } else {
             LOGGER.warning("Winner is NULL.");
         }
