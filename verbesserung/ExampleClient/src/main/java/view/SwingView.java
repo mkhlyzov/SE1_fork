@@ -149,9 +149,17 @@
 
 package view;
 
-import java.awt.*;
+import java.awt.BorderLayout;
+import java.awt.Color;
+import java.awt.Font;
+import java.awt.FontMetrics;
+import java.awt.Graphics;
 
-import javax.swing.*;
+import javax.swing.JFrame;
+import javax.swing.JLabel;
+import javax.swing.JPanel;
+import javax.swing.SwingConstants;
+import javax.swing.SwingUtilities;
 
 import logic.GameHelper;
 import messagesbase.messagesfromclient.ETerrain;
@@ -192,8 +200,6 @@ public class SwingView extends JFrame {
          * Fenster ist veränderbar.
          * Dadurch kann GamePanel seine Zellen skalieren.
          */
-        setSize(1000, 600);
-
         setLocationRelativeTo(null);
         setVisible(true);
     }
@@ -205,6 +211,16 @@ public class SwingView extends JFrame {
             /*
              * Aktuelle Karte an GamePanel übergeben.
              */
+            int cols = gameHelper.getMaxX() + 1;
+            int rows = gameHelper.getMaxY() + 1;
+
+            if (rows == 10 && cols == 10) {
+                setSize(500, 500 + 50);
+            } else if (rows == 5 && cols == 20) {
+                setSize(1000, 250 + 50);
+            }
+
+            setResizable(false);
             gamePanel.updateMap(gameHelper);
 
             /*
@@ -287,7 +303,7 @@ class GamePanel extends JPanel {
          */
         int cellWidth = getWidth() / cols;
         int cellHeight = getHeight() / rows;
-
+        int fontSize = (int) (Math.min(cellWidth, cellHeight));
         /*
          * Jede Zelle zeichnen.
          */
@@ -314,7 +330,7 @@ class GamePanel extends JPanel {
                         new Font(
                                 "Segoe UI Emoji",
                                 Font.PLAIN,
-                                Math.min(cellWidth, cellHeight) / 2));
+                                fontSize));
 
                 FontMetrics fm = g.getFontMetrics();
 
