@@ -373,10 +373,10 @@ class GamePanel extends JPanel {
         switch (position) {
 
             case MyPlayerPosition:
-                return "🧍";
+                return "🙂";
 
             case EnemyPlayerPosition:
-                return "🤺";
+                return "😈";
 
             case BothPlayerPosition:
                 return "⚔️";

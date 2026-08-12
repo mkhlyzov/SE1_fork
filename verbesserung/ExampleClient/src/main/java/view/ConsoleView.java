@@ -39,9 +39,9 @@ public class ConsoleView {
         EPlayerPositionState position = node.getPlayerPositionState();
         switch (position) {
             case EPlayerPositionState.MyPlayerPosition:
-                return "🧍"; // Eigener Spieler
+                return "🙂"; // Eigener Spieler
             case EPlayerPositionState.EnemyPlayerPosition:
-                return "🤺"; // Gegner
+                return "😈"; // Gegner
             case EPlayerPositionState.BothPlayerPosition:
                 return "⚔️"; // Beide auf dem Feld
         }
