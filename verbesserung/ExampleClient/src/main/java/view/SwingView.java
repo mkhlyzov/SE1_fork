@@ -1,152 +1,3 @@
-// package view;
-
-// import java.awt.BorderLayout;
-// import java.awt.Dimension;
-// import java.awt.Font;
-// import java.awt.GridLayout;
-
-// import javax.swing.JFrame;
-// import javax.swing.JLabel;
-// import javax.swing.JPanel;
-// import javax.swing.SwingConstants;
-// import javax.swing.SwingUtilities;
-
-// import logic.GameHelper;
-// import messagesbase.messagesfromclient.ETerrain;
-// import messagesbase.messagesfromserver.EFortState;
-// import messagesbase.messagesfromserver.EPlayerPositionState;
-// import messagesbase.messagesfromserver.ETreasureState;
-// import messagesbase.messagesfromserver.FullMap;
-// import messagesbase.messagesfromserver.FullMapNode;
-
-// public class SwingView extends JFrame {
-//     private static final int CELL_SIZE = 50;
-//     private final JPanel mapPanel = new JPanel();
-//     private final JLabel statusLabel = new JLabel("Game started",
-//             SwingConstants.CENTER);
-
-//     public SwingView() {
-
-//         setTitle("SE1 MVC Game View");
-//         setSize(3000, 3000);
-//         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-//         setLayout(new BorderLayout());
-
-//         add(statusLabel, BorderLayout.NORTH);
-//         add(mapPanel, BorderLayout.CENTER);
-
-//         setVisible(true);
-//     }
-
-//     public void render(GameHelper gameHelper) {
-//         SwingUtilities.invokeLater(() -> {
-//             FullMap map = gameHelper.getMap();
-//             int maxX = gameHelper.getMaxX();
-//             int maxY = gameHelper.getMaxY();
-
-//             mapPanel.removeAll();
-//             mapPanel.setLayout(new GridLayout(maxY + 1, maxX + 1));
-
-//             String[][] grid = new String[maxY + 1][maxX + 1];
-
-//             for (FullMapNode node : map.getMapNodes()) {
-//                 int x = node.getX();
-//                 int y = node.getY();
-//                 grid[y][x] = getSymbolForNode(node, gameHelper);
-//             }
-
-//             for (int y = 0; y <= maxY; y++) {
-//                 for (int x = 0; x <= maxX; x++) {
-//                     JLabel cell = new JLabel(grid[y][x] != null ? grid[y][x] : " ",
-//                             SwingConstants.CENTER);
-//                     // cell.setPreferredSize(new Dimension(CELL_SIZE, CELL_SIZE));
-//                     // Font labelFont = cell.getFont();
-//                     // String labelText = cell.getText();
-//                     // int stringWidth = cell.getFontMetrics(labelFont).stringWidth(labelText);
-//                     // if (stringWidth > 0) {
-//                     // double widthRatio = (double) CELL_SIZE / (double) stringWidth;
-//                     // int newFontSize = (int) (labelFont.getSize() * widthRatio);
-//                     // int fontSizeToUse = Math.min(newFontSize, CELL_SIZE);
-//                     // cell.setFont(new Font(labelFont.getName(), Font.PLAIN, fontSizeToUse));
-//                     // }
-//                     cell.setPreferredSize(new Dimension(CELL_SIZE, CELL_SIZE));
-//                     cell.setMinimumSize(new Dimension(CELL_SIZE, CELL_SIZE));
-//                     cell.setMaximumSize(new Dimension(CELL_SIZE, CELL_SIZE));
-
-//                     cell.setHorizontalAlignment(SwingConstants.CENTER);
-//                     cell.setVerticalAlignment(SwingConstants.CENTER);
-
-//                     cell.setFont(new Font("Segoe UI Emoji", Font.PLAIN, CELL_SIZE));
-//                     mapPanel.add(cell);
-//                 }
-//             }
-
-//             mapPanel.revalidate();
-//             mapPanel.repaint();
-//             pack();
-//         });
-//     }
-
-//     public void printGameResult(boolean won) {
-//         SwingUtilities.invokeLater(() -> {
-//             statusLabel.setText(won ? "🏆 Du hast gewonnen!" : "💀 Du hast verloren.");
-//         });
-//     }
-
-//     private String getSymbolForNode(FullMapNode node, GameHelper gameHelper) {
-//         EPlayerPositionState position = node.getPlayerPositionState();
-//         switch (position) {
-//             case MyPlayerPosition:
-//                 return "🧍";
-//             case EnemyPlayerPosition:
-//                 return "🤺";
-//             case BothPlayerPosition:
-//                 return "⚔️";
-//             default:
-//                 break;
-//         }
-
-//         EFortState fortState = node.getFortState();
-
-//         switch (fortState) {
-//             case MyFortPresent:
-//                 return "🏰";
-//             case EnemyFortPresent:
-//                 return "🏯";
-//             default:
-//                 break;
-//         }
-
-//         if (gameHelper.goldWasHere(node)) {
-//             ETreasureState treasureState = node.getTreasureState();
-
-//             switch (treasureState) {
-//                 case MyTreasureIsPresent:
-//                     return "💰";
-//                 case NoOrUnknownTreasureState:
-//                     return "🟡";
-//                 default:
-//                     break;
-//             }
-//         }
-
-//         ETerrain terrain = node.getTerrain();
-
-//         if (gameHelper.isObserved(node)) {
-//             return switch (terrain) {
-//                 case Grass -> "🟢";
-//                 case Water -> "🟦";
-//                 case Mountain -> "🟤";
-//             };
-//         }
-//         return switch (terrain) {
-//             case Grass -> "🟩";
-//             case Water -> "🟦";
-//             case Mountain -> "🟫";
-//         };
-//     }
-// }
-
 package view;
 
 import java.awt.BorderLayout;
@@ -156,12 +7,15 @@ import java.awt.Font;
 import java.awt.FontMetrics;
 import java.awt.Graphics;
 
+import javax.swing.BoxLayout;
+import javax.swing.JButton;
 import javax.swing.JFrame;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
 import javax.swing.SwingConstants;
 import javax.swing.SwingUtilities;
 
+import engine.GameSimulator;
 import logic.GameHelper;
 import messagesbase.messagesfromclient.ETerrain;
 import messagesbase.messagesfromserver.EFortState;
@@ -182,11 +36,26 @@ public class SwingView extends JFrame {
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         setLayout(new BorderLayout());
 
+        JPanel topPanel = new JPanel();
+        topPanel.setLayout(new BoxLayout(topPanel, BoxLayout.Y_AXIS));
+        add(topPanel, BorderLayout.NORTH);
+
+        JButton newGameButton = new JButton("New Game");
+        newGameButton.addActionListener(e -> {
+            dispose();
+            new Thread(() -> {
+                GameSimulator.multiPlayer(new String[0]);
+            }).start();
+        });
+        newGameButton.setVisible(true);
+        newGameButton.setAlignmentX(CENTER_ALIGNMENT);
+        topPanel.add(newGameButton);
+
         statusLabel = new JLabel(
                 "Game started",
                 SwingConstants.CENTER);
-
-        add(statusLabel, BorderLayout.NORTH);
+        statusLabel.setAlignmentX(CENTER_ALIGNMENT);
+        topPanel.add(statusLabel);
 
         /*
          * Genau wie im Minesweeper:
@@ -194,7 +63,6 @@ public class SwingView extends JFrame {
          * in BorderLayout.CENTER eingefügt.
          */
         gamePanel = new GamePanel();
-
         add(gamePanel, BorderLayout.CENTER);
 
         /*
@@ -235,7 +103,6 @@ public class SwingView extends JFrame {
     public void printGameResult(boolean won) {
 
         SwingUtilities.invokeLater(() -> {
-
             statusLabel.setText(
                     won
                             ? "🏆 Du hast gewonnen!"
