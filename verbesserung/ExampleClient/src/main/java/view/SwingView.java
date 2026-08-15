@@ -7,6 +7,7 @@ import java.awt.Font;
 import java.awt.FontMetrics;
 import java.awt.Graphics;
 
+import javax.swing.BorderFactory;
 import javax.swing.BoxLayout;
 import javax.swing.JButton;
 import javax.swing.JFrame;
@@ -29,6 +30,16 @@ public class SwingView extends JFrame {
 
     private JLabel statusLabel;
 
+    private JLabel myPlayerLabel;
+
+    private JLabel enemyPlayerLabel;
+
+    private JPanel leftPanel;
+
+    private JPanel rightPanel;
+
+    JPanel topPanel = new JPanel();
+
     public SwingView() {
 
         super("SE1 MVC Game View");
@@ -36,27 +47,12 @@ public class SwingView extends JFrame {
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         setLayout(new BorderLayout());
 
-        JPanel topPanel = new JPanel();
         topPanel.setLayout(new BoxLayout(topPanel, BoxLayout.Y_AXIS));
         add(topPanel, BorderLayout.NORTH);
 
-        JButton newGameButton = new JButton("New Game");
-        newGameButton.addActionListener(e -> {
-            dispose();
-            new Thread(() -> {
-                GameSimulator.multiPlayer(new String[0]);
-            }).start();
-        });
-        newGameButton.setVisible(true);
-        newGameButton.setAlignmentX(CENTER_ALIGNMENT);
-        topPanel.add(newGameButton);
+        addnewGameButton();
 
-        statusLabel = new JLabel(
-                "Game started",
-                SwingConstants.CENTER);
-        statusLabel.setAlignmentX(CENTER_ALIGNMENT);
-        topPanel.add(statusLabel);
-
+        addGameInfo();
         /*
          * Genau wie im Minesweeper:
          * Ein GamePanel wird erstellt und
@@ -71,6 +67,70 @@ public class SwingView extends JFrame {
          */
         setLocationRelativeTo(null);
         setVisible(true);
+    }
+
+    private void addGameInfo() {
+
+        JPanel playersPanel = new JPanel(new BorderLayout());
+
+        JLabel myText = new JLabel("Mein Spieler");
+        JLabel enemyText = new JLabel("Gegner");
+
+        myText.setFont(new Font("SansSerif", Font.BOLD, 16));
+        enemyText.setFont(new Font("SansSerif", Font.BOLD, 16));
+
+        myPlayerLabel = new JLabel("🙂");
+        enemyPlayerLabel = new JLabel("😈");
+
+        myPlayerLabel.setFont(
+                new Font("Segoe UI Emoji", Font.PLAIN, 40));
+
+        enemyPlayerLabel.setFont(
+                new Font("Segoe UI Emoji", Font.PLAIN, 40));
+
+        statusLabel = new JLabel(
+                "Game started",
+                SwingConstants.CENTER);
+
+        statusLabel.setFont(
+                new Font("SansSerif", Font.BOLD, 20));
+
+        statusLabel.setBorder(
+                BorderFactory.createEmptyBorder(0, 20, 0, 0));
+
+        // Linke Seite
+        leftPanel = new JPanel();
+
+        leftPanel.add(myText);
+        leftPanel.add(myPlayerLabel);
+        leftPanel.setPreferredSize(new Dimension(170, 60));
+        // Rechte Seite
+        rightPanel = new JPanel();
+
+        rightPanel.add(enemyPlayerLabel);
+        rightPanel.add(enemyText);
+        rightPanel.setPreferredSize(new Dimension(170, 60));
+        // Alles in einer Linie
+        playersPanel.add(leftPanel, BorderLayout.WEST);
+        playersPanel.add(statusLabel, BorderLayout.CENTER);
+        playersPanel.add(rightPanel, BorderLayout.EAST);
+
+        topPanel.add(playersPanel);
+    }
+
+    private void addnewGameButton() {
+        JButton newGameButton = new JButton("New Game");
+        newGameButton.setPreferredSize(new Dimension(180, 50));
+        newGameButton.setFont(new Font("SansSerif", Font.BOLD, 20));
+        newGameButton.addActionListener(e -> {
+            dispose();
+            new Thread(() -> {
+                GameSimulator.multiPlayer(new String[0]);
+            }).start();
+        });
+        newGameButton.setVisible(true);
+        newGameButton.setAlignmentX(CENTER_ALIGNMENT);
+        topPanel.add(newGameButton);
     }
 
     public void render(GameHelper gameHelper) {
@@ -103,10 +163,20 @@ public class SwingView extends JFrame {
     public void printGameResult(boolean won) {
 
         SwingUtilities.invokeLater(() -> {
+            statusLabel.setHorizontalAlignment(SwingConstants.CENTER);
+            statusLabel.setVerticalAlignment(SwingConstants.CENTER);
             statusLabel.setText(
                     won
-                            ? "🏆 Du hast gewonnen!"
-                            : "💀 Du hast verloren.");
+                            // ? "🏆 Won!"
+                            // : "💀 Lost.");
+                            ? "Won!"
+                            : "Lost.");
+
+            if (won) {
+                leftPanel.setBorder(BorderFactory.createLineBorder(Color.GREEN, 4));
+            } else {
+                rightPanel.setBorder(BorderFactory.createLineBorder(Color.GREEN, 4));
+            }
         });
     }
 }
