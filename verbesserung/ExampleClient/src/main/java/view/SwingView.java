@@ -16,7 +16,7 @@ import javax.swing.JPanel;
 import javax.swing.SwingConstants;
 import javax.swing.SwingUtilities;
 
-import engine.GameSimulator;
+import clientcore.ClientMain;
 import logic.GameHelper;
 import messagesbase.messagesfromclient.ETerrain;
 import messagesbase.messagesfromserver.EFortState;
@@ -24,7 +24,7 @@ import messagesbase.messagesfromserver.EPlayerPositionState;
 import messagesbase.messagesfromserver.ETreasureState;
 import messagesbase.messagesfromserver.FullMapNode;
 
-public class SwingView extends JFrame {
+public class SwingView extends JFrame implements IView {
 
     private GamePanel gamePanel;
 
@@ -125,7 +125,8 @@ public class SwingView extends JFrame {
         newGameButton.addActionListener(e -> {
             dispose();
             new Thread(() -> {
-                GameSimulator.multiPlayer(new String[0]);
+                // GameSimulator.multiPlayer(new String[0]);
+                ClientMain.main(new String[] { "x", "y", "z" });
             }).start();
         });
         newGameButton.setVisible(true);
@@ -133,6 +134,7 @@ public class SwingView extends JFrame {
         topPanel.add(newGameButton);
     }
 
+    @Override
     public void render(GameHelper gameHelper) {
 
         SwingUtilities.invokeLater(() -> {
@@ -160,6 +162,7 @@ public class SwingView extends JFrame {
         });
     }
 
+    @Override
     public void printGameResult(boolean won) {
 
         SwingUtilities.invokeLater(() -> {

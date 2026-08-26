@@ -8,10 +8,11 @@ import messagesbase.messagesfromserver.ETreasureState;
 import messagesbase.messagesfromserver.FullMap;
 import messagesbase.messagesfromserver.FullMapNode;
 
-public class ConsoleView {
+public class ConsoleView implements IView {
     public ConsoleView() {
     }
 
+    @Override
     public void render(GameHelper gameHelper) {
         FullMap map = gameHelper.getMap();
         int maxX = gameHelper.getMaxX();
@@ -86,6 +87,7 @@ public class ConsoleView {
     /**
      * Gibt das Spielende in der Konsole aus.
      */
+    @Override
     public void printGameResult(boolean won) {
         System.out.println(won ? "🏆 Du hast gewonnen!" : "💀 Du hast verloren.");
     }

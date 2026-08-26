@@ -326,14 +326,14 @@ public class FakeEngine {
 
         if (!inBounds(pd.position) || isWater(pd.position)) {
             pd.state = EPlayerGameState.Lost;
-            // pd_enemy.state = EPlayerGameState.Won;
+            pd_enemy.state = EPlayerGameState.Won;
         }
         if (pd.position.equals(pd.treasurePosition)) {
             pd.treasureCollected = true;
         }
         if (pd.treasureCollected && pd.position.equals(pd_enemy.fortPosition)) {
             pd.state = EPlayerGameState.Won;
-            // pd_enemy.state = EPlayerGameState.Lost;
+            pd_enemy.state = EPlayerGameState.Lost;
         }
 
         // try {

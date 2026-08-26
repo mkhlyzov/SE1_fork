@@ -5,15 +5,17 @@ import java.util.logging.Logger;
 
 import logic.GameHelper;
 import logic.IStrategy;
+import logic.StrategyAlwaysClosest;
 import logic.StrategyPlannedTour;
 import map.ClientMap;
 import messagesbase.messagesfromclient.PlayerHalfMap;
 import messagesbase.messagesfromclient.PlayerMove;
 import messagesbase.messagesfromserver.GameState;
 import messagesbase.messagesfromserver.PlayerState;
-import network.ClientNetwork;
 import network.INetwork;
-import view.ConsoleView;
+import network.OfflineNetwork;
+import view.IView;
+import view.SwingView;
 
 public class ClientMain {
 
@@ -88,7 +90,8 @@ public class ClientMain {
     }
 
     public void startMovePhase() {
-        ConsoleView view = new ConsoleView();
+        // ConsoleView view = new ConsoleView();
+        IView view = new SwingView();
         GameHelper gameHelper = new GameHelper(net.getPlayerId());
 
         while (true) {
@@ -97,16 +100,21 @@ public class ClientMain {
 
             if (state != null) {
                 for (PlayerState ps : state.getPlayers()) {
+
                     String myPlayerId = net.getPlayerId().getUniquePlayerID();
                     if (ps.getUniquePlayerID().equals(myPlayerId)) {
                         switch (ps.getState()) {
                             case MustAct -> myTurnToMove = true;
                             // case MustWait -> myTurnToMove = false;
                             case Won -> {
+                                gameHelper.update(state);
+                                view.render(gameHelper);
                                 view.printGameResult(true);
                                 return;
                             }
                             case Lost -> {
+                                gameHelper.update(state);
+                                view.render(gameHelper);
                                 view.printGameResult(false);
                                 return;
                             }
@@ -153,7 +161,8 @@ public class ClientMain {
             String gamemode = args[0];
             String serverURL = args[1];
             String gameId = args[2];
-            network = new ClientNetwork(serverURL, gameId);
+            // network = new ClientNetwork(serverURL, gameId);
+            network = new OfflineNetwork(new StrategyAlwaysClosest());
         }
         ClientMain main = new ClientMain(network);
         main.startGame(studentId);
