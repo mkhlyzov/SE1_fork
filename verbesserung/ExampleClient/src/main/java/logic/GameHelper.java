@@ -12,6 +12,7 @@ import java.util.stream.Collectors;
 
 import messagesbase.UniquePlayerIdentifier;
 import messagesbase.messagesfromclient.ETerrain;
+import messagesbase.messagesfromserver.EPlayerGameState;
 import messagesbase.messagesfromserver.EPlayerPositionState;
 import messagesbase.messagesfromserver.ETreasureState;
 import messagesbase.messagesfromserver.FullMap;
@@ -154,43 +155,117 @@ public class GameHelper {
         }
     }
 
+    // public void update(GameState gameState) {
+    // currentGameState = gameState;
+    // initialize();
+    // updatePositions();
+    // FullMap map = gameState.getMap();
+    // boolean hasTreasureNow = hasTreasure();
+    // int maxX = getMaxX();
+    // int maxY = getMaxY();
+
+    // for (FullMapNode node : map.getMapNodes()) {
+    // String key = key(node);
+    // if (node.getTreasureState() == ETreasureState.MyTreasureIsPresent) {
+    // rememberGoldPosition = key;
+    // }
+    // if (node.getPlayerPositionState() == EPlayerPositionState.MyPlayerPosition
+    // || node.getPlayerPositionState() == EPlayerPositionState.BothPlayerPosition)
+    // {
+    // visitedFields.add(key);
+    // observedFields.add(key);
+
+    // if (hasTreasureNow && !lastHadTreasure) {
+    // rememberGoldPosition = key;
+    // }
+    // if (node.getTerrain() == ETerrain.Mountain) {
+    // int[][] dirs = { { 1, 0 }, { -1, 0 }, { 0, 1 }, { 0, -1 }, { 1, 1 }, { -1, 1
+    // }, { -1, -1 },
+    // { 1, -1 } };
+    // for (int[] dir : dirs) {
+    // int nx = node.getX() + dir[0];
+    // int ny = node.getY() + dir[1];
+
+    // if (nx >= 0 && ny >= 0 && nx <= maxX && ny <= maxY) {
+    // String neighbourkey = nx + "," + ny;
+    // observedFields.add(neighbourkey);
+    // }
+    // }
+    // }
+    // }
+    // }
+    // lastHadTreasure = hasTreasureNow;
+    // }
+
     public void update(GameState gameState) {
+
+        if (currentGameState == gameState) {
+            return;
+        }
+
         currentGameState = gameState;
+
         initialize();
-        updatePositions();
+
+        updatePositionHistory(gameState);
+
         FullMap map = gameState.getMap();
         boolean hasTreasureNow = hasTreasure();
         int maxX = getMaxX();
         int maxY = getMaxY();
 
         for (FullMapNode node : map.getMapNodes()) {
+
             String key = key(node);
+
             if (node.getTreasureState() == ETreasureState.MyTreasureIsPresent) {
+
                 rememberGoldPosition = key;
             }
+
             if (node.getPlayerPositionState() == EPlayerPositionState.MyPlayerPosition
                     || node.getPlayerPositionState() == EPlayerPositionState.BothPlayerPosition) {
+
                 visitedFields.add(key);
                 observedFields.add(key);
 
                 if (hasTreasureNow && !lastHadTreasure) {
                     rememberGoldPosition = key;
                 }
+
                 if (node.getTerrain() == ETerrain.Mountain) {
-                    int[][] dirs = { { 1, 0 }, { -1, 0 }, { 0, 1 }, { 0, -1 }, { 1, 1 }, { -1, 1 }, { -1, -1 },
-                            { 1, -1 } };
+
+                    int[][] dirs = {
+                            { 1, 0 },
+                            { -1, 0 },
+                            { 0, 1 },
+                            { 0, -1 },
+                            { 1, 1 },
+                            { -1, 1 },
+                            { -1, -1 },
+                            { 1, -1 }
+                    };
+
                     for (int[] dir : dirs) {
+
                         int nx = node.getX() + dir[0];
                         int ny = node.getY() + dir[1];
 
-                        if (nx >= 0 && ny >= 0 && nx <= maxX && ny <= maxY) {
+                        if (nx >= 0
+                                && ny >= 0
+                                && nx <= maxX
+                                && ny <= maxY) {
+
                             String neighbourkey = nx + "," + ny;
-                            observedFields.add(neighbourkey);
+
+                            observedFields.add(
+                                    neighbourkey);
                         }
                     }
                 }
             }
         }
+
         lastHadTreasure = hasTreasureNow;
     }
 
@@ -346,5 +421,39 @@ public class GameHelper {
         int fromCost = (from.getTerrain() == ETerrain.Mountain) ? 2 : 1;
         int toCost = (to.getTerrain() == ETerrain.Mountain) ? 2 : 1;
         return fromCost + toCost;
+    }
+
+    public static PlayerState getPlayerState(
+            GameState state,
+            UniquePlayerIdentifier playerId) {
+
+        for (PlayerState player : state.getPlayers()) {
+
+            if (player.getUniquePlayerID()
+                    .equals(playerId.getUniquePlayerID())) {
+
+                return player;
+            }
+        }
+
+        return null;
+    }
+
+    private void updatePositionHistory(GameState gameState) {
+
+        PlayerState myPlayer = getPlayerState(gameState, playerId);
+
+        if (myPlayer == null) {
+            return;
+        }
+
+        if (myPlayer.getState() == EPlayerGameState.MustAct) {
+
+            updatePositions();
+        }
+    }
+
+    public List<Point> getPlayerPosHistory() {
+        return playerPosHistory;
     }
 }

@@ -16,8 +16,8 @@ import javax.swing.JPanel;
 import javax.swing.SwingConstants;
 import javax.swing.SwingUtilities;
 
-import clientcore.ClientMain;
 import logic.GameHelper;
+import controller.GameController;
 import messagesbase.messagesfromclient.ETerrain;
 import messagesbase.messagesfromserver.EFortState;
 import messagesbase.messagesfromserver.EPlayerPositionState;
@@ -25,6 +25,8 @@ import messagesbase.messagesfromserver.ETreasureState;
 import messagesbase.messagesfromserver.FullMapNode;
 
 public class SwingView extends JFrame implements IView {
+
+    private GameController controller;
 
     private GamePanel gamePanel;
 
@@ -67,6 +69,10 @@ public class SwingView extends JFrame implements IView {
          */
         setLocationRelativeTo(null);
         setVisible(true);
+    }
+
+    public void setController(GameController controller) {
+        this.controller = controller;
     }
 
     private void addGameInfo() {
@@ -126,7 +132,7 @@ public class SwingView extends JFrame implements IView {
             dispose();
             new Thread(() -> {
                 // GameSimulator.multiPlayer(new String[0]);
-                ClientMain.main(new String[] { "x", "y", "z" });
+                controller.startNewGame();
             }).start();
         });
         newGameButton.setVisible(true);

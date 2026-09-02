@@ -5,9 +5,13 @@ import java.util.logging.Level;
 import java.util.logging.LogRecord;
 import java.util.logging.Logger;
 
-import clientcore.ClientMain;
 import engine.GameSimulator;
 import util.RandomManager;
+import view.SwingView;
+import view.IView;
+import model.Model;
+import model.GameSettings;
+import controller.GameController;
 
 public class MainClient {
 
@@ -29,6 +33,27 @@ public class MainClient {
 	public static void main(String[] args) {
 		// RandomManager.setSeed(1773484627773L);
 		RandomManager.randomizeSeed();
+
+		setupLogging();
+
+		// if (args.length < 3) {
+		// GameSimulator.main(args);
+		// } else {
+		// ClientMain.main(args);
+		// }
+
+		IView view = new SwingView();
+
+		Model model = new Model();
+		GameSettings settings = GameSettings.getDefaultSettings();
+		model.setSettings(settings);
+
+		GameController controller = new GameController(model, view);
+		((SwingView) view).setController(controller);
+		controller.startSession();
+	}
+
+	private static void setupLogging() {
 		Logger root = Logger.getLogger("");
 		root.setLevel(Level.FINE);
 
@@ -51,12 +76,6 @@ public class MainClient {
 				}
 			});
 		}
-		if (args.length < 3) {
-			GameSimulator.main(args);
-		} else {
-			ClientMain.main(args);
-		}
-
 	}
 
 }
