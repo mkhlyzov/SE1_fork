@@ -13,29 +13,27 @@ import network.OfflineNetwork;
 
 public class Factory {
 
-    public static IStrategy buildPlayeStrategy(GameSettings settings) {
-        return buildIStrategy(settings.getPlayerStrategy());
-    }
+  public static IStrategy buildPlayeStrategy(GameSettings settings) {
+    return buildIStrategy(settings.getPlayerStrategy());
+  }
 
-    public static INetwork buildNetwork(GameSettings settings) {
-        return switch (settings.getGameMode()) {
+  public static INetwork buildNetwork(GameSettings settings) {
+    return switch (settings.getGameMode()) {
+      case ONLINE -> new ClientNetwork(settings.getServerURL(), settings.getGameId());
 
-            case ONLINE -> new ClientNetwork(settings.getServerURL(), settings.getGameId());
+      case OFFLINE -> new OfflineNetwork(buildIStrategy(settings.getEnemyStrategy()));
+    };
+  }
 
-            case OFFLINE -> new OfflineNetwork(buildIStrategy(settings.getEnemyStrategy()));
-        };
-    }
+  private static IStrategy buildIStrategy(StrategyType strategy) {
+    return switch (strategy) {
+      case PLANNED_TOUR -> new StrategyPlannedTour();
 
-    private static IStrategy buildIStrategy(StrategyType strategy) {
-        return switch (strategy) {
+      case NEAREST_NEIGHBOUR -> new StrategyNearestNeighbour();
 
-            case PLANNED_TOUR -> new StrategyPlannedTour();
+      case ALWAYS_CLOSEST -> new StrategyAlwaysClosest();
 
-            case NEAREST_NEIGHBOUR -> new StrategyNearestNeighbour();
-
-            case ALWAYS_CLOSEST -> new StrategyAlwaysClosest();
-
-            case MANUAL -> new StrategyManual();
-        };
-    }
+      case MANUAL -> new StrategyManual();
+    };
+  }
 }

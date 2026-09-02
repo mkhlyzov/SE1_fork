@@ -5,31 +5,30 @@ import java.util.logging.Logger;
 
 public final class TestLogger {
 
-    private static final Logger ROOT_LOGGER = Logger.getLogger("");
-    private static boolean configured = false;
+  private static final Logger ROOT_LOGGER = Logger.getLogger("");
+  private static boolean configured = false;
 
-    static {
-        configure();
+  static {
+    configure();
+  }
+
+  private TestLogger() {}
+
+  private static void configure() {
+    if (configured) {
+      return;
     }
 
-    private TestLogger() {
+    ROOT_LOGGER.setLevel(Level.FINE);
+
+    for (var handler : ROOT_LOGGER.getHandlers()) {
+      handler.setLevel(Level.FINE);
     }
 
-    private static void configure() {
-        if (configured) {
-            return;
-        }
+    configured = true;
+  }
 
-        ROOT_LOGGER.setLevel(Level.FINE);
-
-        for (var handler : ROOT_LOGGER.getHandlers()) {
-            handler.setLevel(Level.FINE);
-        }
-
-        configured = true;
-    }
-
-    public static Logger getLogger() {
-        return ROOT_LOGGER;
-    }
+  public static Logger getLogger() {
+    return ROOT_LOGGER;
+  }
 }

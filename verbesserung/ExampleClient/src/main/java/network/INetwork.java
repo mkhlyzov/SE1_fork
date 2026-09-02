@@ -6,13 +6,13 @@ import messagesbase.messagesfromclient.PlayerMove;
 import messagesbase.messagesfromserver.GameState;
 
 public interface INetwork {
-    public void registerPlayer(String studentId);
+  public void registerPlayer(String studentId);
 
-    public void sendHalfMap(PlayerHalfMap halfMap);
+  public void sendHalfMap(PlayerHalfMap halfMap);
 
-    public void sendMove(PlayerMove move);
+  public void sendMove(PlayerMove move);
 
-    public GameState getGameState();
+  public GameState getGameState();
 
-    public UniquePlayerIdentifier getPlayerId();
+  public UniquePlayerIdentifier getPlayerId();
 }

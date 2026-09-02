@@ -1,4 +1,19 @@
+// Integrates Spring Boot, specifies versions, and provides sources for required libraries.
+buildscript {
+ 	ext {
+        springBootVersion = '3.3.2'
+    }
+    repositories {
+        mavenCentral()
+    }
+    dependencies {
+        classpath("org.springframework.boot:spring-boot-gradle-plugin:${springBootVersion}")
+    }
+}
 // Downloads libraries from a web server. Used to integrate the provided network message implementation.
+plugins {
+    id 'com.diffplug.spotless' version '7.0.2'
+}
 def urlFile = { url, name ->
     File file = new File("$buildDir/download/${name}.jar")
     file.parentFile.mkdirs()
@@ -12,18 +27,7 @@ def urlFile = { url, name ->
     files(file.absolutePath)
 }
 
-// Integrates Spring Boot, specifies versions, and provides sources for required libraries.
-buildscript {
- 	ext {
-        springBootVersion = '3.3.2'
-    }
-    repositories {
-        mavenCentral()
-    }
-    dependencies {
-        classpath("org.springframework.boot:spring-boot-gradle-plugin:${springBootVersion}")
-    }
-}
+
 
 // Applies the Java plugin to enable support for Java, IDE integration, and Spring.
 apply plugin: 'java'
@@ -119,4 +123,10 @@ bootJar {
 
 application {
     mainClass = 'client.main.MainClient'
+}
+
+spotless {
+    java {
+        googleJavaFormat()
+    }
 }

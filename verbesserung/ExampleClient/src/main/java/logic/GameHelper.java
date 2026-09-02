@@ -9,7 +9,6 @@ import java.util.Queue;
 import java.util.Set;
 import java.util.logging.Logger;
 import java.util.stream.Collectors;
-
 import messagesbase.UniquePlayerIdentifier;
 import messagesbase.messagesfromclient.ETerrain;
 import messagesbase.messagesfromserver.EPlayerGameState;
@@ -21,439 +20,440 @@ import messagesbase.messagesfromserver.GameState;
 import messagesbase.messagesfromserver.PlayerState;
 
 public class GameHelper {
-    private Boolean DEBUG = false;
-    private static final Logger LOGGER = Logger.getLogger(GameHelper.class.getName());
-    private GameState currentGameState;
-    private final Set<String> visitedFields = new HashSet<>();
-    private final Set<String> observedFields = new HashSet<>();
-    private final UniquePlayerIdentifier playerId;
-    private boolean lastHadTreasure = false;
-    private String rememberGoldPosition = null;
+  private Boolean DEBUG = false;
+  private static final Logger LOGGER = Logger.getLogger(GameHelper.class.getName());
+  private GameState currentGameState;
+  private final Set<String> visitedFields = new HashSet<>();
+  private final Set<String> observedFields = new HashSet<>();
+  private final UniquePlayerIdentifier playerId;
+  private boolean lastHadTreasure = false;
+  private String rememberGoldPosition = null;
 
-    private int myXmin;
-    private int myXmax;
-    private int myYmin;
-    private int myYmax;
-    private int enemyXmin;
-    private int enemyXmax;
-    private int enemyYmin;
-    private int enemyYmax;
-    private boolean isInitialized = false;
+  private int myXmin;
+  private int myXmax;
+  private int myYmin;
+  private int myYmax;
+  private int enemyXmin;
+  private int enemyXmax;
+  private int enemyYmin;
+  private int enemyYmax;
+  private boolean isInitialized = false;
 
-    private List<Point> playerPosHistory = new ArrayList<>();
-    private List<Point> enemyPosHistory = new ArrayList<>();
+  private List<Point> playerPosHistory = new ArrayList<>();
+  private List<Point> enemyPosHistory = new ArrayList<>();
 
-    public GameHelper(UniquePlayerIdentifier playerId) {
-        this.playerId = playerId;
+  public GameHelper(UniquePlayerIdentifier playerId) {
+    this.playerId = playerId;
+  }
+
+  public GameHelper(UniquePlayerIdentifier playerId, Boolean debug) {
+    this.playerId = playerId;
+    this.DEBUG = debug;
+  }
+
+  public UniquePlayerIdentifier getPlayerId() {
+    return playerId;
+  }
+
+  public FullMap getMap() {
+    return currentGameState.getMap();
+  }
+
+  public int getMaxX() {
+    FullMap map = currentGameState.getMap();
+    return map.stream().mapToInt(FullMapNode::getX).max().orElse(0);
+  }
+
+  public int getMaxY() {
+    FullMap map = currentGameState.getMap();
+    return map.stream().mapToInt(FullMapNode::getY).max().orElse(0);
+  }
+
+  private String key(FullMapNode node) {
+    return node.getX() + "," + node.getY();
+  }
+
+  public boolean isVisited(FullMapNode node) {
+    return visitedFields.contains(key(node));
+  }
+
+  public boolean isObserved(FullMapNode node) {
+    return observedFields.contains(key(node));
+  }
+
+  public FullMapNode getMyPosition() {
+    FullMap map = currentGameState.getMap();
+    return map.getMapNodes().stream()
+        .filter(
+            n ->
+                n.getPlayerPositionState() == EPlayerPositionState.BothPlayerPosition
+                    || n.getPlayerPositionState() == EPlayerPositionState.MyPlayerPosition)
+        .findFirst()
+        .orElse(null);
+  }
+
+  public FullMapNode getEnemyPosition() {
+    FullMap map = currentGameState.getMap();
+    return map.getMapNodes().stream()
+        .filter(
+            n ->
+                n.getPlayerPositionState() == EPlayerPositionState.BothPlayerPosition
+                    || n.getPlayerPositionState() == EPlayerPositionState.EnemyPlayerPosition)
+        .findFirst()
+        .orElse(null);
+  }
+
+  public Point getFirstTrueEnemyPosition() {
+    if (enemyPosHistory.size() > 8) {
+      return enemyPosHistory.get(8);
+    }
+    return null;
+  }
+
+  public boolean goldWasHere(FullMapNode node) {
+    return rememberGoldPosition != null && key(node).equals(rememberGoldPosition);
+  }
+
+  public boolean hasTreasure() {
+    return currentGameState.getPlayers().stream()
+        .filter(p -> p.getUniquePlayerID().equals(playerId.getUniquePlayerID()))
+        .findFirst()
+        .map(PlayerState::hasCollectedTreasure)
+        .orElse(false);
+  }
+
+  public boolean playerRecentlyMoved() {
+
+    // System.out.println("Size of Array: " + playerPosHistory.size());
+
+    int size = playerPosHistory.size();
+    if (size < 2) {
+      return true;
     }
 
-    public GameHelper(UniquePlayerIdentifier playerId, Boolean debug) {
-        this.playerId = playerId;
-        this.DEBUG = debug;
+    Point previous = playerPosHistory.get(size - 2);
+    Point current = playerPosHistory.get(size - 1);
+
+    return !current.equals(previous);
+  }
+
+  // private void updatePositions() {
+  // Point currentPlayerPos = new
+  // Point(getMyPosition().getX(),getMyPosition().getY());
+  // playerPosHistory.add(currentPlayerPos);
+  // Point enemyPlayerPos = new
+  // Point(getEnemyPosition().getX(),getEnemyPosition().getY());
+  // enemyPosHistory.add(enemyPlayerPos);
+  // }
+  private void updatePositions() {
+
+    FullMapNode myPosition = getMyPosition();
+    if (myPosition != null) {
+      Point currentPlayerPos = new Point(myPosition.getX(), myPosition.getY());
+      playerPosHistory.add(currentPlayerPos);
     }
 
-    public UniquePlayerIdentifier getPlayerId() {
-        return playerId;
+    FullMapNode enemyPosition = getEnemyPosition();
+    if (enemyPosition != null) {
+      Point enemyPlayerPos = new Point(enemyPosition.getX(), enemyPosition.getY());
+      enemyPosHistory.add(enemyPlayerPos);
+    }
+  }
+
+  // public void update(GameState gameState) {
+  // currentGameState = gameState;
+  // initialize();
+  // updatePositions();
+  // FullMap map = gameState.getMap();
+  // boolean hasTreasureNow = hasTreasure();
+  // int maxX = getMaxX();
+  // int maxY = getMaxY();
+
+  // for (FullMapNode node : map.getMapNodes()) {
+  // String key = key(node);
+  // if (node.getTreasureState() == ETreasureState.MyTreasureIsPresent) {
+  // rememberGoldPosition = key;
+  // }
+  // if (node.getPlayerPositionState() == EPlayerPositionState.MyPlayerPosition
+  // || node.getPlayerPositionState() == EPlayerPositionState.BothPlayerPosition)
+  // {
+  // visitedFields.add(key);
+  // observedFields.add(key);
+
+  // if (hasTreasureNow && !lastHadTreasure) {
+  // rememberGoldPosition = key;
+  // }
+  // if (node.getTerrain() == ETerrain.Mountain) {
+  // int[][] dirs = { { 1, 0 }, { -1, 0 }, { 0, 1 }, { 0, -1 }, { 1, 1 }, { -1, 1
+  // }, { -1, -1 },
+  // { 1, -1 } };
+  // for (int[] dir : dirs) {
+  // int nx = node.getX() + dir[0];
+  // int ny = node.getY() + dir[1];
+
+  // if (nx >= 0 && ny >= 0 && nx <= maxX && ny <= maxY) {
+  // String neighbourkey = nx + "," + ny;
+  // observedFields.add(neighbourkey);
+  // }
+  // }
+  // }
+  // }
+  // }
+  // lastHadTreasure = hasTreasureNow;
+  // }
+
+  public void update(GameState gameState) {
+
+    if (currentGameState == gameState) {
+      return;
     }
 
-    public FullMap getMap() {
-        return currentGameState.getMap();
-    }
+    currentGameState = gameState;
 
-    public int getMaxX() {
-        FullMap map = currentGameState.getMap();
-        return map.stream().mapToInt(FullMapNode::getX).max().orElse(0);
-    }
+    initialize();
 
-    public int getMaxY() {
-        FullMap map = currentGameState.getMap();
-        return map.stream().mapToInt(FullMapNode::getY).max().orElse(0);
-    }
+    updatePositionHistory(gameState);
 
-    private String key(FullMapNode node) {
-        return node.getX() + "," + node.getY();
-    }
+    FullMap map = gameState.getMap();
+    boolean hasTreasureNow = hasTreasure();
+    int maxX = getMaxX();
+    int maxY = getMaxY();
 
-    public boolean isVisited(FullMapNode node) {
-        return visitedFields.contains(key(node));
-    }
+    for (FullMapNode node : map.getMapNodes()) {
 
-    public boolean isObserved(FullMapNode node) {
-        return observedFields.contains(key(node));
-    }
+      String key = key(node);
 
-    public FullMapNode getMyPosition() {
-        FullMap map = currentGameState.getMap();
-        return map.getMapNodes().stream()
-                .filter(n -> n.getPlayerPositionState() == EPlayerPositionState.BothPlayerPosition
-                        || n.getPlayerPositionState() == EPlayerPositionState.MyPlayerPosition)
-                .findFirst().orElse(null);
-    }
+      if (node.getTreasureState() == ETreasureState.MyTreasureIsPresent) {
 
-    public FullMapNode getEnemyPosition() {
-        FullMap map = currentGameState.getMap();
-        return map.getMapNodes().stream()
-                .filter(n -> n.getPlayerPositionState() == EPlayerPositionState.BothPlayerPosition
-                        || n.getPlayerPositionState() == EPlayerPositionState.EnemyPlayerPosition)
-                .findFirst().orElse(null);
-    }
+        rememberGoldPosition = key;
+      }
 
-    public Point getFirstTrueEnemyPosition() {
-        if (enemyPosHistory.size() > 8) {
-            return enemyPosHistory.get(8);
+      if (node.getPlayerPositionState() == EPlayerPositionState.MyPlayerPosition
+          || node.getPlayerPositionState() == EPlayerPositionState.BothPlayerPosition) {
+
+        visitedFields.add(key);
+        observedFields.add(key);
+
+        if (hasTreasureNow && !lastHadTreasure) {
+          rememberGoldPosition = key;
         }
-        return null;
-    }
 
-    public boolean goldWasHere(FullMapNode node) {
-        return rememberGoldPosition != null && key(node).equals(rememberGoldPosition);
-    }
+        if (node.getTerrain() == ETerrain.Mountain) {
 
-    public boolean hasTreasure() {
-        return currentGameState.getPlayers().stream()
-                .filter(p -> p.getUniquePlayerID().equals(playerId.getUniquePlayerID()))
-                .findFirst()
-                .map(PlayerState::hasCollectedTreasure)
-                .orElse(false);
-    }
+          int[][] dirs = {
+            {1, 0},
+            {-1, 0},
+            {0, 1},
+            {0, -1},
+            {1, 1},
+            {-1, 1},
+            {-1, -1},
+            {1, -1}
+          };
 
-    public boolean playerRecentlyMoved() {
+          for (int[] dir : dirs) {
 
-        // System.out.println("Size of Array: " + playerPosHistory.size());
+            int nx = node.getX() + dir[0];
+            int ny = node.getY() + dir[1];
 
-        int size = playerPosHistory.size();
-        if (size < 2) {
-            return true;
-        }
+            if (nx >= 0 && ny >= 0 && nx <= maxX && ny <= maxY) {
 
-        Point previous = playerPosHistory.get(size - 2);
-        Point current = playerPosHistory.get(size - 1);
+              String neighbourkey = nx + "," + ny;
 
-        return !current.equals(previous);
-    }
-
-    // private void updatePositions() {
-    // Point currentPlayerPos = new
-    // Point(getMyPosition().getX(),getMyPosition().getY());
-    // playerPosHistory.add(currentPlayerPos);
-    // Point enemyPlayerPos = new
-    // Point(getEnemyPosition().getX(),getEnemyPosition().getY());
-    // enemyPosHistory.add(enemyPlayerPos);
-    // }
-    private void updatePositions() {
-
-        FullMapNode myPosition = getMyPosition();
-        if (myPosition != null) {
-            Point currentPlayerPos = new Point(myPosition.getX(), myPosition.getY());
-            playerPosHistory.add(currentPlayerPos);
-        }
-
-        FullMapNode enemyPosition = getEnemyPosition();
-        if (enemyPosition != null) {
-            Point enemyPlayerPos = new Point(enemyPosition.getX(), enemyPosition.getY());
-            enemyPosHistory.add(enemyPlayerPos);
-        }
-    }
-
-    // public void update(GameState gameState) {
-    // currentGameState = gameState;
-    // initialize();
-    // updatePositions();
-    // FullMap map = gameState.getMap();
-    // boolean hasTreasureNow = hasTreasure();
-    // int maxX = getMaxX();
-    // int maxY = getMaxY();
-
-    // for (FullMapNode node : map.getMapNodes()) {
-    // String key = key(node);
-    // if (node.getTreasureState() == ETreasureState.MyTreasureIsPresent) {
-    // rememberGoldPosition = key;
-    // }
-    // if (node.getPlayerPositionState() == EPlayerPositionState.MyPlayerPosition
-    // || node.getPlayerPositionState() == EPlayerPositionState.BothPlayerPosition)
-    // {
-    // visitedFields.add(key);
-    // observedFields.add(key);
-
-    // if (hasTreasureNow && !lastHadTreasure) {
-    // rememberGoldPosition = key;
-    // }
-    // if (node.getTerrain() == ETerrain.Mountain) {
-    // int[][] dirs = { { 1, 0 }, { -1, 0 }, { 0, 1 }, { 0, -1 }, { 1, 1 }, { -1, 1
-    // }, { -1, -1 },
-    // { 1, -1 } };
-    // for (int[] dir : dirs) {
-    // int nx = node.getX() + dir[0];
-    // int ny = node.getY() + dir[1];
-
-    // if (nx >= 0 && ny >= 0 && nx <= maxX && ny <= maxY) {
-    // String neighbourkey = nx + "," + ny;
-    // observedFields.add(neighbourkey);
-    // }
-    // }
-    // }
-    // }
-    // }
-    // lastHadTreasure = hasTreasureNow;
-    // }
-
-    public void update(GameState gameState) {
-
-        if (currentGameState == gameState) {
-            return;
-        }
-
-        currentGameState = gameState;
-
-        initialize();
-
-        updatePositionHistory(gameState);
-
-        FullMap map = gameState.getMap();
-        boolean hasTreasureNow = hasTreasure();
-        int maxX = getMaxX();
-        int maxY = getMaxY();
-
-        for (FullMapNode node : map.getMapNodes()) {
-
-            String key = key(node);
-
-            if (node.getTreasureState() == ETreasureState.MyTreasureIsPresent) {
-
-                rememberGoldPosition = key;
+              observedFields.add(neighbourkey);
             }
-
-            if (node.getPlayerPositionState() == EPlayerPositionState.MyPlayerPosition
-                    || node.getPlayerPositionState() == EPlayerPositionState.BothPlayerPosition) {
-
-                visitedFields.add(key);
-                observedFields.add(key);
-
-                if (hasTreasureNow && !lastHadTreasure) {
-                    rememberGoldPosition = key;
-                }
-
-                if (node.getTerrain() == ETerrain.Mountain) {
-
-                    int[][] dirs = {
-                            { 1, 0 },
-                            { -1, 0 },
-                            { 0, 1 },
-                            { 0, -1 },
-                            { 1, 1 },
-                            { -1, 1 },
-                            { -1, -1 },
-                            { 1, -1 }
-                    };
-
-                    for (int[] dir : dirs) {
-
-                        int nx = node.getX() + dir[0];
-                        int ny = node.getY() + dir[1];
-
-                        if (nx >= 0
-                                && ny >= 0
-                                && nx <= maxX
-                                && ny <= maxY) {
-
-                            String neighbourkey = nx + "," + ny;
-
-                            observedFields.add(
-                                    neighbourkey);
-                        }
-                    }
-                }
-            }
+          }
         }
-
-        lastHadTreasure = hasTreasureNow;
+      }
     }
 
-    private void initialize() {
-        if (isInitialized)
-            return;
+    lastHadTreasure = hasTreasureNow;
+  }
 
-        if (!DEBUG) {
-            checkAllNodesAreReachable();
-            initializeMapCoordinates();
-        }
+  private void initialize() {
+    if (isInitialized) return;
 
-        isInitialized = true;
+    if (!DEBUG) {
+      checkAllNodesAreReachable();
+      initializeMapCoordinates();
     }
 
-    private void checkAllNodesAreReachable() {
-        /*
-         * checkAllGoalsAreReachable
-         * Returns True if all Goals are reachable, returns False otherwise
-         */
+    isInitialized = true;
+  }
 
-        Set<FullMapNode> nodesLeft = getMap().getMapNodes().stream()
-                .filter(n -> n.getTerrain() != ETerrain.Water)
-                .collect(Collectors.toSet());
-        Set<FullMapNode> visited = new HashSet<>();
-        Queue<FullMapNode> queue = new LinkedList<>();
-
-        FullMapNode start = getMyPosition();
-        queue.add(start);
-        visited.add(start);
-
-        while (!queue.isEmpty() && !nodesLeft.isEmpty()) {
-            FullMapNode current = queue.poll();
-            visited.add(current);
-            nodesLeft.remove(current);
-
-            for (FullMapNode nb : this.getNeighbours4(current)) {
-                if (!visited.contains(nb)) {
-                    queue.add(nb);
-                }
-            }
-        }
-
-        assert nodesLeft.isEmpty();
-    }
-
-    private void initializeMapCoordinates() {
-        FullMap map = this.getMap();
-        FullMapNode myPosition = this.getMyPosition();
-        int maxX = this.getMaxX(); // 9 or 19
-        int maxY = this.getMaxY(); // 9 or 4
-        int playerX = myPosition.getX();
-        int playerY = myPosition.getY();
-
-        if (maxX == 9 && maxY == 9) {
-            // 10x10 — split horizontally
-            myXmin = 0;
-            myXmax = 10;
-            myYmin = 0;
-            myYmax = 5;
-
-            if (myXmin <= playerX && playerX < myXmax && myYmin <= playerY && playerY < myYmax) {
-                enemyXmin = 0;
-                enemyXmax = 10;
-                enemyYmin = 5;
-                enemyYmax = 10;
-            } else {
-                myXmin = 0;
-                myXmax = 10;
-                myYmin = 5;
-                myYmax = 10;
-
-                enemyXmin = 0;
-                enemyXmax = 10;
-                enemyYmin = 0;
-                enemyYmax = 5;
-            }
-        } else if (maxX == 19 && maxY == 4) {
-            // 20x5 — split vertically
-            myXmin = 0;
-            myXmax = 10;
-            myYmin = 0;
-            myYmax = 5;
-
-            if (myXmin <= playerX && playerX < myXmax && myYmin <= playerY && playerY < myYmax) {
-                enemyXmin = 10;
-                enemyXmax = 20;
-                enemyYmin = 0;
-                enemyYmax = 5;
-            } else {
-                myXmin = 10;
-                myXmax = 20;
-                myYmin = 0;
-                myYmax = 5;
-
-                enemyXmin = 0;
-                enemyXmax = 10;
-                enemyYmin = 0;
-                enemyYmax = 5;
-            }
-        } else {
-            LOGGER.severe("Unknown map format (" + (maxX + 1) + " x " + (maxY + 1) + ")");
-        }
-    }
-
-    public boolean insideMine(FullMapNode n) {
-        return n.getX() >= myXmin && n.getX() < myXmax && n.getY() >= myYmin && n.getY() < myYmax;
-    }
-
-    public boolean insideEnemy(FullMapNode n) {
-        return n.getX() >= enemyXmin && n.getX() < enemyXmax && n.getY() >= enemyYmin && n.getY() < enemyYmax;
-    }
-
-    public List<FullMapNode> getNeighbours4(FullMapNode node) {
-        List<FullMapNode> neighbours = new ArrayList<>();
-        for (FullMapNode n : this.getMap().getMapNodes()) {
-            int dx = n.getX() - node.getX();
-            int dy = n.getY() - node.getY();
-            if ((dx * dx + dy * dy) == 1 && n.getTerrain() != ETerrain.Water) {
-                neighbours.add(n);
-            }
-        }
-        return neighbours;
-    }
-
-    public List<FullMapNode> getNeighbours8(FullMapNode node) {
-        List<FullMapNode> neighbours = new ArrayList<>();
-        for (FullMapNode n : this.getMap().getMapNodes()) {
-            int dx = n.getX() - node.getX();
-            int dy = n.getY() - node.getY();
-            if ((dx * dx + dy * dy) <= 2 && n.getTerrain() != ETerrain.Water) {
-                neighbours.add(n);
-            }
-        }
-        return neighbours;
-    }
-
-    /**
-     * Calculates the movement cost between two directly adjacent nodes.
-     *
-     * The transition cost is the sum of terrain costs of both nodes:
-     * Grass = 1, Mountain = 2.
-     *
-     * @param from the source node
-     * @param to   the directly adjacent target node
-     * @return the movement cost between the two nodes
+  private void checkAllNodesAreReachable() {
+    /*
+     * checkAllGoalsAreReachable
+     * Returns True if all Goals are reachable, returns False otherwise
      */
-    private int terrainTransitionCost(FullMapNode from, FullMapNode to) {
-        int dx = to.getX() - from.getX();
-        int dy = to.getY() - from.getY();
-        assert dx * dx + dy * dy == 1;
 
-        int fromCost = (from.getTerrain() == ETerrain.Mountain) ? 2 : 1;
-        int toCost = (to.getTerrain() == ETerrain.Mountain) ? 2 : 1;
-        return fromCost + toCost;
-    }
+    Set<FullMapNode> nodesLeft =
+        getMap().getMapNodes().stream()
+            .filter(n -> n.getTerrain() != ETerrain.Water)
+            .collect(Collectors.toSet());
+    Set<FullMapNode> visited = new HashSet<>();
+    Queue<FullMapNode> queue = new LinkedList<>();
 
-    public static PlayerState getPlayerState(
-            GameState state,
-            UniquePlayerIdentifier playerId) {
+    FullMapNode start = getMyPosition();
+    queue.add(start);
+    visited.add(start);
 
-        for (PlayerState player : state.getPlayers()) {
+    while (!queue.isEmpty() && !nodesLeft.isEmpty()) {
+      FullMapNode current = queue.poll();
+      visited.add(current);
+      nodesLeft.remove(current);
 
-            if (player.getUniquePlayerID()
-                    .equals(playerId.getUniquePlayerID())) {
-
-                return player;
-            }
+      for (FullMapNode nb : this.getNeighbours4(current)) {
+        if (!visited.contains(nb)) {
+          queue.add(nb);
         }
-
-        return null;
+      }
     }
 
-    private void updatePositionHistory(GameState gameState) {
+    assert nodesLeft.isEmpty();
+  }
 
-        PlayerState myPlayer = getPlayerState(gameState, playerId);
+  private void initializeMapCoordinates() {
+    FullMap map = this.getMap();
+    FullMapNode myPosition = this.getMyPosition();
+    int maxX = this.getMaxX(); // 9 or 19
+    int maxY = this.getMaxY(); // 9 or 4
+    int playerX = myPosition.getX();
+    int playerY = myPosition.getY();
 
-        if (myPlayer == null) {
-            return;
-        }
+    if (maxX == 9 && maxY == 9) {
+      // 10x10 — split horizontally
+      myXmin = 0;
+      myXmax = 10;
+      myYmin = 0;
+      myYmax = 5;
 
-        if (myPlayer.getState() == EPlayerGameState.MustAct) {
+      if (myXmin <= playerX && playerX < myXmax && myYmin <= playerY && playerY < myYmax) {
+        enemyXmin = 0;
+        enemyXmax = 10;
+        enemyYmin = 5;
+        enemyYmax = 10;
+      } else {
+        myXmin = 0;
+        myXmax = 10;
+        myYmin = 5;
+        myYmax = 10;
 
-            updatePositions();
-        }
+        enemyXmin = 0;
+        enemyXmax = 10;
+        enemyYmin = 0;
+        enemyYmax = 5;
+      }
+    } else if (maxX == 19 && maxY == 4) {
+      // 20x5 — split vertically
+      myXmin = 0;
+      myXmax = 10;
+      myYmin = 0;
+      myYmax = 5;
+
+      if (myXmin <= playerX && playerX < myXmax && myYmin <= playerY && playerY < myYmax) {
+        enemyXmin = 10;
+        enemyXmax = 20;
+        enemyYmin = 0;
+        enemyYmax = 5;
+      } else {
+        myXmin = 10;
+        myXmax = 20;
+        myYmin = 0;
+        myYmax = 5;
+
+        enemyXmin = 0;
+        enemyXmax = 10;
+        enemyYmin = 0;
+        enemyYmax = 5;
+      }
+    } else {
+      LOGGER.severe("Unknown map format (" + (maxX + 1) + " x " + (maxY + 1) + ")");
+    }
+  }
+
+  public boolean insideMine(FullMapNode n) {
+    return n.getX() >= myXmin && n.getX() < myXmax && n.getY() >= myYmin && n.getY() < myYmax;
+  }
+
+  public boolean insideEnemy(FullMapNode n) {
+    return n.getX() >= enemyXmin
+        && n.getX() < enemyXmax
+        && n.getY() >= enemyYmin
+        && n.getY() < enemyYmax;
+  }
+
+  public List<FullMapNode> getNeighbours4(FullMapNode node) {
+    List<FullMapNode> neighbours = new ArrayList<>();
+    for (FullMapNode n : this.getMap().getMapNodes()) {
+      int dx = n.getX() - node.getX();
+      int dy = n.getY() - node.getY();
+      if ((dx * dx + dy * dy) == 1 && n.getTerrain() != ETerrain.Water) {
+        neighbours.add(n);
+      }
+    }
+    return neighbours;
+  }
+
+  public List<FullMapNode> getNeighbours8(FullMapNode node) {
+    List<FullMapNode> neighbours = new ArrayList<>();
+    for (FullMapNode n : this.getMap().getMapNodes()) {
+      int dx = n.getX() - node.getX();
+      int dy = n.getY() - node.getY();
+      if ((dx * dx + dy * dy) <= 2 && n.getTerrain() != ETerrain.Water) {
+        neighbours.add(n);
+      }
+    }
+    return neighbours;
+  }
+
+  /**
+   * Calculates the movement cost between two directly adjacent nodes.
+   *
+   * <p>The transition cost is the sum of terrain costs of both nodes: Grass = 1, Mountain = 2.
+   *
+   * @param from the source node
+   * @param to the directly adjacent target node
+   * @return the movement cost between the two nodes
+   */
+  private int terrainTransitionCost(FullMapNode from, FullMapNode to) {
+    int dx = to.getX() - from.getX();
+    int dy = to.getY() - from.getY();
+    assert dx * dx + dy * dy == 1;
+
+    int fromCost = (from.getTerrain() == ETerrain.Mountain) ? 2 : 1;
+    int toCost = (to.getTerrain() == ETerrain.Mountain) ? 2 : 1;
+    return fromCost + toCost;
+  }
+
+  public static PlayerState getPlayerState(GameState state, UniquePlayerIdentifier playerId) {
+
+    for (PlayerState player : state.getPlayers()) {
+
+      if (player.getUniquePlayerID().equals(playerId.getUniquePlayerID())) {
+
+        return player;
+      }
     }
 
-    public List<Point> getPlayerPosHistory() {
-        return playerPosHistory;
+    return null;
+  }
+
+  private void updatePositionHistory(GameState gameState) {
+
+    PlayerState myPlayer = getPlayerState(gameState, playerId);
+
+    if (myPlayer == null) {
+      return;
     }
+
+    if (myPlayer.getState() == EPlayerGameState.MustAct) {
+
+      updatePositions();
+    }
+  }
+
+  public List<Point> getPlayerPosHistory() {
+    return playerPosHistory;
+  }
 }

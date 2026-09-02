@@ -1,12 +1,12 @@
 package view;
 
+import controller.GameController;
 import java.awt.BorderLayout;
 import java.awt.Color;
 import java.awt.Dimension;
 import java.awt.Font;
 import java.awt.FontMetrics;
 import java.awt.Graphics;
-
 import javax.swing.BorderFactory;
 import javax.swing.BoxLayout;
 import javax.swing.JButton;
@@ -15,9 +15,7 @@ import javax.swing.JLabel;
 import javax.swing.JPanel;
 import javax.swing.SwingConstants;
 import javax.swing.SwingUtilities;
-
 import logic.GameHelper;
-import controller.GameController;
 import messagesbase.messagesfromclient.ETerrain;
 import messagesbase.messagesfromserver.EFortState;
 import messagesbase.messagesfromserver.EPlayerPositionState;
@@ -26,372 +24,350 @@ import messagesbase.messagesfromserver.FullMapNode;
 
 public class SwingView extends JFrame implements IView {
 
-    private GameController controller;
+  private GameController controller;
 
-    private GamePanel gamePanel;
+  private GamePanel gamePanel;
 
-    private JLabel statusLabel;
+  private JLabel statusLabel;
 
-    private JLabel myPlayerLabel;
+  private JLabel myPlayerLabel;
 
-    private JLabel enemyPlayerLabel;
+  private JLabel enemyPlayerLabel;
 
-    private JPanel leftPanel;
+  private JPanel leftPanel;
 
-    private JPanel rightPanel;
+  private JPanel rightPanel;
 
-    JPanel topPanel = new JPanel();
+  JPanel topPanel = new JPanel();
 
-    public SwingView() {
+  public SwingView() {
 
-        super("SE1 MVC Game View");
+    super("SE1 MVC Game View");
 
-        setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-        setLayout(new BorderLayout());
+    setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+    setLayout(new BorderLayout());
 
-        topPanel.setLayout(new BoxLayout(topPanel, BoxLayout.Y_AXIS));
-        add(topPanel, BorderLayout.NORTH);
+    topPanel.setLayout(new BoxLayout(topPanel, BoxLayout.Y_AXIS));
+    add(topPanel, BorderLayout.NORTH);
 
-        addnewGameButton();
+    addnewGameButton();
 
-        addGameInfo();
-        /*
-         * Genau wie im Minesweeper:
-         * Ein GamePanel wird erstellt und
-         * in BorderLayout.CENTER eingefügt.
-         */
-        gamePanel = new GamePanel();
-        add(gamePanel, BorderLayout.CENTER);
+    addGameInfo();
+    /*
+     * Genau wie im Minesweeper:
+     * Ein GamePanel wird erstellt und
+     * in BorderLayout.CENTER eingefügt.
+     */
+    gamePanel = new GamePanel();
+    add(gamePanel, BorderLayout.CENTER);
 
-        /*
-         * Fenster ist veränderbar.
-         * Dadurch kann GamePanel seine Zellen skalieren.
-         */
-        setLocationRelativeTo(null);
-        setVisible(true);
-    }
+    /*
+     * Fenster ist veränderbar.
+     * Dadurch kann GamePanel seine Zellen skalieren.
+     */
+    setLocationRelativeTo(null);
+    setVisible(true);
+  }
 
-    public void setController(GameController controller) {
-        this.controller = controller;
-    }
+  public void setController(GameController controller) {
+    this.controller = controller;
+  }
 
-    private void addGameInfo() {
+  private void addGameInfo() {
 
-        JPanel playersPanel = new JPanel(new BorderLayout());
+    JPanel playersPanel = new JPanel(new BorderLayout());
 
-        JLabel myText = new JLabel("Mein Spieler");
-        JLabel enemyText = new JLabel("Gegner");
+    JLabel myText = new JLabel("Mein Spieler");
+    JLabel enemyText = new JLabel("Gegner");
 
-        myText.setFont(new Font("SansSerif", Font.BOLD, 16));
-        enemyText.setFont(new Font("SansSerif", Font.BOLD, 16));
+    myText.setFont(new Font("SansSerif", Font.BOLD, 16));
+    enemyText.setFont(new Font("SansSerif", Font.BOLD, 16));
 
-        myPlayerLabel = new JLabel("🙂");
-        enemyPlayerLabel = new JLabel("😈");
+    myPlayerLabel = new JLabel("🙂");
+    enemyPlayerLabel = new JLabel("😈");
 
-        myPlayerLabel.setFont(
-                new Font("Segoe UI Emoji", Font.PLAIN, 40));
+    myPlayerLabel.setFont(new Font("Segoe UI Emoji", Font.PLAIN, 40));
 
-        enemyPlayerLabel.setFont(
-                new Font("Segoe UI Emoji", Font.PLAIN, 40));
+    enemyPlayerLabel.setFont(new Font("Segoe UI Emoji", Font.PLAIN, 40));
 
-        statusLabel = new JLabel(
-                "Game started",
-                SwingConstants.CENTER);
+    statusLabel = new JLabel("Game started", SwingConstants.CENTER);
 
-        statusLabel.setFont(
-                new Font("SansSerif", Font.BOLD, 20));
+    statusLabel.setFont(new Font("SansSerif", Font.BOLD, 20));
 
-        statusLabel.setBorder(
-                BorderFactory.createEmptyBorder(0, 20, 0, 0));
+    statusLabel.setBorder(BorderFactory.createEmptyBorder(0, 20, 0, 0));
 
-        // Linke Seite
-        leftPanel = new JPanel();
+    // Linke Seite
+    leftPanel = new JPanel();
 
-        leftPanel.add(myText);
-        leftPanel.add(myPlayerLabel);
-        leftPanel.setPreferredSize(new Dimension(170, 60));
-        // Rechte Seite
-        rightPanel = new JPanel();
+    leftPanel.add(myText);
+    leftPanel.add(myPlayerLabel);
+    leftPanel.setPreferredSize(new Dimension(170, 60));
+    // Rechte Seite
+    rightPanel = new JPanel();
 
-        rightPanel.add(enemyPlayerLabel);
-        rightPanel.add(enemyText);
-        rightPanel.setPreferredSize(new Dimension(170, 60));
-        // Alles in einer Linie
-        playersPanel.add(leftPanel, BorderLayout.WEST);
-        playersPanel.add(statusLabel, BorderLayout.CENTER);
-        playersPanel.add(rightPanel, BorderLayout.EAST);
+    rightPanel.add(enemyPlayerLabel);
+    rightPanel.add(enemyText);
+    rightPanel.setPreferredSize(new Dimension(170, 60));
+    // Alles in einer Linie
+    playersPanel.add(leftPanel, BorderLayout.WEST);
+    playersPanel.add(statusLabel, BorderLayout.CENTER);
+    playersPanel.add(rightPanel, BorderLayout.EAST);
 
-        topPanel.add(playersPanel);
-    }
+    topPanel.add(playersPanel);
+  }
 
-    private void addnewGameButton() {
-        JButton newGameButton = new JButton("New Game");
-        newGameButton.setPreferredSize(new Dimension(180, 50));
-        newGameButton.setFont(new Font("SansSerif", Font.BOLD, 20));
-        newGameButton.addActionListener(e -> {
-            dispose();
-            new Thread(() -> {
-                // GameSimulator.multiPlayer(new String[0]);
-                controller.startNewGame();
-            }).start();
+  private void addnewGameButton() {
+    JButton newGameButton = new JButton("New Game");
+    newGameButton.setPreferredSize(new Dimension(180, 50));
+    newGameButton.setFont(new Font("SansSerif", Font.BOLD, 20));
+    newGameButton.addActionListener(
+        e -> {
+          dispose();
+          new Thread(
+                  () -> {
+                    // GameSimulator.multiPlayer(new String[0]);
+                    controller.startNewGame();
+                  })
+              .start();
         });
-        newGameButton.setVisible(true);
-        newGameButton.setAlignmentX(CENTER_ALIGNMENT);
-        topPanel.add(newGameButton);
-    }
+    newGameButton.setVisible(true);
+    newGameButton.setAlignmentX(CENTER_ALIGNMENT);
+    topPanel.add(newGameButton);
+  }
 
-    @Override
-    public void render(GameHelper gameHelper) {
+  @Override
+  public void render(GameHelper gameHelper) {
 
-        SwingUtilities.invokeLater(() -> {
+    SwingUtilities.invokeLater(
+        () -> {
 
-            /*
-             * Aktuelle Karte an GamePanel übergeben.
-             */
-            int cols = gameHelper.getMaxX() + 1;
-            int rows = gameHelper.getMaxY() + 1;
+          /*
+           * Aktuelle Karte an GamePanel übergeben.
+           */
+          int cols = gameHelper.getMaxX() + 1;
+          int rows = gameHelper.getMaxY() + 1;
 
-            if (rows == 10 && cols == 10) {
-                gamePanel.setPreferredSize(new Dimension(500, 500));
-            } else if (rows == 5 && cols == 20) {
-                gamePanel.setPreferredSize(new Dimension(1000, 250));
-            }
-            pack();
-            setResizable(false);
-            gamePanel.updateMap(gameHelper);
+          if (rows == 10 && cols == 10) {
+            gamePanel.setPreferredSize(new Dimension(500, 500));
+          } else if (rows == 5 && cols == 20) {
+            gamePanel.setPreferredSize(new Dimension(1000, 250));
+          }
+          pack();
+          setResizable(false);
+          gamePanel.updateMap(gameHelper);
 
-            /*
-             * Genau wie im Minesweeper:
-             * repaint() ruft paintComponent() erneut auf.
-             */
-            gamePanel.repaint();
+          /*
+           * Genau wie im Minesweeper:
+           * repaint() ruft paintComponent() erneut auf.
+           */
+          gamePanel.repaint();
         });
-    }
+  }
 
-    @Override
-    public void printGameResult(boolean won) {
+  @Override
+  public void printGameResult(boolean won) {
 
-        SwingUtilities.invokeLater(() -> {
-            statusLabel.setHorizontalAlignment(SwingConstants.CENTER);
-            statusLabel.setVerticalAlignment(SwingConstants.CENTER);
-            statusLabel.setText(
-                    won
-                            // ? "🏆 Won!"
-                            // : "💀 Lost.");
-                            ? "Won!"
-                            : "Lost.");
+    SwingUtilities.invokeLater(
+        () -> {
+          statusLabel.setHorizontalAlignment(SwingConstants.CENTER);
+          statusLabel.setVerticalAlignment(SwingConstants.CENTER);
+          statusLabel.setText(
+              won
+                  // ? "🏆 Won!"
+                  // : "💀 Lost.");
+                  ? "Won!"
+                  : "Lost.");
 
-            if (won) {
-                leftPanel.setBorder(BorderFactory.createLineBorder(Color.GREEN, 4));
-            } else {
-                rightPanel.setBorder(BorderFactory.createLineBorder(Color.GREEN, 4));
-            }
+          if (won) {
+            leftPanel.setBorder(BorderFactory.createLineBorder(Color.GREEN, 4));
+          } else {
+            rightPanel.setBorder(BorderFactory.createLineBorder(Color.GREEN, 4));
+          }
         });
-    }
+  }
 }
 
 /**
  * GamePanel zeichnet die Karte.
  *
- * Gleicher Aufbau wie GamePanel im Minesweeper.
+ * <p>Gleicher Aufbau wie GamePanel im Minesweeper.
  *
- * Die Zellengröße wird dynamisch anhand
- * der aktuellen Panelgröße berechnet.
+ * <p>Die Zellengröße wird dynamisch anhand der aktuellen Panelgröße berechnet.
  */
 class GamePanel extends JPanel {
 
-    private String[][] board;
+  private String[][] board;
 
-    private int rows;
-    private int cols;
+  private int rows;
+  private int cols;
 
-    public GamePanel() {
+  public GamePanel() {
 
-        setBackground(Color.LIGHT_GRAY);
+    setBackground(Color.LIGHT_GRAY);
+  }
+
+  /** Aktuellen Spielzustand in ein Board übertragen. */
+  public void updateMap(GameHelper gameHelper) {
+
+    int maxX = gameHelper.getMaxX();
+    int maxY = gameHelper.getMaxY();
+
+    rows = maxY + 1;
+    cols = maxX + 1;
+
+    board = new String[rows][cols];
+
+    for (FullMapNode node : gameHelper.getMap().getMapNodes()) {
+
+      int x = node.getX();
+      int y = node.getY();
+
+      board[y][x] = getSymbolForNode(node, gameHelper);
     }
+  }
 
-    /**
-     * Aktuellen Spielzustand in ein Board übertragen.
+  @Override
+  protected void paintComponent(Graphics g) {
+
+    super.paintComponent(g);
+
+    /*
+     * Solange noch keine Karte vorhanden ist,
+     * gibt es nichts zu zeichnen.
      */
-    public void updateMap(GameHelper gameHelper) {
-
-        int maxX = gameHelper.getMaxX();
-        int maxY = gameHelper.getMaxY();
-
-        rows = maxY + 1;
-        cols = maxX + 1;
-
-        board = new String[rows][cols];
-
-        for (FullMapNode node : gameHelper.getMap().getMapNodes()) {
-
-            int x = node.getX();
-            int y = node.getY();
-
-            board[y][x] = getSymbolForNode(node, gameHelper);
-        }
+    if (board == null) {
+      return;
     }
 
-    @Override
-    protected void paintComponent(Graphics g) {
-
-        super.paintComponent(g);
-
-        /*
-         * Solange noch keine Karte vorhanden ist,
-         * gibt es nichts zu zeichnen.
-         */
-        if (board == null) {
-            return;
-        }
-
-        /*
-         * Genau wie im Minesweeper.
-         */
-        int cellWidth = getWidth() / cols;
-        int cellHeight = getHeight() / rows;
-        int fontSize = (int) (Math.min(cellWidth, cellHeight));
-        /*
-         * Jede Zelle zeichnen.
-         */
-        for (int row = 0; row < rows; row++) {
-
-            for (int col = 0; col < cols; col++) {
-
-                int x = col * cellWidth;
-                int y = row * cellHeight;
-
-                String symbol = board[row][col];
-
-                if (symbol == null) {
-                    continue;
-                }
-
-                /*
-                 * Genau wie beim Text im Minesweeper:
-                 *
-                 * Schriftgröße basiert auf
-                 * cellWidth und cellHeight.
-                 */
-                g.setFont(
-                        new Font(
-                                "Segoe UI Emoji",
-                                Font.PLAIN,
-                                fontSize));
-
-                FontMetrics fm = g.getFontMetrics();
-
-                int textWidth = fm.stringWidth(symbol);
-
-                int textHeight = fm.getAscent();
-
-                /*
-                 * Symbol innerhalb der Zelle zentrieren.
-                 *
-                 * Gleiche Berechnung wie im Minesweeper.
-                 */
-                int textX = x + (cellWidth - textWidth) / 2;
-
-                int textY = y
-                        + (cellHeight + textHeight) / 2
-                        - 2;
-
-                g.drawString(
-                        symbol,
-                        textX,
-                        textY);
-            }
-        }
-    }
-
-    /**
-     * Symbol für ein Feld bestimmen.
+    /*
+     * Genau wie im Minesweeper.
      */
-    private String getSymbolForNode(
-            FullMapNode node,
-            GameHelper gameHelper) {
+    int cellWidth = getWidth() / cols;
+    int cellHeight = getHeight() / rows;
+    int fontSize = (int) (Math.min(cellWidth, cellHeight));
+    /*
+     * Jede Zelle zeichnen.
+     */
+    for (int row = 0; row < rows; row++) {
 
-        /*
-         * Spielerposition.
-         */
-        EPlayerPositionState position = node.getPlayerPositionState();
+      for (int col = 0; col < cols; col++) {
 
-        switch (position) {
+        int x = col * cellWidth;
+        int y = row * cellHeight;
 
-            case MyPlayerPosition:
-                return "🙂";
+        String symbol = board[row][col];
 
-            case EnemyPlayerPosition:
-                return "😈";
-
-            case BothPlayerPosition:
-                return "⚔️";
-
-            default:
-                break;
+        if (symbol == null) {
+          continue;
         }
 
         /*
-         * Burg.
+         * Genau wie beim Text im Minesweeper:
+         *
+         * Schriftgröße basiert auf
+         * cellWidth und cellHeight.
          */
-        EFortState fortState = node.getFortState();
+        g.setFont(new Font("Segoe UI Emoji", Font.PLAIN, fontSize));
 
-        switch (fortState) {
+        FontMetrics fm = g.getFontMetrics();
 
-            case MyFortPresent:
-                return "🏰";
+        int textWidth = fm.stringWidth(symbol);
 
-            case EnemyFortPresent:
-                return "🏯";
-
-            default:
-                break;
-        }
+        int textHeight = fm.getAscent();
 
         /*
-         * Schatz.
+         * Symbol innerhalb der Zelle zentrieren.
+         *
+         * Gleiche Berechnung wie im Minesweeper.
          */
-        if (gameHelper.goldWasHere(node)) {
+        int textX = x + (cellWidth - textWidth) / 2;
 
-            ETreasureState treasureState = node.getTreasureState();
+        int textY = y + (cellHeight + textHeight) / 2 - 2;
 
-            switch (treasureState) {
-
-                case MyTreasureIsPresent:
-                    return "💰";
-
-                case NoOrUnknownTreasureState:
-                    return "🟡";
-
-                default:
-                    break;
-            }
-        }
-
-        /*
-         * Terrain.
-         */
-        ETerrain terrain = node.getTerrain();
-
-        if (gameHelper.isObserved(node)) {
-
-            return switch (terrain) {
-
-                case Grass -> "🟢";
-
-                case Water -> "🟦";
-
-                case Mountain -> "🟤";
-            };
-        }
-
-        return switch (terrain) {
-
-            case Grass -> "🟩";
-
-            case Water -> "🟦";
-
-            case Mountain -> "🟫";
-        };
+        g.drawString(symbol, textX, textY);
+      }
     }
+  }
+
+  /** Symbol für ein Feld bestimmen. */
+  private String getSymbolForNode(FullMapNode node, GameHelper gameHelper) {
+
+    /*
+     * Spielerposition.
+     */
+    EPlayerPositionState position = node.getPlayerPositionState();
+
+    switch (position) {
+      case MyPlayerPosition:
+        return "🙂";
+
+      case EnemyPlayerPosition:
+        return "😈";
+
+      case BothPlayerPosition:
+        return "⚔️";
+
+      default:
+        break;
+    }
+
+    /*
+     * Burg.
+     */
+    EFortState fortState = node.getFortState();
+
+    switch (fortState) {
+      case MyFortPresent:
+        return "🏰";
+
+      case EnemyFortPresent:
+        return "🏯";
+
+      default:
+        break;
+    }
+
+    /*
+     * Schatz.
+     */
+    if (gameHelper.goldWasHere(node)) {
+
+      ETreasureState treasureState = node.getTreasureState();
+
+      switch (treasureState) {
+        case MyTreasureIsPresent:
+          return "💰";
+
+        case NoOrUnknownTreasureState:
+          return "🟡";
+
+        default:
+          break;
+      }
+    }
+
+    /*
+     * Terrain.
+     */
+    ETerrain terrain = node.getTerrain();
+
+    if (gameHelper.isObserved(node)) {
+
+      return switch (terrain) {
+        case Grass -> "🟢";
+
+        case Water -> "🟦";
+
+        case Mountain -> "🟤";
+      };
+    }
+
+    return switch (terrain) {
+      case Grass -> "🟩";
+
+      case Water -> "🟦";
+
+      case Mountain -> "🟫";
+    };
+  }
 }

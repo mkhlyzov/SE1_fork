@@ -9,86 +9,83 @@ import messagesbase.messagesfromserver.FullMap;
 import messagesbase.messagesfromserver.FullMapNode;
 
 public class ConsoleView implements IView {
-    public ConsoleView() {
+  public ConsoleView() {}
+
+  @Override
+  public void render(GameHelper gameHelper) {
+    FullMap map = gameHelper.getMap();
+    int maxX = gameHelper.getMaxX();
+    int maxY = gameHelper.getMaxY();
+
+    // 2D-Matrix vorbereiten
+    String[][] grid = new String[maxY + 1][maxX + 1];
+    for (FullMapNode node : map.getMapNodes()) {
+      int x = node.getX();
+      int y = node.getY();
+      grid[y][x] = getSymbolForNode(node, gameHelper);
     }
 
-    @Override
-    public void render(GameHelper gameHelper) {
-        FullMap map = gameHelper.getMap();
-        int maxX = gameHelper.getMaxX();
-        int maxY = gameHelper.getMaxY();
+    System.out.println("📜 Aktuelle Spielkarte:");
+    for (int y = 0; y <= maxY; y++) {
+      for (int x = 0; x <= maxX; x++) {
+        System.out.print(grid[y][x] != null ? grid[y][x] : "⬜");
+      }
+      System.out.println(); // Zeilenumbruch
+    }
+  }
 
-        // 2D-Matrix vorbereiten
-        String[][] grid = new String[maxY + 1][maxX + 1];
-        for (FullMapNode node : map.getMapNodes()) {
-            int x = node.getX();
-            int y = node.getY();
-            grid[y][x] = getSymbolForNode(node, gameHelper);
-        }
-
-        System.out.println("📜 Aktuelle Spielkarte:");
-        for (int y = 0; y <= maxY; y++) {
-            for (int x = 0; x <= maxX; x++) {
-                System.out.print(grid[y][x] != null ? grid[y][x] : "⬜");
-            }
-            System.out.println(); // Zeilenumbruch
-        }
+  private String getSymbolForNode(FullMapNode node, GameHelper gameHelper) {
+    // Spielerzustand hat höchste Priorität
+    EPlayerPositionState position = node.getPlayerPositionState();
+    switch (position) {
+      case EPlayerPositionState.MyPlayerPosition:
+        return "🙂"; // Eigener Spieler
+      case EPlayerPositionState.EnemyPlayerPosition:
+        return "😈"; // Gegner
+      case EPlayerPositionState.BothPlayerPosition:
+        return "⚔️"; // Beide auf dem Feld
     }
 
-    private String getSymbolForNode(FullMapNode node, GameHelper gameHelper) {
-        // Spielerzustand hat höchste Priorität
-        EPlayerPositionState position = node.getPlayerPositionState();
-        switch (position) {
-            case EPlayerPositionState.MyPlayerPosition:
-                return "🙂"; // Eigener Spieler
-            case EPlayerPositionState.EnemyPlayerPosition:
-                return "😈"; // Gegner
-            case EPlayerPositionState.BothPlayerPosition:
-                return "⚔️"; // Beide auf dem Feld
-        }
-
-        // // Burganzeige (wird nicht überschrieben durch Terrain)
-        EFortState fortState = node.getFortState();
-        switch (fortState) {
-            case EFortState.MyFortPresent:
-                return "🏰"; // eigene Burg
-            case EFortState.EnemyFortPresent:
-                return "🏯"; // gegnerische Burg
-        }
-
-        // // Schatzanzeige (anders je nach Sammlung)
-        if (gameHelper.goldWasHere(node)) {
-            ETreasureState hasTreasure = node.getTreasureState();
-            switch (hasTreasure) {
-                case ETreasureState.MyTreasureIsPresent:
-                    return "💰"; // Sichtbarer Schatz
-                case ETreasureState.NoOrUnknownTreasureState:
-                    return "🟡"; // Sichtbarer Schatz
-            }
-        }
-
-        // Terrainanzeige
-        ETerrain terrain = node.getTerrain();
-        if (gameHelper.isObserved(node)) {
-            return switch (terrain) {
-                case ETerrain.Grass -> "🟢";
-                case ETerrain.Water -> "\uD83D\uDFE6";
-                case ETerrain.Mountain -> "🟤";
-            };
-        } else {
-            return switch (terrain) {
-                case ETerrain.Grass -> "\uD83D\uDFE9";
-                case ETerrain.Water -> "\uD83D\uDFE6";
-                case ETerrain.Mountain -> "\uD83D\uDFEB";
-            };
-        }
+    // // Burganzeige (wird nicht überschrieben durch Terrain)
+    EFortState fortState = node.getFortState();
+    switch (fortState) {
+      case EFortState.MyFortPresent:
+        return "🏰"; // eigene Burg
+      case EFortState.EnemyFortPresent:
+        return "🏯"; // gegnerische Burg
     }
 
-    /**
-     * Gibt das Spielende in der Konsole aus.
-     */
-    @Override
-    public void printGameResult(boolean won) {
-        System.out.println(won ? "🏆 Du hast gewonnen!" : "💀 Du hast verloren.");
+    // // Schatzanzeige (anders je nach Sammlung)
+    if (gameHelper.goldWasHere(node)) {
+      ETreasureState hasTreasure = node.getTreasureState();
+      switch (hasTreasure) {
+        case ETreasureState.MyTreasureIsPresent:
+          return "💰"; // Sichtbarer Schatz
+        case ETreasureState.NoOrUnknownTreasureState:
+          return "🟡"; // Sichtbarer Schatz
+      }
     }
+
+    // Terrainanzeige
+    ETerrain terrain = node.getTerrain();
+    if (gameHelper.isObserved(node)) {
+      return switch (terrain) {
+        case ETerrain.Grass -> "🟢";
+        case ETerrain.Water -> "\uD83D\uDFE6";
+        case ETerrain.Mountain -> "🟤";
+      };
+    } else {
+      return switch (terrain) {
+        case ETerrain.Grass -> "\uD83D\uDFE9";
+        case ETerrain.Water -> "\uD83D\uDFE6";
+        case ETerrain.Mountain -> "\uD83D\uDFEB";
+      };
+    }
+  }
+
+  /** Gibt das Spielende in der Konsole aus. */
+  @Override
+  public void printGameResult(boolean won) {
+    System.out.println(won ? "🏆 Du hast gewonnen!" : "💀 Du hast verloren.");
+  }
 }
