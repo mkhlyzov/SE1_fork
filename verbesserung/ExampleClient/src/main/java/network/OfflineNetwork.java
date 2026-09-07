@@ -1,7 +1,8 @@
 package network;
 
-import engine.FakeEngine;
 import java.util.Set;
+
+import engine.FakeEngine;
 import logic.GameHelper;
 import logic.IStrategy;
 import map.ClientMap;
@@ -44,27 +45,31 @@ public class OfflineNetwork implements INetwork {
 
   @Override
   public void sendMove(PlayerMove move) {
+
     engine.applyMove(move);
     if (engine.isFinished()) {
       return;
     }
-    GameState enemyState = engine.getState(enemyId.getUniquePlayerID());
-    enemyhelper.update(enemyState);
-    PlayerMove enemyMove = enemyStrategy.calculateNextMove(enemyhelper);
-    engine.applyMove(enemyMove);
+
+    Thread enemyThread = new Thread(() -> {
+      GameState enemyState = engine.getState(enemyId.getUniquePlayerID());
+      enemyhelper.update(enemyState);
+      PlayerMove enemyMove = enemyStrategy.calculateNextMove(enemyhelper);
+      engine.applyMove(enemyMove);
+    });
+    enemyThread.start();
   }
 
   @Override
   public GameState getGameState() {
     if (!mapReady) {
-      PlayerState myPlayer =
-          new PlayerState(
-              "Fake",
-              "Player",
-              playerId.getUniquePlayerID(),
-              EPlayerGameState.MustAct,
-              playerId,
-              false);
+      PlayerState myPlayer = new PlayerState(
+          "Fake",
+          "Player",
+          playerId.getUniquePlayerID(),
+          EPlayerGameState.MustAct,
+          playerId,
+          false);
       return new GameState(Set.of(myPlayer), "ABC");
     }
     return engine.getState(playerId.getUniquePlayerID());

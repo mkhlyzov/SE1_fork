@@ -122,7 +122,7 @@ bootJar {
 
 
 application {
-    mainClass = 'client.main.MainClient'
+    mainClass = 'main.Main'
 }
 
 spotless {

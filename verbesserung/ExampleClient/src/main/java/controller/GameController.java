@@ -1,6 +1,7 @@
 package controller;
 
 import java.util.logging.Logger;
+
 import logic.GameHelper;
 import logic.IStrategy;
 import map.ClientMap;
@@ -203,12 +204,12 @@ public class GameController {
       }
 
       case Won -> {
-        finishGame(true);
+        finishGame(state, true);
         model.setGameFinished(true);
       }
 
       case Lost -> {
-        finishGame(false);
+        finishGame(state, false);
         model.setGameFinished(true);
       }
 
@@ -218,8 +219,11 @@ public class GameController {
     }
   }
 
-  private void finishGame(boolean won) {
+  private void finishGame(GameState state, boolean won) {
 
+    GameHelper gameHelper = model.getGameHelper();
+    gameHelper.update(state);
+    view.render(gameHelper);
     view.printGameResult(won);
   }
 

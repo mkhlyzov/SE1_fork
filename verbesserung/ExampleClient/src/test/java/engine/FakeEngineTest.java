@@ -1,7 +1,8 @@
 package engine;
 
-import client.main.MainClient;
 import org.junit.jupiter.api.Test;
+
+import main.Main;
 import util.RandomManager;
 
 public class FakeEngineTest {
@@ -15,6 +16,6 @@ public class FakeEngineTest {
 
   @Test
   public void RunGame() {
-    MainClient.main(new String[0]);
+    Main.main(new String[0]);
   }
 }

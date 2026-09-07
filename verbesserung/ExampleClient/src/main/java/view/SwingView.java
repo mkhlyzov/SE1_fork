@@ -1,26 +1,36 @@
 package view;
 
-import controller.GameController;
 import java.awt.BorderLayout;
 import java.awt.Color;
 import java.awt.Dimension;
 import java.awt.Font;
 import java.awt.FontMetrics;
 import java.awt.Graphics;
+import java.awt.GridLayout;
+
 import javax.swing.BorderFactory;
 import javax.swing.BoxLayout;
 import javax.swing.JButton;
+import javax.swing.JComboBox;
+import javax.swing.JDialog;
 import javax.swing.JFrame;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
+import javax.swing.JTextField;
 import javax.swing.SwingConstants;
 import javax.swing.SwingUtilities;
+
+import controller.GameController;
 import logic.GameHelper;
 import messagesbase.messagesfromclient.ETerrain;
 import messagesbase.messagesfromserver.EFortState;
 import messagesbase.messagesfromserver.EPlayerPositionState;
 import messagesbase.messagesfromserver.ETreasureState;
 import messagesbase.messagesfromserver.FullMapNode;
+import messagesbase.messagesfromserver.PlayerState;
+import model.EGameMode;
+import model.GameSettings;
+import model.StrategyType;
 
 public class SwingView extends JFrame implements IView {
 
@@ -28,17 +38,13 @@ public class SwingView extends JFrame implements IView {
 
   private GamePanel gamePanel;
 
-  private JLabel statusLabel;
+  private InfoPanel infoPanel;
 
-  private JLabel myPlayerLabel;
-
-  private JLabel enemyPlayerLabel;
-
-  private JPanel leftPanel;
-
-  private JPanel rightPanel;
+  private JPanel settingsPanel = new JPanel();
 
   JPanel topPanel = new JPanel();
+
+  private JPanel buttonsPanel = new JPanel();
 
   public SwingView() {
 
@@ -50,9 +56,12 @@ public class SwingView extends JFrame implements IView {
     topPanel.setLayout(new BoxLayout(topPanel, BoxLayout.Y_AXIS));
     add(topPanel, BorderLayout.NORTH);
 
+    topPanel.add(buttonsPanel);
+
     addnewGameButton();
 
-    addGameInfo();
+    addSettingsButton();
+
     /*
      * Genau wie im Minesweeper:
      * Ein GamePanel wird erstellt und
@@ -75,45 +84,127 @@ public class SwingView extends JFrame implements IView {
 
   private void addGameInfo() {
 
-    JPanel playersPanel = new JPanel(new BorderLayout());
+    if (infoPanel != null) {
+      topPanel.remove(infoPanel);
+    }
 
-    JLabel myText = new JLabel("Mein Spieler");
-    JLabel enemyText = new JLabel("Gegner");
+    infoPanel = new InfoPanel();
 
-    myText.setFont(new Font("SansSerif", Font.BOLD, 16));
-    enemyText.setFont(new Font("SansSerif", Font.BOLD, 16));
+    topPanel.add(infoPanel);
 
-    myPlayerLabel = new JLabel("🙂");
-    enemyPlayerLabel = new JLabel("😈");
+    topPanel.revalidate();
+    topPanel.repaint();
+  }
 
-    myPlayerLabel.setFont(new Font("Segoe UI Emoji", Font.PLAIN, 40));
+  private void addSettingsButton() {
 
-    enemyPlayerLabel.setFont(new Font("Segoe UI Emoji", Font.PLAIN, 40));
+    JButton settingsButton = new JButton("Settings");
 
-    statusLabel = new JLabel("Game started", SwingConstants.CENTER);
+    settingsButton.setPreferredSize(new Dimension(180, 50));
+    settingsButton.setFont(new Font("SansSerif", Font.BOLD, 20));
+    settingsButton.setAlignmentX(CENTER_ALIGNMENT);
 
-    statusLabel.setFont(new Font("SansSerif", Font.BOLD, 20));
+    settingsButton.addActionListener(
+        e -> openSettingsDialog());
 
-    statusLabel.setBorder(BorderFactory.createEmptyBorder(0, 20, 0, 0));
+    buttonsPanel.add(settingsButton);
+  }
 
-    // Linke Seite
-    leftPanel = new JPanel();
+  private void openSettingsDialog() {
 
-    leftPanel.add(myText);
-    leftPanel.add(myPlayerLabel);
-    leftPanel.setPreferredSize(new Dimension(170, 60));
-    // Rechte Seite
-    rightPanel = new JPanel();
+    JDialog dialog = new JDialog(this, "Game Settings", true);
 
-    rightPanel.add(enemyPlayerLabel);
-    rightPanel.add(enemyText);
-    rightPanel.setPreferredSize(new Dimension(170, 60));
-    // Alles in einer Linie
-    playersPanel.add(leftPanel, BorderLayout.WEST);
-    playersPanel.add(statusLabel, BorderLayout.CENTER);
-    playersPanel.add(rightPanel, BorderLayout.EAST);
+    JPanel mainPanel = new JPanel(new BorderLayout(10, 10));
 
-    topPanel.add(playersPanel);
+    JPanel settingsPanel = new JPanel(new GridLayout(8, 2, 10, 10));
+
+    JComboBox<EGameMode> gameModeBox = new JComboBox<>(EGameMode.values());
+
+    JComboBox<StrategyType> playerStrategyBox = new JComboBox<>(StrategyType.values());
+
+    JComboBox<StrategyType> enemyStrategyBox = new JComboBox<>(StrategyType.values());
+
+    JTextField serverURLField = new JTextField();
+
+    JTextField gameIdField = new JTextField();
+
+    JTextField studentIdField = new JTextField("Fake1");
+
+    JTextField delayField = new JTextField("100");
+
+    JTextField fixedSeedField = new JTextField();
+
+    settingsPanel.add(new JLabel("Game Mode:"));
+    settingsPanel.add(gameModeBox);
+
+    settingsPanel.add(new JLabel("Player Strategy:"));
+    settingsPanel.add(playerStrategyBox);
+
+    settingsPanel.add(new JLabel("Enemy Strategy:"));
+    settingsPanel.add(enemyStrategyBox);
+
+    settingsPanel.add(new JLabel("Server URL:"));
+    settingsPanel.add(serverURLField);
+
+    settingsPanel.add(new JLabel("Game ID:"));
+    settingsPanel.add(gameIdField);
+
+    settingsPanel.add(new JLabel("Student ID:"));
+    settingsPanel.add(studentIdField);
+
+    settingsPanel.add(new JLabel("Delay:"));
+    settingsPanel.add(delayField);
+
+    settingsPanel.add(new JLabel("Fixed Seed:"));
+    settingsPanel.add(fixedSeedField);
+
+    JPanel buttonPanel = new JPanel();
+
+    JButton cancelButton = new JButton("Cancel");
+
+    JButton applyButton = new JButton("Apply");
+
+    cancelButton.addActionListener(
+        e -> dialog.dispose());
+
+    applyButton.addActionListener(
+        e -> {
+
+          int delay = Integer.parseInt(delayField.getText());
+
+          Long fixedSeed = null;
+
+          if (!fixedSeedField.getText().isBlank()) {
+            fixedSeed = Long.parseLong(fixedSeedField.getText());
+          }
+
+          GameSettings settings = new GameSettings(
+              studentIdField.getText(),
+              (EGameMode) gameModeBox.getSelectedItem(),
+              (StrategyType) playerStrategyBox.getSelectedItem(),
+              (StrategyType) enemyStrategyBox.getSelectedItem(),
+              serverURLField.getText(),
+              gameIdField.getText(),
+              delay,
+              fixedSeed);
+
+          controller.updateSettings(settings);
+
+          dialog.dispose();
+        });
+
+    buttonPanel.add(cancelButton);
+    buttonPanel.add(applyButton);
+
+    mainPanel.add(settingsPanel, BorderLayout.CENTER);
+    mainPanel.add(buttonPanel, BorderLayout.SOUTH);
+
+    dialog.add(mainPanel);
+
+    dialog.setSize(550, 420);
+    dialog.setLocationRelativeTo(this);
+    dialog.setResizable(false);
+    dialog.setVisible(true);
   }
 
   private void addnewGameButton() {
@@ -122,46 +213,74 @@ public class SwingView extends JFrame implements IView {
     newGameButton.setFont(new Font("SansSerif", Font.BOLD, 20));
     newGameButton.addActionListener(
         e -> {
-          dispose();
           new Thread(
-                  () -> {
-                    // GameSimulator.multiPlayer(new String[0]);
-                    controller.startNewGame();
-                  })
+              () -> {
+                controller.startNewGame();
+              })
               .start();
         });
     newGameButton.setVisible(true);
     newGameButton.setAlignmentX(CENTER_ALIGNMENT);
-    topPanel.add(newGameButton);
+    buttonsPanel.add(newGameButton);
   }
 
   @Override
   public void render(GameHelper gameHelper) {
 
-    SwingUtilities.invokeLater(
-        () -> {
+    // SwingUtilities.invokeLater(
+    // () -> {
 
-          /*
-           * Aktuelle Karte an GamePanel übergeben.
-           */
-          int cols = gameHelper.getMaxX() + 1;
-          int rows = gameHelper.getMaxY() + 1;
+    // /*
+    // * Aktuelle Karte an GamePanel übergeben.
+    // */
+    // addGameInfo();
+    // int cols = gameHelper.getMaxX() + 1;
+    // int rows = gameHelper.getMaxY() + 1;
 
-          if (rows == 10 && cols == 10) {
-            gamePanel.setPreferredSize(new Dimension(500, 500));
-          } else if (rows == 5 && cols == 20) {
-            gamePanel.setPreferredSize(new Dimension(1000, 250));
-          }
-          pack();
-          setResizable(false);
-          gamePanel.updateMap(gameHelper);
+    // if (rows == 10 && cols == 10) {
+    // gamePanel.setPreferredSize(new Dimension(500, 500));
+    // } else if (rows == 5 && cols == 20) {
+    // gamePanel.setPreferredSize(new Dimension(1000, 250));
+    // }
+    // setResizable(false);
+    // gamePanel.updateMap(gameHelper);
 
-          /*
-           * Genau wie im Minesweeper:
-           * repaint() ruft paintComponent() erneut auf.
-           */
-          gamePanel.repaint();
-        });
+    // /*
+    // * Genau wie im Minesweeper:
+    // * repaint() ruft paintComponent() erneut auf.
+    // */
+    // gamePanel.revalidate();
+    // gamePanel.repaint();
+    // pack();
+    // });
+    try {
+      SwingUtilities.invokeAndWait(
+          () -> {
+
+            addGameInfo();
+
+            int cols = gameHelper.getMaxX() + 1;
+            int rows = gameHelper.getMaxY() + 1;
+
+            if (rows == 10 && cols == 10) {
+              gamePanel.setPreferredSize(new Dimension(500, 500));
+            } else if (rows == 5 && cols == 20) {
+              gamePanel.setPreferredSize(new Dimension(1000, 250));
+            }
+
+            setResizable(false);
+
+            gamePanel.updateMap(gameHelper);
+
+            gamePanel.revalidate();
+            gamePanel.repaint();
+
+            pack();
+          });
+
+    } catch (Exception e) {
+      e.printStackTrace();
+    }
   }
 
   @Override
@@ -169,19 +288,11 @@ public class SwingView extends JFrame implements IView {
 
     SwingUtilities.invokeLater(
         () -> {
-          statusLabel.setHorizontalAlignment(SwingConstants.CENTER);
-          statusLabel.setVerticalAlignment(SwingConstants.CENTER);
-          statusLabel.setText(
-              won
-                  // ? "🏆 Won!"
-                  // : "💀 Lost.");
-                  ? "Won!"
-                  : "Lost.");
 
           if (won) {
-            leftPanel.setBorder(BorderFactory.createLineBorder(Color.GREEN, 4));
+            infoPanel.updatePlayerStateWon();
           } else {
-            rightPanel.setBorder(BorderFactory.createLineBorder(Color.GREEN, 4));
+            infoPanel.updatePlayerStateLost();
           }
         });
   }
@@ -190,9 +301,11 @@ public class SwingView extends JFrame implements IView {
 /**
  * GamePanel zeichnet die Karte.
  *
- * <p>Gleicher Aufbau wie GamePanel im Minesweeper.
+ * <p>
+ * Gleicher Aufbau wie GamePanel im Minesweeper.
  *
- * <p>Die Zellengröße wird dynamisch anhand der aktuellen Panelgröße berechnet.
+ * <p>
+ * Die Zellengröße wird dynamisch anhand der aktuellen Panelgröße berechnet.
  */
 class GamePanel extends JPanel {
 
@@ -369,5 +482,132 @@ class GamePanel extends JPanel {
 
       case Mountain -> "🟫";
     };
+  }
+}
+
+class InfoPanel extends JPanel {
+  PlayerState state;
+
+  private JLabel statusLabel;
+
+  private JPanel leftPanel;
+  private JPanel rightPanel;
+
+  public InfoPanel() {
+
+    setLayout(new BorderLayout());
+
+    JLabel myText = new JLabel("Mein Spieler");
+    JLabel enemyText = new JLabel("Gegner");
+
+    myText.setFont(new Font("SansSerif", Font.BOLD, 16));
+    enemyText.setFont(new Font("SansSerif", Font.BOLD, 16));
+
+    JLabel myPlayerLabel = new JLabel("🙂");
+    JLabel enemyPlayerLabel = new JLabel("😈");
+
+    myPlayerLabel.setFont(
+        new Font("Segoe UI Emoji", Font.PLAIN, 40));
+
+    enemyPlayerLabel.setFont(
+        new Font("Segoe UI Emoji", Font.PLAIN, 40));
+
+    statusLabel = new JLabel("Game started", SwingConstants.CENTER);
+
+    statusLabel.setFont(
+        new Font("SansSerif", Font.BOLD, 20));
+
+    statusLabel.setBorder(
+        BorderFactory.createEmptyBorder(0, 20, 0, 0));
+
+    leftPanel = new JPanel();
+
+    leftPanel.add(myText);
+    leftPanel.add(myPlayerLabel);
+
+    leftPanel.setPreferredSize(
+        new Dimension(170, 60));
+
+    rightPanel = new JPanel();
+
+    rightPanel.add(enemyPlayerLabel);
+    rightPanel.add(enemyText);
+
+    rightPanel.setPreferredSize(
+        new Dimension(170, 60));
+
+    add(leftPanel, BorderLayout.WEST);
+    add(statusLabel, BorderLayout.CENTER);
+    add(rightPanel, BorderLayout.EAST);
+  }
+
+  public void updatePlayerState(PlayerState state) {
+    this.state = state;
+
+    if (state == null) {
+
+      statusLabel.setText("Game started");
+
+      leftPanel.setBorder(null);
+      rightPanel.setBorder(null);
+
+      repaint();
+
+      return;
+
+    }
+    switch (state.getState()) {
+
+      case Won:
+        statusLabel.setText("Won!");
+
+        leftPanel.setBorder(
+            BorderFactory.createLineBorder(Color.GREEN, 4));
+
+        rightPanel.setBorder(null);
+
+        break;
+
+      case Lost:
+        statusLabel.setText("Lost!");
+
+        rightPanel.setBorder(
+            BorderFactory.createLineBorder(Color.GREEN, 4));
+
+        leftPanel.setBorder(null);
+
+        break;
+
+      default:
+        statusLabel.setText("Game started");
+        break;
+    }
+
+    repaint();
+  }
+
+  @Override
+  protected void paintComponent(Graphics g) {
+    super.paintComponent(g);
+  }
+
+  public void updatePlayerStateWon() {
+
+    statusLabel.setText("Won!");
+
+    leftPanel.setBorder(
+        BorderFactory.createLineBorder(Color.GREEN, 4));
+
+    rightPanel.setBorder(null);
+  }
+
+  public void updatePlayerStateLost() {
+
+    statusLabel.setText("Lost!");
+
+    rightPanel.setBorder(
+        BorderFactory.createLineBorder(Color.GREEN, 4));
+
+    leftPanel.setBorder(null);
   }
 }

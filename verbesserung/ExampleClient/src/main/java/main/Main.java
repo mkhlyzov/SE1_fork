@@ -1,17 +1,18 @@
-package client.main;
+package main;
 
-import controller.GameController;
 import java.util.logging.Formatter;
 import java.util.logging.Level;
 import java.util.logging.LogRecord;
 import java.util.logging.Logger;
+
+import controller.GameController;
 import model.GameSettings;
 import model.Model;
 import util.RandomManager;
 import view.IView;
 import view.SwingView;
 
-public class MainClient {
+public class Main {
 
   // ADDITIONAL TIPS ON THIS MATTER ARE GIVEN THROUGHOUT THE TUTORIAL SESSION!
 

@@ -30,16 +30,17 @@ public class GameSettings {
   }
 
   public static GameSettings getDefaultSettings() {
-    GameSettings defaults =
-        new GameSettings(
-            "Fake1",
-            EGameMode.OFFLINE,
-            StrategyType.PLANNED_TOUR,
-            StrategyType.ALWAYS_CLOSEST,
-            null,
-            null,
-            100,
-            null);
+    GameSettings defaults = new GameSettings(
+        "Fake1",
+        EGameMode.OFFLINE,
+        // StrategyType.PLANNED_TOUR,
+        // StrategyType.ALWAYS_CLOSEST,
+        StrategyType.PLANNED_TOUR,
+        StrategyType.NEAREST_NEIGHBOUR,
+        null,
+        null,
+        100,
+        null);
     return defaults;
   }
 
