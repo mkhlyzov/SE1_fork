@@ -283,102 +283,50 @@ public class FakeEngine {
   }
 
   public synchronized void applyMove(PlayerMove move) {
-
     PlayerData pd = players.get(move.getUniquePlayerID());
-
     PlayerData pd_enemy = players.values().stream()
-        .filter(
-            p -> !p.playerId
-                .getUniquePlayerID()
-                .equals(move.getUniquePlayerID()))
-        .findFirst()
-        .orElse(null);
+        .filter(p -> !p.playerId.getUniquePlayerID().equals(move.getUniquePlayerID())).findFirst().orElse(null);
 
-    if (pd == null || pd_enemy == null) {
-      return;
-    }
-
-    // Только игрок с MustAct имеет право сделать ход
-    if (pd.state != EPlayerGameState.MustAct) {
-      return;
-    }
-
-    int dx = 0;
-    int dy = 0;
-
+    int dx = 0, dy = 0;
     switch (move.getMove()) {
       case Up -> dy = -1;
       case Down -> dy = 1;
       case Left -> dx = -1;
       case Right -> dx = 1;
     }
-
     Point currentPos = pd.position;
-    Point newPos = new Point(
-        currentPos.x + dx,
-        currentPos.y + dy);
+    Point newPos = new Point(currentPos.x + dx, currentPos.y + dy);
 
     resetBufferIfDirectionChanged(move);
-
     pd.moveBuffer.add(move);
     pd.numMovesApplied++;
 
     int stepsNeededToMove = stepCost(currentPos, newPos);
-
     if (pd.moveBuffer.size() >= stepsNeededToMove) {
-
       pd.moveBuffer.clear();
       pd.position = newPos;
 
-      updateObjectivesVisibility(
-          move.getUniquePlayerID());
+      updateObjectivesVisibility(move.getUniquePlayerID());
     }
 
-    /*
-     * Ungültiger Zug:
-     * aktueller Spieler verliert,
-     * Gegner gewinnt.
-     */
-    if (!inBounds(pd.position)
-        || isWater(pd.position)) {
-
+    if (!inBounds(pd.position) || isWater(pd.position)) {
       pd.state = EPlayerGameState.Lost;
       pd_enemy.state = EPlayerGameState.Won;
-
-      notifyAll();
-      return;
     }
-
-    /*
-     * Schatz gefunden.
-     */
     if (pd.position.equals(pd.treasurePosition)) {
       pd.treasureCollected = true;
     }
-
-    /*
-     * Gegnerische Burg erreicht,
-     * nachdem Schatz gesammelt wurde.
-     */
-    if (pd.treasureCollected
-        && pd.position.equals(pd_enemy.fortPosition)) {
-
+    if (pd.treasureCollected && pd.position.equals(pd_enemy.fortPosition)) {
       pd.state = EPlayerGameState.Won;
       pd_enemy.state = EPlayerGameState.Lost;
-
-      notifyAll();
-      return;
     }
 
-    /*
-     * Normaler Zug beendet:
-     * aktueller Spieler wartet,
-     * Gegner darf handeln.
-     */
-    pd.state = EPlayerGameState.MustWait;
-    pd_enemy.state = EPlayerGameState.MustAct;
-
-    notifyAll();
+    // try {
+    // Thread.sleep(100);
+    // } catch (InterruptedException e) {
+    // Thread.currentThread().interrupt();
+    // System.err.println("Sleep unterbrochen: " + e.getMessage());
+    // }
   }
 
   private void updateObjectivesVisibility(String playerId) {
@@ -427,146 +375,74 @@ public class FakeEngine {
   }
 
   public synchronized GameState getState(String playerId) {
-
     PlayerData pd = players.get(playerId);
-
-    PlayerData pd_enemy = players.values().stream()
-        .filter(
-            p -> !p.playerId
-                .getUniquePlayerID()
-                .equals(playerId))
-        .findFirst()
-        .orElse(null);
-
-    if (pd == null || pd_enemy == null) {
-      return null;
-    }
-
-    while (pd.state == EPlayerGameState.MustWait) {
-
-      try {
-        wait();
-
-      } catch (InterruptedException e) {
-
-        Thread.currentThread().interrupt();
-        return null;
-      }
-    }
+    PlayerData pd_enemy = players.values().stream().filter(p -> !p.playerId.getUniquePlayerID().equals(playerId))
+        .findFirst().orElse(null);
 
     PlayerState myPlayer = new PlayerState(
-        "Fake",
-        "Player",
-        playerId,
+        "Fake", "Player", playerId,
         pd.state,
         pd.playerId,
         pd.treasureCollected);
-
     PlayerState enemyPlayer = new PlayerState(
-        "Fake",
-        "Player",
-        pd_enemy.playerId.getUniquePlayerID(),
+        "Fake", "Player", pd_enemy.playerId.getUniquePlayerID(),
         pd_enemy.state,
         pd_enemy.playerId,
         pd_enemy.treasureCollected);
 
     Set<PlayerState> players_set = Set.of(myPlayer, enemyPlayer);
 
-    if (terrainGrid == null) {
-      return new GameState(
-          players_set,
-          "ABC");
-    }
+    if (terrainGrid == null)
+      return new GameState(players_set, "ABC");
 
     Point treasurePos = pd.treasurePosition;
-
     Boolean treasureWasCollected = pd.treasureCollected;
-
     Boolean treasureWasObserved = pd.treasureObserved;
 
     Point playerPos = pd.position;
-
     Point fortPos = pd.fortPosition;
-
     Point enemyFortPos = pd_enemy.fortPosition;
-
     Boolean enemyFortWasObserved = pd.enemyFortObserved;
-
     boolean hideEnemy = pd_enemy.numMovesApplied < HIDE_POSITION_NUM_TURNS;
-
     Point enemyPos = pd_enemy.position;
-
     if (hideEnemy) {
-
       Random r = RandomManager.getRandom();
-
-      enemyPos = new Point(
-          r.nextInt(WIDTH),
-          r.nextInt(HEIGHT));
+      enemyPos = new Point(r.nextInt(WIDTH), r.nextInt(HEIGHT));
     }
-
     List<FullMapNode> mapNodes = new ArrayList<>();
-
     for (int x = 0; x < WIDTH; x++) {
-
       for (int y = 0; y < HEIGHT; y++) {
-
         Point p = new Point(x, y);
 
         ETerrain terrain = terrainGrid[x][y];
-
-        ETreasureState treasureState = (treasurePos.equals(p)
-            && !treasureWasCollected
-            && treasureWasObserved)
-                ? ETreasureState.MyTreasureIsPresent
-                : ETreasureState.NoOrUnknownTreasureState;
+        ETreasureState treasureState = (treasurePos.equals(p) && !treasureWasCollected && treasureWasObserved)
+            ? ETreasureState.MyTreasureIsPresent
+            : ETreasureState.NoOrUnknownTreasureState;
 
         EPlayerPositionState positionState;
-
         if (pd.position.equals(p)) {
-
           if (enemyPos.equals(p)) {
-
             positionState = EPlayerPositionState.BothPlayerPosition;
-
           } else {
-
             positionState = EPlayerPositionState.MyPlayerPosition;
           }
-
         } else if (enemyPos.equals(p)) {
-
           positionState = EPlayerPositionState.EnemyPlayerPosition;
-
         } else {
-
           positionState = EPlayerPositionState.NoPlayerPresent;
         }
 
-        EFortState fortState = fortPos.equals(p)
-            ? EFortState.MyFortPresent
-            : ((enemyFortPos.equals(p)
-                && enemyFortWasObserved)
-                    ? EFortState.EnemyFortPresent
-                    : EFortState.NoOrUnknownFortState);
+        EFortState fortState = fortPos.equals(p) ? EFortState.MyFortPresent
+            : ((enemyFortPos.equals(p) && enemyFortWasObserved) ? EFortState.EnemyFortPresent
+                : EFortState.NoOrUnknownFortState);
 
-        mapNodes.add(
-            new FullMapNode(
-                terrain,
-                positionState,
-                treasureState,
-                fortState,
-                x,
-                y));
+        mapNodes.add(new FullMapNode(
+            terrain, positionState, treasureState, fortState, x, y));
       }
     }
 
     FullMap map = new FullMap(mapNodes);
-
-    return new GameState(
-        map,
-        players_set,
-        "ABC");
+    return new GameState(map, players_set, "ABC");
   }
 
   private ETerrain getTerrain(int x, int y) {

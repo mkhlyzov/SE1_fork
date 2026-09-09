@@ -43,21 +43,49 @@ public class OfflineNetwork implements INetwork {
     mapReady = true;
   }
 
+  // @Override
+  // public void sendMove(PlayerMove move) {
+
+  // engine.applyMove(move);
+  // if (engine.isFinished()) {
+  // return;
+  // }
+
+  // Thread enemyThread = new Thread(() -> {
+  // GameState enemyState = engine.getState(enemyId.getUniquePlayerID());
+  // enemyhelper.update(enemyState);
+  // PlayerMove enemyMove = enemyStrategy.calculateNextMove(enemyhelper);
+  // engine.applyMove(enemyMove);
+  // });
+  // enemyThread.start();
+  // }
+
   @Override
   public void sendMove(PlayerMove move) {
 
     engine.applyMove(move);
+
     if (engine.isFinished()) {
       return;
     }
 
     Thread enemyThread = new Thread(() -> {
       GameState enemyState = engine.getState(enemyId.getUniquePlayerID());
+
       enemyhelper.update(enemyState);
+
       PlayerMove enemyMove = enemyStrategy.calculateNextMove(enemyhelper);
+
       engine.applyMove(enemyMove);
     });
+
     enemyThread.start();
+
+    try {
+      enemyThread.join();
+    } catch (InterruptedException e) {
+      Thread.currentThread().interrupt();
+    }
   }
 
   @Override
