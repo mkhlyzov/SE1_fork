@@ -4,9 +4,10 @@ import java.util.logging.Logger;
 
 import logic.GameHelper;
 import logic.IStrategy;
-import map.ClientMap;
+import map.IMapGenerator;
 import messagesbase.messagesfromclient.PlayerHalfMap;
 import messagesbase.messagesfromclient.PlayerMove;
+import messagesbase.messagesfromserver.EPlayerGameState;
 import messagesbase.messagesfromserver.GameState;
 import messagesbase.messagesfromserver.PlayerState;
 import model.GameSettings;
@@ -23,6 +24,7 @@ public class GameController {
   private IStrategy strategy;
 
   private final Object monitor = new Object();
+  private Thread gameWorkerThread = null;
 
   public GameController(Model model, IView view) {
     this.model = model;
@@ -34,52 +36,52 @@ public class GameController {
   }
 
   public void startNewGame() {
+    if (gameWorkerThread != null && gameWorkerThread.isAlive()) {
+      abortGame();
+      gameWorkerThread.interrupt(); // is it good or bad???
+    }
 
+    gameWorkerThread = new Thread(this::_startNewGame);
+    gameWorkerThread.start();
+  }
+  
+  private void _startNewGame() {
     applySettings();
-    model.setGameFinished(false);
 
     registerPlayer();
-
-    if (network.getPlayerId() == null) {
-      return;
-    }
-
-    model.setGameHelper(new GameHelper(network.getPlayerId()));
-
-    waitPermissionForSendingHalfmap();
-
-    if (model.isGameFinished()) {
-
-      view.printGameResult(model.getGameResult());
-
-      return;
-    }
-
     sendHalfMap();
     startGameLoop();
   }
 
+
+
   private void registerPlayer() {
     network.registerPlayer(model.getSettings().getStudentId());
-    if (network.getPlayerId() == null) {
-      LOGGER.severe("Registrierung fehlgeschlagen, Spiel kann nicht gestartet werden.");
-    }
+
+    assert network.getPlayerId() != null;
+    LOGGER.info("Player registered successfully with id: " + network.getPlayerId().getUniquePlayerID());
+
+    model.setGameHelper(new GameHelper(network.getPlayerId()));
   }
 
   private void sendHalfMap() {
+    waitPermissionForSendingHalfmap();
+    LOGGER.info("Permission for sending HalfMap acquired.");
+
+    if (model.isGameFinished()) {
+      finishGame();
+      return;
+    }
+
     PlayerHalfMap halfMap = createHalfMap();
-    LOGGER.info("Sende HalfMap jetzt an den Server...");
     network.sendHalfMap(halfMap);
     LOGGER.fine("HalfMap wurde gesendet.");
   }
 
   private PlayerHalfMap createHalfMap() {
-
     String myPlayerId = network.getPlayerId().getUniquePlayerID();
-
-    ClientMap map = new ClientMap(myPlayerId);
-
-    return map.generate();
+    IMapGenerator mapGen = Factory.buildMapGenerator(model.getSettings());
+    return mapGen.generate(myPlayerId);
   }
 
   private void waitPermissionForSendingHalfmap() {
@@ -139,11 +141,6 @@ public class GameController {
   }
 
   private void startGameLoop() {
-    model.setGameHelper(new GameHelper(network.getPlayerId()));
-
-    model.setGameFinished(false);
-    model.setAbort(false);
-
     while (!model.isGameFinished() && !model.isAbort()) {
 
       waitIfPaused();
@@ -153,8 +150,6 @@ public class GameController {
       }
 
       playOneTurn();
-
-      model.setStep(false);
     }
   }
 
@@ -178,64 +173,40 @@ public class GameController {
 
     GameState state = network.getGameState();
 
-    if (state == null) {
-      return;
-    }
-
-    GameHelper gameHelper = model.getGameHelper();
-
-    gameHelper.update(state);
-    view.render(gameHelper);
-
-    PlayerState myPlayer = GameHelper.getPlayerState(state, network.getPlayerId());
-
-    if (myPlayer == null) {
-      return;
-    }
-
-    handlePlayerState(state, myPlayer);
-  }
-
-  private void handlePlayerState(GameState state, PlayerState player) {
-
-    switch (player.getState()) {
-      case MustAct -> {
-        makeMove();
-      }
-
-      case Won -> {
-        finishGame(state, true);
-        model.setGameFinished(true);
-      }
-
-      case Lost -> {
-        finishGame(state, false);
-        model.setGameFinished(true);
-      }
-
-      case MustWait -> {
-        LOGGER.fine("Warte auf meinen Zug...");
-      }
-    }
-  }
-
-  private void finishGame(GameState state, boolean won) {
+    assert state != null;
 
     GameHelper gameHelper = model.getGameHelper();
     gameHelper.update(state);
     view.render(gameHelper);
+
+    PlayerState myPlayerState = GameHelper.getPlayerState(state, network.getPlayerId());
+
+    assert myPlayerState != null;
+
+    switch(myPlayerState.getState()) {
+      case EPlayerGameState.MustAct -> {
+        PlayerMove move = strategy.calculateNextMove(gameHelper);
+        network.sendMove(move);
+        model.setStep(false);
+      }
+      case EPlayerGameState.Won, EPlayerGameState.Lost -> {
+        finishGame();
+      }
+      case EPlayerGameState.MustWait -> {
+        LOGGER.fine("Waiting for my turn...");
+      }
+    }
+  }
+
+  private void finishGame() {
+    model.setGameFinished(true);
+
+    GameHelper gameHelper = model.getGameHelper();
+    GameState state = gameHelper.getGameState();
+    boolean won = GameHelper.getPlayerState(state, network.getPlayerId()).getState() == EPlayerGameState.Won;
     view.printGameResult(won);
   }
-
-  private void makeMove() {
-
-    GameHelper gameHelper = model.getGameHelper();
-
-    PlayerMove move = strategy.calculateNextMove(gameHelper);
-
-    network.sendMove(move);
-  }
-
+  
   public void pauseGame() {
     model.setPause(true);
   }
@@ -278,10 +249,13 @@ public class GameController {
    * Applies the stored game settings when a new game is started.
    * Greates the player strategy and network configuration based
    * on the settings currently stored in the model.
-   * This model should be called at the start of new game.
+   * This model should be called at the start of each new game.
    */
   public void applySettings() {
     strategy = Factory.buildPlayeStrategy(model.getSettings());
     network = Factory.buildNetwork(model.getSettings());
+
+    model.setGameFinished(false);
+    model.setAbort(false);
   }
 }

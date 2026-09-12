@@ -2,11 +2,13 @@ package engine;
 
 import java.util.logging.Level;
 import java.util.logging.Logger;
+
 import logic.GameHelper;
 import logic.IStrategy;
 import logic.StrategyAlwaysClosest;
 import logic.StrategyPlannedTour;
 import map.ClientMap;
+import map.IMapGenerator;
 import messagesbase.UniquePlayerIdentifier;
 import messagesbase.messagesfromclient.PlayerHalfMap;
 import messagesbase.messagesfromclient.PlayerMove;
@@ -42,12 +44,12 @@ public class GameSimulator {
     // IStrategy strategy_1 = new StrategyAlwaysClosest();
     IStrategy strategy_1 = new StrategyPlannedTour();
 
-    ClientMap mapGenerator_1 = new ClientMap(playerId_1);
-    PlayerHalfMap halfMapData_1 = mapGenerator_1.generate();
+    IMapGenerator mapGenerator_1 = new ClientMap();
+    PlayerHalfMap halfMapData_1 = mapGenerator_1.generate(playerId_1);
     engine.registerPlayer(playerId_1, halfMapData_1);
 
-    ClientMap mapGenerator_2 = new ClientMap(playerId_2);
-    PlayerHalfMap halfMapData_2 = mapGenerator_2.generate();
+    IMapGenerator mapGenerator_2 = new ClientMap();
+    PlayerHalfMap halfMapData_2 = mapGenerator_2.generate(playerId_2);
     engine.registerPlayer(playerId_2, halfMapData_2);
 
     GameHelper helper = new GameHelper(new UniquePlayerIdentifier(playerId_1));
@@ -80,12 +82,12 @@ public class GameSimulator {
     IStrategy strategy_2 = new StrategyAlwaysClosest();
     Logger.getLogger(strategy_1.getClass().getName()).setLevel(Level.FINE);
     Logger.getLogger(strategy_2.getClass().getName()).setLevel(Level.OFF);
-    ClientMap mapGenerator_1 = new ClientMap(playerId_1);
-    PlayerHalfMap halfMapData_1 = mapGenerator_1.generate();
+    IMapGenerator mapGenerator_1 = new ClientMap();
+    PlayerHalfMap halfMapData_1 = mapGenerator_1.generate(playerId_1);
     engine.registerPlayer(playerId_1, halfMapData_1);
 
-    ClientMap mapGenerator_2 = new ClientMap(playerId_2);
-    PlayerHalfMap halfMapData_2 = mapGenerator_2.generate();
+    IMapGenerator mapGenerator_2 = new ClientMap();
+    PlayerHalfMap halfMapData_2 = mapGenerator_2.generate(playerId_2);
     engine.registerPlayer(playerId_2, halfMapData_2);
 
     GameHelper helper_1 = new GameHelper(new UniquePlayerIdentifier(playerId_1));
