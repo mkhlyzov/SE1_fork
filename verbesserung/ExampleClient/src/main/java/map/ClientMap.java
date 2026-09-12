@@ -1,36 +1,38 @@
 package map;
 
 import java.util.ArrayList;
-import java.util.LinkedList;
 import java.util.List;
-import java.util.Queue;
 import java.util.Random;
 import java.util.logging.Logger;
+
 import messagesbase.messagesfromclient.ETerrain;
 import messagesbase.messagesfromclient.PlayerHalfMap;
 import messagesbase.messagesfromclient.PlayerHalfMapNode;
 import util.RandomManager;
 
-public class ClientMap {
+public class ClientMap implements IMapGenerator {
   private static final Logger LOGGER = Logger.getLogger(ClientMap.class.getName());
   private final int FORTCOUNT = 1;
-  private final String playerId;
   private final int height;
   private final int width;
 
-  public ClientMap(String playerId) {
-    this.playerId = playerId;
+  private final MapValidator validator;
+
+  public ClientMap() {
     this.height = 5;
     this.width = 10;
+
+    this.validator = new MapValidator();
   }
 
-  public ClientMap(String playerId, int height, int width) {
-    this.playerId = playerId;
+  public ClientMap(int height, int width) {
     this.height = height;
     this.width = width;
+
+    this.validator = new MapValidator();
   }
 
-  public PlayerHalfMap generate_old() {
+  public PlayerHalfMap generate_old(String playerId) {
     List<PlayerHalfMapNode> nodes = new ArrayList<>();
     Random rand = RandomManager.getRandom();
 
@@ -107,7 +109,7 @@ public class ClientMap {
       }
       if (countfort < FORTCOUNT) continue;
 
-      if (!isMapConnected(nodes)) {
+      if (!validator.isMapConnected(nodes)) {
         // System.out.println("🔁 Ungültige Map – wird neu generiert...");
         continue;
       }
@@ -117,7 +119,8 @@ public class ClientMap {
     return new PlayerHalfMap(playerId, nodes);
   }
 
-  public PlayerHalfMap generate() {
+  @Override
+  public PlayerHalfMap generate(String playerId) {
     List<PlayerHalfMapNode> nodes = new ArrayList<>();
     Random rand = RandomManager.getRandom();
 
@@ -154,7 +157,7 @@ public class ClientMap {
         continue;
       }
 
-      if (!validateEdgesSimple(nodes)) {
+      if (!validator.validateEdgesSimple(nodes)) {
         continue;
       }
 
@@ -176,7 +179,7 @@ public class ClientMap {
       }
       if (countfort < FORTCOUNT) continue;
 
-      if (!isMapConnected(nodes)) {
+      if (!validator.isMapConnected(nodes)) {
         // System.out.println("🔁 Ungültige Map – wird neu generiert...");
         continue;
       }
@@ -197,85 +200,12 @@ public class ClientMap {
     return rand.nextBoolean() ? ETerrain.Grass : ETerrain.Mountain;
   }
 
-  private boolean isMapConnected(List<PlayerHalfMapNode> mapNodes) {
-
-    boolean[][] visited = new boolean[height][width];
-    List<PlayerHalfMapNode> walkables = new ArrayList<>();
-
-    for (PlayerHalfMapNode node : mapNodes) {
-      if (node.getTerrain() != ETerrain.Water) {
-        walkables.add(node);
-      }
-    }
-
-    if (walkables.isEmpty()) return false;
-
-    Queue<PlayerHalfMapNode> queue = new LinkedList<>();
-    PlayerHalfMapNode start = walkables.get(0);
-    queue.add(start);
-    visited[start.getY()][start.getX()] = true;
-
-    int connectedCount = 1;
-
-    while (!queue.isEmpty()) {
-      PlayerHalfMapNode current = queue.poll();
-      int x = current.getX();
-      int y = current.getY();
-
-      int[][] dirs = {{1, 0}, {-1, 0}, {0, 1}, {0, -1}};
-      for (int[] d : dirs) {
-        int nx = x + d[0];
-        int ny = y + d[1];
-
-        if (nx >= 0 && nx < width && ny >= 0 && ny < height && !visited[ny][nx]) {
-          for (PlayerHalfMapNode neighbor : walkables) {
-            if (neighbor.getX() == nx && neighbor.getY() == ny) {
-              visited[ny][nx] = true;
-              queue.add(neighbor);
-              connectedCount++;
-              break;
-            }
-          }
-        }
-      }
-    }
-
-    return connectedCount == walkables.size();
-  }
-
   public int getHeight() {
     return height;
   }
 
   public int getWidth() {
     return width;
-  }
-
-  private boolean validateEdgesSimple(List<PlayerHalfMapNode> nodes) {
-
-    if (!checkline(nodes, 0, true, width)) return false;
-    if (!checkline(nodes, height - 1, true, width)) return false;
-
-    if (!checkline(nodes, 0, false, height)) return false;
-    if (!checkline(nodes, width - 1, false, height)) return false;
-    return true;
-  }
-
-  private boolean checkline(
-      List<PlayerHalfMapNode> nodes, int fixed, boolean horizontal, int length) {
-    int accessible = 0;
-    int water = 0;
-    for (PlayerHalfMapNode n : nodes) {
-      boolean onLine = horizontal ? n.getY() == fixed : n.getX() == fixed;
-      if (!onLine) continue;
-
-      if (n.getTerrain() == ETerrain.Water) water++;
-      else accessible++;
-    }
-    int minAccessible = (int) Math.ceil(length * 0.40);
-    int minWater = (int) Math.ceil(length * 0.20);
-
-    return accessible >= minAccessible && water >= minWater;
   }
 }
 

@@ -5,6 +5,8 @@ import logic.StrategyAlwaysClosest;
 import logic.StrategyManual;
 import logic.StrategyNearestNeighbour;
 import logic.StrategyPlannedTour;
+import map.ClientMap;
+import map.IMapGenerator;
 import model.GameSettings;
 import model.StrategyType;
 import network.ClientNetwork;
@@ -35,5 +37,9 @@ public class Factory {
 
       case MANUAL -> new StrategyManual();
     };
+  }
+
+  public static IMapGenerator buildMapGenerator(GameSettings settings) {
+    return new ClientMap();
   }
 }

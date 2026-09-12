@@ -123,6 +123,7 @@ bootJar {
 
 application {
     mainClass = 'main.Main'
+    applicationDefaultJvmArgs = ['-ea']
 }
 
 spotless {

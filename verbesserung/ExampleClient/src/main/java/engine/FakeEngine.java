@@ -64,7 +64,10 @@ public class FakeEngine {
     return false;
   }
 
+  // TODO: redesign this
   public Boolean playerHasWon(String playerId) {
+    assert isFinished();
+
     PlayerData pd = players.get(playerId);
     PlayerData pd_enemy = players.values().stream()
         .filter(p -> !p.playerId.getUniquePlayerID().equals(playerId))
@@ -287,6 +290,8 @@ public class FakeEngine {
     PlayerData pd_enemy = players.values().stream()
         .filter(p -> !p.playerId.getUniquePlayerID().equals(move.getUniquePlayerID())).findFirst().orElse(null);
 
+    assert pd.state == EPlayerGameState.MustAct;
+
     int dx = 0, dy = 0;
     switch (move.getMove()) {
       case Up -> dy = -1;
@@ -312,21 +317,20 @@ public class FakeEngine {
     if (!inBounds(pd.position) || isWater(pd.position)) {
       pd.state = EPlayerGameState.Lost;
       pd_enemy.state = EPlayerGameState.Won;
+      return;
     }
+    
     if (pd.position.equals(pd.treasurePosition)) {
       pd.treasureCollected = true;
     }
     if (pd.treasureCollected && pd.position.equals(pd_enemy.fortPosition)) {
       pd.state = EPlayerGameState.Won;
       pd_enemy.state = EPlayerGameState.Lost;
+      return;
     }
 
-    // try {
-    // Thread.sleep(100);
-    // } catch (InterruptedException e) {
-    // Thread.currentThread().interrupt();
-    // System.err.println("Sleep unterbrochen: " + e.getMessage());
-    // }
+    pd.state = EPlayerGameState.MustWait;
+    pd_enemy.state = EPlayerGameState.MustAct;
   }
 
   private void updateObjectivesVisibility(String playerId) {
@@ -407,7 +411,12 @@ public class FakeEngine {
     Point enemyPos = pd_enemy.position;
     if (hideEnemy) {
       Random r = RandomManager.getRandom();
-      enemyPos = new Point(r.nextInt(WIDTH), r.nextInt(HEIGHT));
+      while (true) {
+        enemyPos = new Point(r.nextInt(WIDTH), r.nextInt(HEIGHT));
+        if (terrainGrid[enemyPos.x][enemyPos.y] != ETerrain.Water) {
+          break;
+        }
+      }
     }
     List<FullMapNode> mapNodes = new ArrayList<>();
     for (int x = 0; x < WIDTH; x++) {

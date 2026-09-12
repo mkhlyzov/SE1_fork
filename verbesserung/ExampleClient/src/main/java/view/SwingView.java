@@ -213,11 +213,12 @@ public class SwingView extends JFrame implements IView {
     newGameButton.setFont(new Font("SansSerif", Font.BOLD, 20));
     newGameButton.addActionListener(
         e -> {
-          new Thread(
-              () -> {
-                controller.startNewGame();
-              })
-              .start();
+          // new Thread(
+          //     () -> {
+          //       controller.startNewGame();
+          //     })
+          //     .start();
+          controller.startNewGame();
         });
     newGameButton.setVisible(true);
     newGameButton.setAlignmentX(CENTER_ALIGNMENT);
@@ -258,6 +259,7 @@ public class SwingView extends JFrame implements IView {
           () -> {
 
             addGameInfo();
+            infoPanel.updatePlayerState(gameHelper.getMyPlayerState());
 
             int cols = gameHelper.getMaxX() + 1;
             int rows = gameHelper.getMaxY() + 1;
@@ -578,9 +580,17 @@ class InfoPanel extends JPanel {
 
         break;
 
-      default:
-        statusLabel.setText("Game started");
+      case MustAct:
+        statusLabel.setText("Your turn");
         break;
+
+      case MustWait:
+        statusLabel.setText("Waiting for my turn...");
+        break;
+
+      // default:
+      //   statusLabel.setText("Game started");
+      //   break;
     }
 
     repaint();
