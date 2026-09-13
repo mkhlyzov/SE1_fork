@@ -185,9 +185,9 @@ public class GameController {
 
     switch(myPlayerState.getState()) {
       case EPlayerGameState.MustAct -> {
+        model.setStep(false);
         PlayerMove move = strategy.calculateNextMove(gameHelper);
         network.sendMove(move);
-        model.setStep(false);
       }
       case EPlayerGameState.Won, EPlayerGameState.Lost -> {
         finishGame();

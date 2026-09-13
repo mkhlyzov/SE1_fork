@@ -585,7 +585,7 @@ class InfoPanel extends JPanel {
         break;
 
       case MustWait:
-        statusLabel.setText("Waiting for my turn...");
+        statusLabel.setText("Enemy turn");
         break;
 
       // default:
