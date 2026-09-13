@@ -1,7 +1,14 @@
 package network;
 
-import java.util.logging.Level;
 import java.util.logging.Logger;
+
+import org.springframework.core.ParameterizedTypeReference;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.HttpMethod;
+import org.springframework.http.MediaType;
+import org.springframework.web.reactive.function.BodyInserters;
+import org.springframework.web.reactive.function.client.WebClient;
+
 import messagesbase.ResponseEnvelope;
 import messagesbase.UniquePlayerIdentifier;
 import messagesbase.messagesfromclient.ERequestState;
@@ -9,28 +16,19 @@ import messagesbase.messagesfromclient.PlayerHalfMap;
 import messagesbase.messagesfromclient.PlayerMove;
 import messagesbase.messagesfromclient.PlayerRegistration;
 import messagesbase.messagesfromserver.GameState;
-import org.springframework.core.ParameterizedTypeReference;
-import org.springframework.http.HttpHeaders;
-import org.springframework.http.HttpMethod;
-import org.springframework.http.MediaType;
-import org.springframework.web.reactive.function.BodyInserters;
-import org.springframework.web.reactive.function.client.WebClient;
 import reactor.core.publisher.Mono;
 
-public class ClientNetwork implements INetwork {
-
-  private static final int GAMESTATE_REQUEST_DELAY = 400;
-  private static final Logger LOGGER = Logger.getLogger("");
+public class ClientNetwork extends AbstractDelayedNtwork implements INetwork {
   // === Attribute ===
   private final String baseURL;
   private final String gameId;
   private UniquePlayerIdentifier playerId;
-  private long lastPollTime = 0;
 
   // === Konstruktor ===
   public ClientNetwork(String baseURL, String gameId) {
     this.baseURL = baseURL;
     this.gameId = gameId;
+    this.LOGGER = Logger.getLogger("");
   }
 
   @Override
@@ -172,28 +170,5 @@ public class ClientNetwork implements INetwork {
 
   public void setPlayerId(UniquePlayerIdentifier playerId) {
     this.playerId = playerId;
-  }
-
-  private void delayForPolling() {
-    long now = System.currentTimeMillis();
-
-    if (lastPollTime == 0) {
-      lastPollTime = now;
-      return;
-    }
-
-    long elapsed = now - lastPollTime;
-    long sleepTime = GAMESTATE_REQUEST_DELAY - elapsed;
-
-    if (sleepTime > 0) {
-      try {
-        Thread.sleep(sleepTime);
-      } catch (InterruptedException e) {
-        Thread.currentThread().interrupt();
-        LOGGER.log(Level.WARNING, "Sleep unterbrochen.", e);
-      }
-    }
-
-    lastPollTime = System.currentTimeMillis();
   }
 }

@@ -1,7 +1,6 @@
 package network;
 
 import java.util.Set;
-import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import engine.FakeEngine;
@@ -16,13 +15,9 @@ import messagesbase.messagesfromserver.EPlayerGameState;
 import messagesbase.messagesfromserver.GameState;
 import messagesbase.messagesfromserver.PlayerState;
 
-public class OfflineNetwork implements INetwork {
-  private static final int GAMESTATE_REQUEST_DELAY = 500;
-  private static final Logger LOGGER = Logger.getLogger("");
-
+public class OfflineNetwork extends AbstractDelayedNtwork implements INetwork {
   private FakeEngine engine = new FakeEngine();
   private boolean mapReady = false;
-  private long lastPollTime = 0;
   
   private UniquePlayerIdentifier playerId;
   
@@ -32,6 +27,7 @@ public class OfflineNetwork implements INetwork {
   private Thread enemyWorker = null;
 
   public OfflineNetwork(IStrategy enemyStrategy) {
+    this.LOGGER = Logger.getLogger("");
     this.enemyStrategy = enemyStrategy;
   }
 
@@ -95,28 +91,5 @@ public class OfflineNetwork implements INetwork {
   @Override
   public UniquePlayerIdentifier getPlayerId() {
     return playerId;
-  }
-
-  private void delayForPolling() {
-    long now = System.currentTimeMillis();
-
-    if (lastPollTime == 0) {
-      lastPollTime = now;
-      return;
-    }
-
-    long elapsed = now - lastPollTime;
-    long sleepTime = GAMESTATE_REQUEST_DELAY - elapsed;
-
-    if (sleepTime > 0) {
-      try {
-        Thread.sleep(sleepTime);
-      } catch (InterruptedException e) {
-        Thread.currentThread().interrupt();
-        LOGGER.log(Level.WARNING, "Sleep unterbrochen.", e);
-      }
-    }
-
-    lastPollTime = System.currentTimeMillis();
   }
 }
