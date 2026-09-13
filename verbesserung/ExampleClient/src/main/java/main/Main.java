@@ -54,7 +54,7 @@ public class Main {
 
   private static void setupLogging() {
     Logger root = Logger.getLogger("");
-    root.setLevel(Level.FINE);
+    root.setLevel(Level.INFO);
 
     for (var h : root.getHandlers()) {
       h.setLevel(Level.FINE);
@@ -76,5 +76,16 @@ public class Main {
             }
           });
     }
+
+    Logger.getLogger("controller").setLevel(Level.FINE);
+    Logger.getLogger("network").setLevel(Level.FINE);
+    Logger.getLogger("logic").setLevel(Level.FINE);
+    Logger.getLogger("map").setLevel(Level.FINE);
+    Logger.getLogger("model").setLevel(Level.FINE);
+    Logger.getLogger("view").setLevel(Level.FINE);
+
+    // Swing/AWT — только INFO
+    Logger.getLogger("javax.swing").setLevel(Level.INFO);
+    Logger.getLogger("java.awt").setLevel(Level.INFO);
   }
 }
