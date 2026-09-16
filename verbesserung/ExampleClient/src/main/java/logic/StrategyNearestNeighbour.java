@@ -13,6 +13,7 @@ import java.util.Queue;
 import java.util.Set;
 import java.util.logging.Logger;
 import java.util.stream.Collectors;
+
 import messagesbase.UniquePlayerIdentifier;
 import messagesbase.messagesfromclient.EMove;
 import messagesbase.messagesfromclient.ETerrain;
@@ -41,8 +42,8 @@ public class StrategyNearestNeighbour implements IStrategy {
     FullMapNode myPosition = gameHelper.getMyPosition();
     UniquePlayerIdentifier playerId = gameHelper.getPlayerId();
     boolean hasTreasure = gameHelper.hasTreasure();
-    boolean enemyFortVisible =
-        map.getMapNodes().stream().anyMatch(n -> n.getFortState() == EFortState.EnemyFortPresent);
+    boolean enemyFortVisible = map.getMapNodes().stream()
+        .anyMatch(n -> n.getFortState() == EFortState.EnemyFortPresent);
     FullMapNode peek = plannedTour.peek();
 
     if (myPosition == null) {
@@ -117,7 +118,8 @@ public class StrategyNearestNeighbour implements IStrategy {
 
   /** Инициализация сторон карты */
   private void initialize(GameHelper gameHelper) {
-    if (isInitialized) return;
+    if (isInitialized)
+      return;
 
     int maxX = gameHelper.getMaxX();
     int maxY = gameHelper.getMaxY();
@@ -210,7 +212,8 @@ public class StrategyNearestNeighbour implements IStrategy {
       FullMap map, FullMapNode start, List<FullMapNode> goals, int noiseRepeats) {
     long t0 = System.nanoTime();
     long timeBudget = 4500;
-    if (goals.isEmpty()) return Collections.emptyList();
+    if (goals.isEmpty())
+      return Collections.emptyList();
     Pathfinder pathfinder = new Pathfinder(map);
 
     int bestCost = Integer.MAX_VALUE;
@@ -251,7 +254,8 @@ public class StrategyNearestNeighbour implements IStrategy {
     unvisited.remove(start);
     while (!unvisited.isEmpty()) {
       FullMapNode nearest = bfsNearest(current, unvisited, map);
-      if (nearest == null) break;
+      if (nearest == null)
+        break;
       tour.add(nearest);
       unvisited.remove(nearest);
       current = nearest;
@@ -283,7 +287,8 @@ public class StrategyNearestNeighbour implements IStrategy {
       PQItem cur = pq.poll();
       String ck = key(cur.node);
 
-      if (goals.contains(cur.node)) return cur.node;
+      if (goals.contains(cur.node))
+        return cur.node;
 
       for (FullMapNode nb : getNeighbors(cur.node, map)) {
         double noise = (Math.random() - 0.5) * 0.01; // -0.005 ... 0.005 // 0
@@ -304,7 +309,8 @@ public class StrategyNearestNeighbour implements IStrategy {
     FullMapNode cur = start;
     for (FullMapNode goal : tour) {
       List<FullMapNode> path = pathfinder.findPath(cur, goal);
-      if (path.isEmpty()) return Integer.MAX_VALUE;
+      if (path.isEmpty())
+        return Integer.MAX_VALUE;
       for (int i = 0; i < path.size(); i++) {
         FullMapNode from = (i == 0) ? cur : path.get(i - 1);
         FullMapNode to = path.get(i);
@@ -337,7 +343,7 @@ public class StrategyNearestNeighbour implements IStrategy {
 
   private List<FullMapNode> getNeighbors(FullMapNode node, FullMap map) {
     List<FullMapNode> res = new ArrayList<>();
-    int[][] dirs = {{1, 0}, {-1, 0}, {0, 1}, {0, -1}};
+    int[][] dirs = { { 1, 0 }, { -1, 0 }, { 0, 1 }, { 0, -1 } };
     for (int[] d : dirs) {
       int nx = node.getX() + d[0], ny = node.getY() + d[1];
       map.getMapNodes().stream()
@@ -368,10 +374,14 @@ public class StrategyNearestNeighbour implements IStrategy {
     int dy = to.getY() - from.getY();
     assert dx * dx + dy * dy == 1;
 
-    if (to.getX() > from.getX()) return EMove.Right;
-    if (to.getX() < from.getX()) return EMove.Left;
-    if (to.getY() > from.getY()) return EMove.Down;
-    if (to.getY() < from.getY()) return EMove.Up;
+    if (to.getX() > from.getX())
+      return EMove.Right;
+    if (to.getX() < from.getX())
+      return EMove.Left;
+    if (to.getY() > from.getY())
+      return EMove.Down;
+    if (to.getY() < from.getY())
+      return EMove.Up;
     return EMove.Right;
   }
 }

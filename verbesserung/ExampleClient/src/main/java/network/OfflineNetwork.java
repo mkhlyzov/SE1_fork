@@ -18,17 +18,23 @@ import messagesbase.messagesfromserver.PlayerState;
 public class OfflineNetwork extends AbstractDelayedNtwork implements INetwork {
   private FakeEngine engine = new FakeEngine();
   private boolean mapReady = false;
-  
+
   private UniquePlayerIdentifier playerId;
-  
+
   private UniquePlayerIdentifier enemyId;
   private final IStrategy enemyStrategy;
   GameHelper enemyhelper;
   private Thread enemyWorker = null;
 
   public OfflineNetwork(IStrategy enemyStrategy) {
-    this.LOGGER = Logger.getLogger("");
+
+    this.LOGGER = Logger.getLogger(OfflineNetwork.class.getName());
     this.enemyStrategy = enemyStrategy;
+
+    Logger enemyStrategyLogger = Logger.getLogger(enemyStrategy.getClass().getName());
+
+    enemyStrategyLogger.setFilter(
+        record -> !Thread.currentThread().getName().equals("enemyWorker"));
   }
 
   @Override
@@ -66,7 +72,7 @@ public class OfflineNetwork extends AbstractDelayedNtwork implements INetwork {
       PlayerMove enemyMove = enemyStrategy.calculateNextMove(enemyhelper);
 
       engine.applyMove(enemyMove);
-    });
+    }, "enemyWorker");
 
     enemyWorker.start();
   }
