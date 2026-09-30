@@ -3,12 +3,12 @@ package network;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-abstract class AbstractDelayedNtwork implements INetwork{
-    protected Logger LOGGER;
-    private int GAMESTATE_REQUEST_DELAY = 400;
-    private long lastPollTime = 0;
+abstract class AbstractDelayedNetwork implements INetwork {
+  protected Logger LOGGER;
+  private int GAMESTATE_REQUEST_DELAY = 400;
+  private long lastPollTime = 0;
 
-    protected void delayForPolling() {
+  protected void delayForPolling() {
     long now = System.currentTimeMillis();
 
     if (lastPollTime == 0) {
@@ -30,5 +30,5 @@ abstract class AbstractDelayedNtwork implements INetwork{
 
     lastPollTime = System.currentTimeMillis();
   }
-    
+
 }
