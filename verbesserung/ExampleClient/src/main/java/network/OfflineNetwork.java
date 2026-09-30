@@ -1,9 +1,8 @@
 package network;
 
+import engine.FakeEngine;
 import java.util.Set;
 import java.util.logging.Logger;
-
-import engine.FakeEngine;
 import logic.GameHelper;
 import logic.IStrategy;
 import map.ClientMap;
@@ -64,15 +63,18 @@ public class OfflineNetwork extends AbstractDelayedNetwork implements INetwork {
       return;
     }
 
-    enemyWorker = new Thread(() -> {
-      GameState enemyState = engine.getState(enemyId.getUniquePlayerID());
+    enemyWorker =
+        new Thread(
+            () -> {
+              GameState enemyState = engine.getState(enemyId.getUniquePlayerID());
 
-      enemyhelper.update(enemyState);
+              enemyhelper.update(enemyState);
 
-      PlayerMove enemyMove = enemyStrategy.calculateNextMove(enemyhelper);
+              PlayerMove enemyMove = enemyStrategy.calculateNextMove(enemyhelper);
 
-      engine.applyMove(enemyMove);
-    }, "enemyWorker");
+              engine.applyMove(enemyMove);
+            },
+            "enemyWorker");
 
     enemyWorker.start();
   }
@@ -82,13 +84,14 @@ public class OfflineNetwork extends AbstractDelayedNetwork implements INetwork {
     delayForPolling();
 
     if (!mapReady) {
-      PlayerState myPlayer = new PlayerState(
-          "Fake",
-          "Player",
-          playerId.getUniquePlayerID(),
-          EPlayerGameState.MustAct,
-          playerId,
-          false);
+      PlayerState myPlayer =
+          new PlayerState(
+              "Fake",
+              "Player",
+              playerId.getUniquePlayerID(),
+              EPlayerGameState.MustAct,
+              playerId,
+              false);
       return new GameState(Set.of(myPlayer), "ABC");
     }
     return engine.getState(playerId.getUniquePlayerID());

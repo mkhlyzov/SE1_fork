@@ -1,8 +1,7 @@
 package engine;
 
-import org.junit.jupiter.api.Test;
-
 import main.Main;
+import org.junit.jupiter.api.Test;
 import util.RandomManager;
 
 public class FakeEngineTest {

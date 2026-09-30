@@ -30,5 +30,4 @@ abstract class AbstractDelayedNetwork implements INetwork {
 
     lastPollTime = System.currentTimeMillis();
   }
-
 }

@@ -12,7 +12,6 @@ import java.util.Queue;
 import java.util.Random;
 import java.util.Set;
 import java.util.logging.Logger;
-
 import messagesbase.UniquePlayerIdentifier;
 import messagesbase.messagesfromclient.ETerrain;
 import messagesbase.messagesfromclient.PlayerHalfMap;
@@ -52,8 +51,7 @@ public class FakeEngine {
     int numMovesApplied = 0;
   }
 
-  public FakeEngine() {
-  }
+  public FakeEngine() {}
 
   public Boolean isFinished() {
     for (PlayerData pd : players.values()) {
@@ -69,10 +67,11 @@ public class FakeEngine {
     assert isFinished();
 
     PlayerData pd = players.get(playerId);
-    PlayerData pd_enemy = players.values().stream()
-        .filter(p -> !p.playerId.getUniquePlayerID().equals(playerId))
-        .findFirst()
-        .orElse(null);
+    PlayerData pd_enemy =
+        players.values().stream()
+            .filter(p -> !p.playerId.getUniquePlayerID().equals(playerId))
+            .findFirst()
+            .orElse(null);
 
     if (pd.state == EPlayerGameState.Won || pd_enemy.state == EPlayerGameState.Lost) {
       return true;
@@ -147,7 +146,8 @@ public class FakeEngine {
   }
 
   private PlayerHalfMap normalizeFortCount(PlayerHalfMap half) {
-    List<PlayerHalfMapNode> forts = half.getMapNodes().stream().filter(PlayerHalfMapNode::isFortPresent).toList();
+    List<PlayerHalfMapNode> forts =
+        half.getMapNodes().stream().filter(PlayerHalfMapNode::isFortPresent).toList();
     List<PlayerHalfMapNode> nodes = new ArrayList<>(half.getMapNodes());
 
     Random r = RandomManager.getRandom();
@@ -186,8 +186,7 @@ public class FakeEngine {
 
   private Point addTreasure(PlayerHalfMap half) {
     PlayerHalfMapNode fort = findFort(half);
-    if (fort == null)
-      return null;
+    if (fort == null) return null;
     List<PlayerHalfMapNode> candidates = collectTreasureCandidates(half, fort);
     PlayerHalfMapNode chosen = RandomManager.chooseRandom(candidates);
     return chosen == null ? null : new Point(chosen.getX(), chosen.getY());
@@ -214,7 +213,8 @@ public class FakeEngine {
       return false;
     }
 
-    List<FullMapNode> walkable = fullMap.getMapNodes().stream().filter(n -> n.getTerrain() != ETerrain.Water).toList();
+    List<FullMapNode> walkable =
+        fullMap.getMapNodes().stream().filter(n -> n.getTerrain() != ETerrain.Water).toList();
 
     if (walkable.isEmpty()) {
       return false;
@@ -280,15 +280,17 @@ public class FakeEngine {
 
     // state verification
     for (int i = 0; i < WIDTH; i++) {
-      for (int j = 0; j < HEIGHT; j++)
-        assert terrainGrid[i][j] != null;
+      for (int j = 0; j < HEIGHT; j++) assert terrainGrid[i][j] != null;
     }
   }
 
   public synchronized void applyMove(PlayerMove move) {
     PlayerData pd = players.get(move.getUniquePlayerID());
-    PlayerData pd_enemy = players.values().stream()
-        .filter(p -> !p.playerId.getUniquePlayerID().equals(move.getUniquePlayerID())).findFirst().orElse(null);
+    PlayerData pd_enemy =
+        players.values().stream()
+            .filter(p -> !p.playerId.getUniquePlayerID().equals(move.getUniquePlayerID()))
+            .findFirst()
+            .orElse(null);
 
     assert pd.state == EPlayerGameState.MustAct;
 
@@ -319,7 +321,7 @@ public class FakeEngine {
       pd_enemy.state = EPlayerGameState.Won;
       return;
     }
-    
+
     if (pd.position.equals(pd.treasurePosition)) {
       pd.treasureCollected = true;
     }
@@ -335,10 +337,11 @@ public class FakeEngine {
 
   private void updateObjectivesVisibility(String playerId) {
     PlayerData pd = players.get(playerId);
-    PlayerData pd_enemy = players.values().stream()
-        .filter(p -> !p.playerId.getUniquePlayerID().equals(playerId))
-        .findFirst()
-        .orElse(null);
+    PlayerData pd_enemy =
+        players.values().stream()
+            .filter(p -> !p.playerId.getUniquePlayerID().equals(playerId))
+            .findFirst()
+            .orElse(null);
     Point pos = pd.position;
 
     ETerrain currentTerrain = getTerrain(pos.x, pos.y);
@@ -346,8 +349,7 @@ public class FakeEngine {
       for (int dx = -1; dx <= 1; dx++) {
         for (int dy = -1; dy <= 1; dy++) {
           Point neighbour = new Point(pos.x + dx, pos.y + dy);
-          if (!inBounds(neighbour))
-            continue;
+          if (!inBounds(neighbour)) continue;
           if (pd.treasurePosition.equals(neighbour)) {
             pd.treasureObserved = true;
           }
@@ -380,24 +382,26 @@ public class FakeEngine {
 
   public synchronized GameState getState(String playerId) {
     PlayerData pd = players.get(playerId);
-    PlayerData pd_enemy = players.values().stream().filter(p -> !p.playerId.getUniquePlayerID().equals(playerId))
-        .findFirst().orElse(null);
+    PlayerData pd_enemy =
+        players.values().stream()
+            .filter(p -> !p.playerId.getUniquePlayerID().equals(playerId))
+            .findFirst()
+            .orElse(null);
 
-    PlayerState myPlayer = new PlayerState(
-        "Fake", "Player", playerId,
-        pd.state,
-        pd.playerId,
-        pd.treasureCollected);
-    PlayerState enemyPlayer = new PlayerState(
-        "Fake", "Player", pd_enemy.playerId.getUniquePlayerID(),
-        pd_enemy.state,
-        pd_enemy.playerId,
-        pd_enemy.treasureCollected);
+    PlayerState myPlayer =
+        new PlayerState("Fake", "Player", playerId, pd.state, pd.playerId, pd.treasureCollected);
+    PlayerState enemyPlayer =
+        new PlayerState(
+            "Fake",
+            "Player",
+            pd_enemy.playerId.getUniquePlayerID(),
+            pd_enemy.state,
+            pd_enemy.playerId,
+            pd_enemy.treasureCollected);
 
     Set<PlayerState> players_set = Set.of(myPlayer, enemyPlayer);
 
-    if (terrainGrid == null)
-      return new GameState(players_set, "ABC");
+    if (terrainGrid == null) return new GameState(players_set, "ABC");
 
     Point treasurePos = pd.treasurePosition;
     Boolean treasureWasCollected = pd.treasureCollected;
@@ -424,9 +428,10 @@ public class FakeEngine {
         Point p = new Point(x, y);
 
         ETerrain terrain = terrainGrid[x][y];
-        ETreasureState treasureState = (treasurePos.equals(p) && !treasureWasCollected && treasureWasObserved)
-            ? ETreasureState.MyTreasureIsPresent
-            : ETreasureState.NoOrUnknownTreasureState;
+        ETreasureState treasureState =
+            (treasurePos.equals(p) && !treasureWasCollected && treasureWasObserved)
+                ? ETreasureState.MyTreasureIsPresent
+                : ETreasureState.NoOrUnknownTreasureState;
 
         EPlayerPositionState positionState;
         if (pd.position.equals(p)) {
@@ -441,12 +446,14 @@ public class FakeEngine {
           positionState = EPlayerPositionState.NoPlayerPresent;
         }
 
-        EFortState fortState = fortPos.equals(p) ? EFortState.MyFortPresent
-            : ((enemyFortPos.equals(p) && enemyFortWasObserved) ? EFortState.EnemyFortPresent
-                : EFortState.NoOrUnknownFortState);
+        EFortState fortState =
+            fortPos.equals(p)
+                ? EFortState.MyFortPresent
+                : ((enemyFortPos.equals(p) && enemyFortWasObserved)
+                    ? EFortState.EnemyFortPresent
+                    : EFortState.NoOrUnknownFortState);
 
-        mapNodes.add(new FullMapNode(
-            terrain, positionState, treasureState, fortState, x, y));
+        mapNodes.add(new FullMapNode(terrain, positionState, treasureState, fortState, x, y));
       }
     }
 
@@ -455,8 +462,7 @@ public class FakeEngine {
   }
 
   private ETerrain getTerrain(int x, int y) {
-    if (x < 0 || x >= WIDTH || y < 0 || y >= HEIGHT)
-      return null;
+    if (x < 0 || x >= WIDTH || y < 0 || y >= HEIGHT) return null;
     return terrainGrid[x][y]; // terrain[x][y]
   }
 
@@ -469,8 +475,7 @@ public class FakeEngine {
   }
 
   private int enterCost(ETerrain t) {
-    if (t == null)
-      return 1;
+    if (t == null) return 1;
     return switch (t) {
       case ETerrain.Grass -> 1;
       case ETerrain.Mountain -> 2;
@@ -479,8 +484,7 @@ public class FakeEngine {
   }
 
   private int leaveCost(ETerrain t) {
-    if (t == null)
-      return 1;
+    if (t == null) return 1;
     return switch (t) {
       case ETerrain.Grass -> 1;
       case ETerrain.Mountain -> 2;

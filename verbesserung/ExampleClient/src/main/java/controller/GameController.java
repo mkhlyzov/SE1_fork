@@ -2,7 +2,6 @@ package controller;
 
 import java.util.logging.Level;
 import java.util.logging.Logger;
-
 import logic.GameHelper;
 import logic.IStrategy;
 import map.IMapGenerator;
@@ -106,7 +105,8 @@ public class GameController {
     network.registerPlayer(model.getSettings().getStudentId());
 
     assert network.getPlayerId() != null;
-    LOGGER.info("Player registered successfully with id: " + network.getPlayerId().getUniquePlayerID());
+    LOGGER.info(
+        "Player registered successfully with id: " + network.getPlayerId().getUniquePlayerID());
 
     model.setGameHelper(new GameHelper(network.getPlayerId()));
   }
@@ -252,7 +252,8 @@ public class GameController {
 
     GameHelper gameHelper = model.getGameHelper();
     GameState state = gameHelper.getGameState();
-    boolean won = GameHelper.getPlayerState(state, network.getPlayerId()).getState() == EPlayerGameState.Won;
+    boolean won =
+        GameHelper.getPlayerState(state, network.getPlayerId()).getState() == EPlayerGameState.Won;
     view.printGameResult(won);
   }
 

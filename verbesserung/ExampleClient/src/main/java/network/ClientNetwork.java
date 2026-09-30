@@ -1,14 +1,6 @@
 package network;
 
 import java.util.logging.Logger;
-
-import org.springframework.core.ParameterizedTypeReference;
-import org.springframework.http.HttpHeaders;
-import org.springframework.http.HttpMethod;
-import org.springframework.http.MediaType;
-import org.springframework.web.reactive.function.BodyInserters;
-import org.springframework.web.reactive.function.client.WebClient;
-
 import messagesbase.ResponseEnvelope;
 import messagesbase.UniquePlayerIdentifier;
 import messagesbase.messagesfromclient.ERequestState;
@@ -16,6 +8,12 @@ import messagesbase.messagesfromclient.PlayerHalfMap;
 import messagesbase.messagesfromclient.PlayerMove;
 import messagesbase.messagesfromclient.PlayerRegistration;
 import messagesbase.messagesfromserver.GameState;
+import org.springframework.core.ParameterizedTypeReference;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.HttpMethod;
+import org.springframework.http.MediaType;
+import org.springframework.web.reactive.function.BodyInserters;
+import org.springframework.web.reactive.function.client.WebClient;
 import reactor.core.publisher.Mono;
 
 public class ClientNetwork extends AbstractDelayedNetwork implements INetwork {
@@ -34,18 +32,19 @@ public class ClientNetwork extends AbstractDelayedNetwork implements INetwork {
   @Override
   public GameState getGameState() {
     delayForPolling();
-    WebClient webClient = WebClient.builder()
-        .baseUrl(baseURL + "/games")
-        .defaultHeader(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_XML_VALUE)
-        .defaultHeader(HttpHeaders.ACCEPT, MediaType.APPLICATION_XML_VALUE)
-        .build();
+    WebClient webClient =
+        WebClient.builder()
+            .baseUrl(baseURL + "/games")
+            .defaultHeader(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_XML_VALUE)
+            .defaultHeader(HttpHeaders.ACCEPT, MediaType.APPLICATION_XML_VALUE)
+            .build();
 
-    Mono<ResponseEnvelope<GameState>> webAccess = webClient
-        .method(HttpMethod.GET)
-        .uri("/" + gameId + "/states/" + playerId.getUniquePlayerID())
-        .retrieve()
-        .bodyToMono(new ParameterizedTypeReference<ResponseEnvelope<GameState>>() {
-        });
+    Mono<ResponseEnvelope<GameState>> webAccess =
+        webClient
+            .method(HttpMethod.GET)
+            .uri("/" + gameId + "/states/" + playerId.getUniquePlayerID())
+            .retrieve()
+            .bodyToMono(new ParameterizedTypeReference<ResponseEnvelope<GameState>>() {});
 
     ResponseEnvelope<GameState> result = webAccess.block();
 
@@ -60,21 +59,22 @@ public class ClientNetwork extends AbstractDelayedNetwork implements INetwork {
   // === Registrierung implementiert ===
   @Override
   public void registerPlayer(String studentUAccount) {
-    WebClient webClient = WebClient.builder()
-        .baseUrl(baseURL + "/games") // ❗ port NICHT nochmal anhängen
-        .defaultHeader(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_XML_VALUE)
-        .defaultHeader(HttpHeaders.ACCEPT, MediaType.APPLICATION_XML_VALUE)
-        .build();
+    WebClient webClient =
+        WebClient.builder()
+            .baseUrl(baseURL + "/games") // ❗ port NICHT nochmal anhängen
+            .defaultHeader(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_XML_VALUE)
+            .defaultHeader(HttpHeaders.ACCEPT, MediaType.APPLICATION_XML_VALUE)
+            .build();
 
     PlayerRegistration playerReg = new PlayerRegistration("Dmytro", "Kostariev", studentUAccount);
 
-    Mono<ResponseEnvelope<UniquePlayerIdentifier>> webAccess = webClient
-        .method(HttpMethod.POST)
-        .uri("/" + gameId + "/players")
-        .body(BodyInserters.fromValue(playerReg))
-        .retrieve()
-        .bodyToMono(new ParameterizedTypeReference<>() {
-        });
+    Mono<ResponseEnvelope<UniquePlayerIdentifier>> webAccess =
+        webClient
+            .method(HttpMethod.POST)
+            .uri("/" + gameId + "/players")
+            .body(BodyInserters.fromValue(playerReg))
+            .retrieve()
+            .bodyToMono(new ParameterizedTypeReference<>() {});
 
     ResponseEnvelope<UniquePlayerIdentifier> result = webAccess.block();
 
@@ -91,21 +91,22 @@ public class ClientNetwork extends AbstractDelayedNetwork implements INetwork {
   // === Platzhalter-Methoden für später ===
   @Override
   public void sendHalfMap(PlayerHalfMap halfMapData) {
-    WebClient webClient = WebClient.builder()
-        .baseUrl(baseURL + "/games")
-        .defaultHeader(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_XML_VALUE)
-        .defaultHeader(HttpHeaders.ACCEPT, MediaType.APPLICATION_XML_VALUE)
-        .build();
+    WebClient webClient =
+        WebClient.builder()
+            .baseUrl(baseURL + "/games")
+            .defaultHeader(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_XML_VALUE)
+            .defaultHeader(HttpHeaders.ACCEPT, MediaType.APPLICATION_XML_VALUE)
+            .build();
 
     LOGGER.info("Sende HalfMap an den Server...");
 
-    Mono<ResponseEnvelope<Object>> webAccess = webClient
-        .method(HttpMethod.POST)
-        .uri("/" + gameId + "/halfmaps")
-        .body(BodyInserters.fromValue(halfMapData))
-        .retrieve()
-        .bodyToMono(new ParameterizedTypeReference<ResponseEnvelope<Object>>() {
-        });
+    Mono<ResponseEnvelope<Object>> webAccess =
+        webClient
+            .method(HttpMethod.POST)
+            .uri("/" + gameId + "/halfmaps")
+            .body(BodyInserters.fromValue(halfMapData))
+            .retrieve()
+            .bodyToMono(new ParameterizedTypeReference<ResponseEnvelope<Object>>() {});
 
     ResponseEnvelope<Object> result = webAccess.block();
 
@@ -127,19 +128,20 @@ public class ClientNetwork extends AbstractDelayedNetwork implements INetwork {
 
   @Override
   public void sendMove(PlayerMove move) {
-    WebClient webClient = WebClient.builder()
-        .baseUrl(baseURL + "/games")
-        .defaultHeader(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_XML_VALUE)
-        .defaultHeader(HttpHeaders.ACCEPT, MediaType.APPLICATION_XML_VALUE)
-        .build();
+    WebClient webClient =
+        WebClient.builder()
+            .baseUrl(baseURL + "/games")
+            .defaultHeader(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_XML_VALUE)
+            .defaultHeader(HttpHeaders.ACCEPT, MediaType.APPLICATION_XML_VALUE)
+            .build();
 
-    Mono<ResponseEnvelope<Object>> webAccess = webClient
-        .method(HttpMethod.POST)
-        .uri("/" + gameId + "/moves")
-        .body(BodyInserters.fromValue(move))
-        .retrieve()
-        .bodyToMono(new ParameterizedTypeReference<ResponseEnvelope<Object>>() {
-        });
+    Mono<ResponseEnvelope<Object>> webAccess =
+        webClient
+            .method(HttpMethod.POST)
+            .uri("/" + gameId + "/moves")
+            .body(BodyInserters.fromValue(move))
+            .retrieve()
+            .bodyToMono(new ParameterizedTypeReference<ResponseEnvelope<Object>>() {});
 
     ResponseEnvelope<Object> result = webAccess.block();
 

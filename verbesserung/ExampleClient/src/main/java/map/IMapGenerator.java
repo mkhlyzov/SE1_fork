@@ -4,9 +4,9 @@ import messagesbase.messagesfromclient.PlayerHalfMap;
 
 public interface IMapGenerator {
 
-    public PlayerHalfMap generate(String playerId);
+  public PlayerHalfMap generate(String playerId);
 
-    int getWidth();
+  int getWidth();
 
-    int getHeight();
+  int getHeight();
 }

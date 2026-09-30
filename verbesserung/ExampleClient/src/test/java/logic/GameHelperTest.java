@@ -1,18 +1,15 @@
 package logic;
 
-import java.awt.Point;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Set;
-
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
-import org.junit.jupiter.api.RepeatedTest;
-import org.junit.jupiter.api.Test;
 
 import engine.FakeEngine;
+import java.awt.Point;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Set;
 import map.ClientMap;
 import map.IMapGenerator;
 import messagesbase.UniquePlayerIdentifier;
@@ -27,6 +24,8 @@ import messagesbase.messagesfromserver.FullMap;
 import messagesbase.messagesfromserver.FullMapNode;
 import messagesbase.messagesfromserver.GameState;
 import messagesbase.messagesfromserver.PlayerState;
+import org.junit.jupiter.api.RepeatedTest;
+import org.junit.jupiter.api.Test;
 
 public class GameHelperTest {
 
@@ -43,7 +42,8 @@ public class GameHelperTest {
 
     PlayerState playerStateMustAct = buildPlayerState(EPlayerGameState.MustAct);
 
-    GameState state1 = new GameState(new FullMap(List.of(position_0_0)), Set.of(playerStateMustAct), "state1");
+    GameState state1 =
+        new GameState(new FullMap(List.of(position_0_0)), Set.of(playerStateMustAct), "state1");
 
     helper.update(state1);
 
@@ -51,11 +51,13 @@ public class GameHelperTest {
 
     PlayerState playerMustWait = buildPlayerState(EPlayerGameState.MustWait);
 
-    GameState state2 = new GameState(new FullMap(List.of(position_1_0)), Set.of(playerMustWait), "state2");
+    GameState state2 =
+        new GameState(new FullMap(List.of(position_1_0)), Set.of(playerMustWait), "state2");
 
     helper.update(state2);
 
-    GameState state3 = new GameState(new FullMap(List.of(position_1_0)), Set.of(playerStateMustAct), "state3");
+    GameState state3 =
+        new GameState(new FullMap(List.of(position_1_0)), Set.of(playerStateMustAct), "state3");
 
     helper.update(state3);
 
@@ -74,21 +76,25 @@ public class GameHelperTest {
     PlayerState playerStateMustAct = buildPlayerState(EPlayerGameState.MustAct);
     PlayerState playerStateMustWait = buildPlayerState(EPlayerGameState.MustWait);
 
-    GameState state1 = new GameState(new FullMap(List.of(position_0_0)), Set.of(playerStateMustAct), "state1");
+    GameState state1 =
+        new GameState(new FullMap(List.of(position_0_0)), Set.of(playerStateMustAct), "state1");
 
     helper.update(state1);
 
     FullMapNode position_1_0 = buildPPos(1, 0);
 
-    GameState state2 = new GameState(new FullMap(List.of(position_1_0)), Set.of(playerStateMustAct), "state2");
+    GameState state2 =
+        new GameState(new FullMap(List.of(position_1_0)), Set.of(playerStateMustAct), "state2");
 
     helper.update(state2);
 
-    GameState state3 = new GameState(new FullMap(List.of(position_1_0)), Set.of(playerStateMustWait), "state3");
+    GameState state3 =
+        new GameState(new FullMap(List.of(position_1_0)), Set.of(playerStateMustWait), "state3");
 
     helper.update(state3);
 
-    GameState state4 = new GameState(new FullMap(List.of(position_1_0)), Set.of(playerStateMustWait), "state4");
+    GameState state4 =
+        new GameState(new FullMap(List.of(position_1_0)), Set.of(playerStateMustWait), "state4");
 
     helper.update(state4);
 
@@ -108,7 +114,8 @@ public class GameHelperTest {
 
     PlayerState playerStateMustAct = buildPlayerState(EPlayerGameState.MustAct);
 
-    GameState state = new GameState(new FullMap(List.of(position_0_0)), Set.of(playerStateMustAct), "state1");
+    GameState state =
+        new GameState(new FullMap(List.of(position_0_0)), Set.of(playerStateMustAct), "state1");
 
     helper.update(state);
     helper.update(state);
@@ -127,9 +134,11 @@ public class GameHelperTest {
 
     PlayerState playerStateMustAct = buildPlayerState(EPlayerGameState.MustAct);
 
-    GameState state1 = new GameState(new FullMap(List.of(position_0_0)), Set.of(playerStateMustAct), "state1");
+    GameState state1 =
+        new GameState(new FullMap(List.of(position_0_0)), Set.of(playerStateMustAct), "state1");
 
-    GameState state2 = new GameState(new FullMap(List.of(position_0_0)), Set.of(playerStateMustAct), "state2");
+    GameState state2 =
+        new GameState(new FullMap(List.of(position_0_0)), Set.of(playerStateMustAct), "state2");
 
     helper.update(state1);
     helper.update(state2);
@@ -185,7 +194,6 @@ public class GameHelperTest {
 
       PlayerMove move_2 = strategy_2.calculateNextMove(helper_2);
       engine.applyMove(move_2);
-
     }
     helper_1.update(engine.getState(playerId_1));
     helper_2.update(engine.getState(playerId_2));
@@ -199,8 +207,10 @@ public class GameHelperTest {
     assertNotNull(pos_1_predicted_by_2);
     assertNotNull(pos_2_predicted_by_1);
 
-    assertTrue(pos_1_real.getX() == pos_1_predicted_by_2.x && pos_1_real.getY() == pos_1_predicted_by_2.y);
-    assertTrue(pos_2_real.getX() == pos_2_predicted_by_1.x && pos_2_real.getY() == pos_2_predicted_by_1.y);
+    assertTrue(
+        pos_1_real.getX() == pos_1_predicted_by_2.x && pos_1_real.getY() == pos_1_predicted_by_2.y);
+    assertTrue(
+        pos_2_real.getX() == pos_2_predicted_by_1.x && pos_2_real.getY() == pos_2_predicted_by_1.y);
   }
 
   /*
@@ -287,18 +297,20 @@ public class GameHelperTest {
                   y));
         }
 
-        PlayerState player1 = new PlayerState(
-            "Player", "One", "u1", player1State, new UniquePlayerIdentifier("player_1"), false);
+        PlayerState player1 =
+            new PlayerState(
+                "Player", "One", "u1", player1State, new UniquePlayerIdentifier("player_1"), false);
 
-        PlayerState player2 = new PlayerState(
-            "Player",
-            "Two",
-            "u2",
-            player1State == EPlayerGameState.MustAct
-                ? EPlayerGameState.MustWait
-                : EPlayerGameState.MustAct,
-            new UniquePlayerIdentifier("player_2"),
-            false);
+        PlayerState player2 =
+            new PlayerState(
+                "Player",
+                "Two",
+                "u2",
+                player1State == EPlayerGameState.MustAct
+                    ? EPlayerGameState.MustWait
+                    : EPlayerGameState.MustAct,
+                new UniquePlayerIdentifier("player_2"),
+                false);
 
         return new GameState(new FullMap(nodes), Set.of(player1, player2), stateId);
       }

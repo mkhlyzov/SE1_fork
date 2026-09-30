@@ -9,7 +9,6 @@ import java.util.Queue;
 import java.util.Set;
 import java.util.logging.Logger;
 import java.util.stream.Collectors;
-
 import messagesbase.UniquePlayerIdentifier;
 import messagesbase.messagesfromclient.ETerrain;
 import messagesbase.messagesfromserver.EPlayerGameState;
@@ -111,8 +110,9 @@ public class GameHelper {
     FullMap map = currentGameState.getMap();
     return map.getMapNodes().stream()
         .filter(
-            n -> n.getPlayerPositionState() == EPlayerPositionState.BothPlayerPosition
-                || n.getPlayerPositionState() == EPlayerPositionState.MyPlayerPosition)
+            n ->
+                n.getPlayerPositionState() == EPlayerPositionState.BothPlayerPosition
+                    || n.getPlayerPositionState() == EPlayerPositionState.MyPlayerPosition)
         .findFirst()
         .orElse(null);
   }
@@ -121,8 +121,9 @@ public class GameHelper {
     FullMap map = currentGameState.getMap();
     return map.getMapNodes().stream()
         .filter(
-            n -> n.getPlayerPositionState() == EPlayerPositionState.BothPlayerPosition
-                || n.getPlayerPositionState() == EPlayerPositionState.EnemyPlayerPosition)
+            n ->
+                n.getPlayerPositionState() == EPlayerPositionState.BothPlayerPosition
+                    || n.getPlayerPositionState() == EPlayerPositionState.EnemyPlayerPosition)
         .findFirst()
         .orElse(null);
   }
@@ -238,14 +239,14 @@ public class GameHelper {
         if (node.getTerrain() == ETerrain.Mountain) {
 
           int[][] dirs = {
-              { 1, 0 },
-              { -1, 0 },
-              { 0, 1 },
-              { 0, -1 },
-              { 1, 1 },
-              { -1, 1 },
-              { -1, -1 },
-              { 1, -1 }
+            {1, 0},
+            {-1, 0},
+            {0, 1},
+            {0, -1},
+            {1, 1},
+            {-1, 1},
+            {-1, -1},
+            {1, -1}
           };
 
           for (int[] dir : dirs) {
@@ -286,8 +287,7 @@ public class GameHelper {
   }
 
   private void initialize() {
-    if (isInitialized)
-      return;
+    if (isInitialized) return;
 
     if (!DEBUG) {
       checkAllNodesAreReachable();
@@ -303,9 +303,10 @@ public class GameHelper {
      * Returns True if all Goals are reachable, returns False otherwise
      */
 
-    Set<FullMapNode> nodesLeft = getMap().getMapNodes().stream()
-        .filter(n -> n.getTerrain() != ETerrain.Water)
-        .collect(Collectors.toSet());
+    Set<FullMapNode> nodesLeft =
+        getMap().getMapNodes().stream()
+            .filter(n -> n.getTerrain() != ETerrain.Water)
+            .collect(Collectors.toSet());
     Set<FullMapNode> visited = new HashSet<>();
     Queue<FullMapNode> queue = new LinkedList<>();
 
@@ -425,12 +426,10 @@ public class GameHelper {
   /**
    * Calculates the movement cost between two directly adjacent nodes.
    *
-   * <p>
-   * The transition cost is the sum of terrain costs of both nodes: Grass = 1,
-   * Mountain = 2.
+   * <p>The transition cost is the sum of terrain costs of both nodes: Grass = 1, Mountain = 2.
    *
    * @param from the source node
-   * @param to   the directly adjacent target node
+   * @param to the directly adjacent target node
    * @return the movement cost between the two nodes
    */
   private int terrainTransitionCost(FullMapNode from, FullMapNode to) {

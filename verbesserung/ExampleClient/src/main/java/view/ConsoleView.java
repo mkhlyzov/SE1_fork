@@ -9,8 +9,7 @@ import messagesbase.messagesfromserver.FullMap;
 import messagesbase.messagesfromserver.FullMapNode;
 
 public class ConsoleView implements IView {
-  public ConsoleView() {
-  }
+  public ConsoleView() {}
 
   @Override
   public void render(GameHelper gameHelper) {
@@ -96,7 +95,5 @@ public class ConsoleView implements IView {
   }
 
   @Override
-  public void clearMap() {
-
-  }
+  public void clearMap() {}
 }
