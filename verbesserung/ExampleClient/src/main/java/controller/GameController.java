@@ -1,5 +1,6 @@
 package controller;
 
+import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import logic.GameHelper;
@@ -39,21 +40,67 @@ public class GameController {
     if (gameWorkerThread != null && gameWorkerThread.isAlive()) {
       abortGame();
       gameWorkerThread.interrupt(); // is it good or bad???
+      try {
+        gameWorkerThread.join();
+      } catch (InterruptedException e) {
+        Thread.currentThread().interrupt();
+        return;
+      }
     }
 
     gameWorkerThread = new Thread(this::_startNewGame);
     gameWorkerThread.start();
   }
-  
+
+  // private void _startNewGame() {
+  // applySettings();
+
+  // registerPlayer();
+  // sendHalfMap();
+  // startGameLoop();
+  // }
   private void _startNewGame() {
     applySettings();
 
+    view.clearMap();
+    view.showMessage("Game started");
+
+    // "Game started" уже отображается в SwingView
+    try {
+      Thread.sleep(700);
+    } catch (InterruptedException e) {
+      Thread.currentThread().interrupt();
+      return;
+    }
+
     registerPlayer();
+
+    view.showMessage("Player registered");
+
+    try {
+      Thread.sleep(700);
+    } catch (InterruptedException e) {
+      Thread.currentThread().interrupt();
+      return;
+    }
+
     sendHalfMap();
+
+    if (model.isGameFinished()) {
+      return;
+    }
+
+    view.showMessage("Map sent");
+
+    try {
+      Thread.sleep(700);
+    } catch (InterruptedException e) {
+      Thread.currentThread().interrupt();
+      return;
+    }
+
     startGameLoop();
   }
-
-
 
   private void registerPlayer() {
     network.registerPlayer(model.getSettings().getStudentId());
@@ -183,16 +230,18 @@ public class GameController {
 
     assert myPlayerState != null;
 
-    switch(myPlayerState.getState()) {
+    switch (myPlayerState.getState()) {
       case EPlayerGameState.MustAct -> {
         model.setStep(false);
         PlayerMove move = strategy.calculateNextMove(gameHelper);
         network.sendMove(move);
+        view.showMessage("Enemy turn");
       }
       case EPlayerGameState.Won, EPlayerGameState.Lost -> {
         finishGame();
       }
       case EPlayerGameState.MustWait -> {
+        view.showMessage("Enemy turn");
         LOGGER.fine("Waiting for my turn...");
       }
     }
@@ -206,7 +255,7 @@ public class GameController {
     boolean won = GameHelper.getPlayerState(state, network.getPlayerId()).getState() == EPlayerGameState.Won;
     view.printGameResult(won);
   }
-  
+
   public void pauseGame() {
     model.setPause(true);
   }
@@ -243,6 +292,10 @@ public class GameController {
     model.setSettings(settings);
   }
 
+  public GameSettings getSettings() {
+    return model.getSettings();
+  }
+
   /*
    * applySettings
    *
@@ -253,6 +306,9 @@ public class GameController {
    */
   public void applySettings() {
     strategy = Factory.buildPlayeStrategy(model.getSettings());
+
+    Logger.getLogger(strategy.getClass().getName()).setLevel(Level.FINE);
+
     network = Factory.buildNetwork(model.getSettings());
 
     model.setGameFinished(false);

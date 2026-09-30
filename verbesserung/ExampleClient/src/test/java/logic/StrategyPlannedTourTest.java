@@ -1,8 +1,5 @@
 package logic;
 
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertTrue;
-
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
@@ -10,6 +7,12 @@ import java.util.Random;
 import java.util.Set;
 import java.util.logging.Logger;
 import java.util.stream.Collectors;
+
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertTrue;
+import org.junit.jupiter.api.RepeatedTest;
+import org.junit.jupiter.api.Test;
+
 import messagesbase.messagesfromclient.ETerrain;
 import messagesbase.messagesfromclient.PlayerMove;
 import messagesbase.messagesfromserver.EFortState;
@@ -17,8 +20,6 @@ import messagesbase.messagesfromserver.EPlayerPositionState;
 import messagesbase.messagesfromserver.ETreasureState;
 import messagesbase.messagesfromserver.FullMap;
 import messagesbase.messagesfromserver.FullMapNode;
-import org.junit.jupiter.api.RepeatedTest;
-import org.junit.jupiter.api.Test;
 import testutils.TestLogger;
 
 class StrategyPlannedTourTest {
@@ -74,14 +75,13 @@ class StrategyPlannedTourTest {
           playerState = EPlayerPositionState.MyPlayerPosition;
         }
 
-        FullMapNode node =
-            new FullMapNode(
-                terrain,
-                playerState,
-                ETreasureState.NoOrUnknownTreasureState,
-                EFortState.NoOrUnknownFortState,
-                x,
-                y);
+        FullMapNode node = new FullMapNode(
+            terrain,
+            playerState,
+            ETreasureState.NoOrUnknownTreasureState,
+            EFortState.NoOrUnknownFortState,
+            x,
+            y);
         if (terrain == ETerrain.Mountain) {
           mountainNode = node;
         }
@@ -92,15 +92,13 @@ class StrategyPlannedTourTest {
 
     FullMap map = new FullMap(nodes);
 
-    long grassNeighbours =
-        nodes.stream()
-            .filter(
-                n ->
-                    Math.abs(n.getX() - mountainX) <= 1
-                        && Math.abs(n.getY() - mountainY) <= 1
-                        && !(n.getX() == mountainX && n.getY() == mountainY))
-            .filter(n -> n.getTerrain() == ETerrain.Grass)
-            .count();
+    long grassNeighbours = nodes.stream()
+        .filter(
+            n -> Math.abs(n.getX() - mountainX) <= 1
+                && Math.abs(n.getY() - mountainY) <= 1
+                && !(n.getX() == mountainX && n.getY() == mountainY))
+        .filter(n -> n.getTerrain() == ETerrain.Grass)
+        .count();
 
     assertTrue(grassNeighbours == 8);
 
@@ -129,7 +127,6 @@ class StrategyPlannedTourTest {
     assertTrue(newDistance < oldDistance);
   }
 
-  // @Test
   @RepeatedTest(100)
   public void BestTourReachesMountainAtOptimalStep() {
     Random r = new Random();
@@ -175,17 +172,18 @@ class StrategyPlannedTourTest {
           playerState = EPlayerPositionState.MyPlayerPosition;
         }
 
-        FullMapNode node =
-            new FullMapNode(
-                terrain,
-                playerState,
-                ETreasureState.NoOrUnknownTreasureState,
-                EFortState.NoOrUnknownFortState,
-                x,
-                y);
+        FullMapNode node = new FullMapNode(
+            terrain,
+            playerState,
+            ETreasureState.NoOrUnknownTreasureState,
+            EFortState.NoOrUnknownFortState,
+            x,
+            y);
 
-        if (terrain == ETerrain.Mountain) mountainNode = node;
-        if (playerState == EPlayerPositionState.MyPlayerPosition) playerNode = node;
+        if (terrain == ETerrain.Mountain)
+          mountainNode = node;
+        if (playerState == EPlayerPositionState.MyPlayerPosition)
+          playerNode = node;
 
         nodes.add(node);
       }
@@ -260,17 +258,18 @@ class StrategyPlannedTourTest {
             playerState = EPlayerPositionState.MyPlayerPosition;
           }
 
-          FullMapNode node =
-              new FullMapNode(
-                  terrain,
-                  playerState,
-                  ETreasureState.NoOrUnknownTreasureState,
-                  EFortState.NoOrUnknownFortState,
-                  x,
-                  y);
+          FullMapNode node = new FullMapNode(
+              terrain,
+              playerState,
+              ETreasureState.NoOrUnknownTreasureState,
+              EFortState.NoOrUnknownFortState,
+              x,
+              y);
 
-          if (terrain == ETerrain.Mountain) mountainNode = node;
-          if (playerState == EPlayerPositionState.MyPlayerPosition) playerNode = node;
+          if (terrain == ETerrain.Mountain)
+            mountainNode = node;
+          if (playerState == EPlayerPositionState.MyPlayerPosition)
+            playerNode = node;
 
           nodes.add(node);
         }
@@ -305,38 +304,34 @@ class StrategyPlannedTourTest {
   @Test
   public void ignoreMountain_v2() {
 
-    FullMapNode A =
-        new FullMapNode(
-            ETerrain.Mountain,
-            EPlayerPositionState.NoPlayerPresent,
-            ETreasureState.NoOrUnknownTreasureState,
-            EFortState.NoOrUnknownFortState,
-            0,
-            0);
-    FullMapNode B =
-        new FullMapNode(
-            ETerrain.Grass,
-            EPlayerPositionState.MyPlayerPosition,
-            ETreasureState.NoOrUnknownTreasureState,
-            EFortState.NoOrUnknownFortState,
-            0,
-            1);
-    FullMapNode C =
-        new FullMapNode(
-            ETerrain.Grass,
-            EPlayerPositionState.NoPlayerPresent,
-            ETreasureState.NoOrUnknownTreasureState,
-            EFortState.NoOrUnknownFortState,
-            1,
-            0);
-    FullMapNode D =
-        new FullMapNode(
-            ETerrain.Grass,
-            EPlayerPositionState.NoPlayerPresent,
-            ETreasureState.NoOrUnknownTreasureState,
-            EFortState.NoOrUnknownFortState,
-            1,
-            1);
+    FullMapNode A = new FullMapNode(
+        ETerrain.Mountain,
+        EPlayerPositionState.NoPlayerPresent,
+        ETreasureState.NoOrUnknownTreasureState,
+        EFortState.NoOrUnknownFortState,
+        0,
+        0);
+    FullMapNode B = new FullMapNode(
+        ETerrain.Grass,
+        EPlayerPositionState.MyPlayerPosition,
+        ETreasureState.NoOrUnknownTreasureState,
+        EFortState.NoOrUnknownFortState,
+        0,
+        1);
+    FullMapNode C = new FullMapNode(
+        ETerrain.Grass,
+        EPlayerPositionState.NoPlayerPresent,
+        ETreasureState.NoOrUnknownTreasureState,
+        EFortState.NoOrUnknownFortState,
+        1,
+        0);
+    FullMapNode D = new FullMapNode(
+        ETerrain.Grass,
+        EPlayerPositionState.NoPlayerPresent,
+        ETreasureState.NoOrUnknownTreasureState,
+        EFortState.NoOrUnknownFortState,
+        1,
+        1);
     StrategyPlannedTour strategy = new StrategyPlannedTour();
     FullMap map = new FullMap(List.of(A, B, C, D));
     GameHelper helper = Utils.generateGameHelper(map);
@@ -370,11 +365,10 @@ class StrategyPlannedTourTest {
 
     double bestScore = strategy.computeTourScore_v1(bestTour, goals, 0.97);
 
-    String msg =
-        ("Best tour: "
-            + bestTour.stream()
-                .map(n -> "(" + n.getX() + "," + n.getY() + "," + n.getTerrain() + ")")
-                .collect(Collectors.joining(" ")));
+    String msg = ("Best tour: "
+        + bestTour.stream()
+            .map(n -> "(" + n.getX() + "," + n.getY() + "," + n.getTerrain() + ")")
+            .collect(Collectors.joining(" ")));
     LOGGER.fine(msg);
     LOGGER.fine("Best score: " + bestScore);
   }

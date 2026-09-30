@@ -9,7 +9,8 @@ import messagesbase.messagesfromserver.FullMap;
 import messagesbase.messagesfromserver.FullMapNode;
 
 public class ConsoleView implements IView {
-  public ConsoleView() {}
+  public ConsoleView() {
+  }
 
   @Override
   public void render(GameHelper gameHelper) {
@@ -87,5 +88,15 @@ public class ConsoleView implements IView {
   @Override
   public void printGameResult(boolean won) {
     System.out.println(won ? "🏆 Du hast gewonnen!" : "💀 Du hast verloren.");
+  }
+
+  @Override
+  public void showMessage(String message) {
+    System.out.println(message);
+  }
+
+  @Override
+  public void clearMap() {
+
   }
 }

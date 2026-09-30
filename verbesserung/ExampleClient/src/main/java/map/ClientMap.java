@@ -70,13 +70,19 @@ public class ClientMap implements IMapGenerator {
 
           if (terrain == ETerrain.Water) {
             waterCount++;
-            if (isEdgeTop) waterTop++;
-            if (isEdgeBottom) waterBottom++;
-            if (isEdgeLeft) waterLeft++;
-            if (isEdgeRight) waterRight++;
+            if (isEdgeTop)
+              waterTop++;
+            if (isEdgeBottom)
+              waterBottom++;
+            if (isEdgeLeft)
+              waterLeft++;
+            if (isEdgeRight)
+              waterRight++;
           }
-          if (terrain == ETerrain.Grass) grassCount++;
-          if (terrain == ETerrain.Mountain) mountainCount++;
+          if (terrain == ETerrain.Grass)
+            grassCount++;
+          if (terrain == ETerrain.Mountain)
+            mountainCount++;
 
           // PlayerHalfMapNode node = new PlayerHalfMapNode(x, y, false, terrain);
           nodes.add(new PlayerHalfMapNode(x, y, false, terrain));
@@ -96,18 +102,20 @@ public class ClientMap implements IMapGenerator {
       for (int i = 0; i < 1000 && countfort < FORTCOUNT; ++i) {
         int idx = rand.nextInt(nodes.size());
         PlayerHalfMapNode node = nodes.get(idx);
-        if (node.getTerrain() != ETerrain.Grass) continue;
+        if (node.getTerrain() != ETerrain.Grass)
+          continue;
         // if (node.getX() >= 3 && node.getX() <= 6 && node.getY() >= 1 && node.getY()
         // <= 3 && !node.isFortPresent())
         // continue;
-        if (node.isFortPresent()) continue;
-        PlayerHalfMapNode fortNode =
-            new PlayerHalfMapNode(node.getX(), node.getY(), true, ETerrain.Grass);
+        if (node.isFortPresent())
+          continue;
+        PlayerHalfMapNode fortNode = new PlayerHalfMapNode(node.getX(), node.getY(), true, ETerrain.Grass);
         nodes.set(idx, fortNode);
         countfort++;
         LOGGER.fine("Coordinates of Fort " + node.getX() + ", " + node.getY());
       }
-      if (countfort < FORTCOUNT) continue;
+      if (countfort < FORTCOUNT)
+        continue;
 
       if (!validator.isMapConnected(nodes)) {
         // System.out.println("🔁 Ungültige Map – wird neu generiert...");
@@ -140,9 +148,12 @@ public class ClientMap implements IMapGenerator {
 
           ETerrain terrain = randomTerrain(rand);
 
-          if (terrain == ETerrain.Water) waterCount++;
-          if (terrain == ETerrain.Grass) grassCount++;
-          if (terrain == ETerrain.Mountain) mountainCount++;
+          if (terrain == ETerrain.Water)
+            waterCount++;
+          if (terrain == ETerrain.Grass)
+            grassCount++;
+          if (terrain == ETerrain.Mountain)
+            mountainCount++;
 
           // PlayerHalfMapNode node = new PlayerHalfMapNode(x, y, false, terrain);
           nodes.add(new PlayerHalfMapNode(x, y, false, terrain));
@@ -166,18 +177,20 @@ public class ClientMap implements IMapGenerator {
       for (int i = 0; i < 1000 && countfort < FORTCOUNT; ++i) {
         int idx = rand.nextInt(nodes.size());
         PlayerHalfMapNode node = nodes.get(idx);
-        if (node.getTerrain() != ETerrain.Grass) continue;
+        if (node.getTerrain() != ETerrain.Grass)
+          continue;
         // if (node.getX() >= 3 && node.getX() <= 6 && node.getY() >= 1 && node.getY()
         // <= 3 && !node.isFortPresent())
         // continue;
-        if (node.isFortPresent()) continue;
-        PlayerHalfMapNode fortNode =
-            new PlayerHalfMapNode(node.getX(), node.getY(), true, ETerrain.Grass);
+        if (node.isFortPresent())
+          continue;
+        PlayerHalfMapNode fortNode = new PlayerHalfMapNode(node.getX(), node.getY(), true, ETerrain.Grass);
         nodes.set(idx, fortNode);
         countfort++;
         LOGGER.fine("Coordinates of Fort " + node.getX() + ", " + node.getY());
       }
-      if (countfort < FORTCOUNT) continue;
+      if (countfort < FORTCOUNT)
+        continue;
 
       if (!validator.isMapConnected(nodes)) {
         // System.out.println("🔁 Ungültige Map – wird neu generiert...");
@@ -191,8 +204,10 @@ public class ClientMap implements IMapGenerator {
 
   private ETerrain randomTerrain(Random rand) {
     int r = rand.nextInt(100);
-    if (r < 80) return ETerrain.Grass;
-    if (r < 90) return ETerrain.Mountain;
+    if (r < 80)
+      return ETerrain.Grass;
+    if (r < 90)
+      return ETerrain.Mountain;
     return ETerrain.Water;
   }
 
@@ -200,10 +215,12 @@ public class ClientMap implements IMapGenerator {
     return rand.nextBoolean() ? ETerrain.Grass : ETerrain.Mountain;
   }
 
+  @Override
   public int getHeight() {
     return height;
   }
 
+  @Override
   public int getWidth() {
     return width;
   }

@@ -1,19 +1,23 @@
 package logic;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertFalse;
-import static org.junit.jupiter.api.Assertions.assertNotNull;
-import static org.junit.jupiter.api.Assertions.assertTrue;
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.when;
-
-import engine.FakeEngine;
 import java.awt.Point;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
 import java.util.logging.Logger;
+
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+import org.junit.jupiter.api.RepeatedTest;
+import org.junit.jupiter.api.Test;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
+
+import engine.FakeEngine;
 import map.ClientMap;
+import map.IMapGenerator;
 import messagesbase.UniquePlayerIdentifier;
 import messagesbase.messagesfromclient.ETerrain;
 import messagesbase.messagesfromclient.PlayerHalfMap;
@@ -26,8 +30,6 @@ import messagesbase.messagesfromserver.FullMap;
 import messagesbase.messagesfromserver.FullMapNode;
 import messagesbase.messagesfromserver.GameState;
 import messagesbase.messagesfromserver.PlayerState;
-import org.junit.jupiter.api.RepeatedTest;
-import org.junit.jupiter.api.Test;
 import testutils.TestLogger;
 import view.ConsoleView;
 
@@ -85,28 +87,26 @@ class StrategyPlannedTourUtilsTest {
   void continiousPathBFS_doesNotUseWater2() {
     StrategyPlannedTour strategy = new StrategyPlannedTour();
 
-    FullMapNode a =
-        new FullMapNode(
-            ETerrain.Grass,
-            EPlayerPositionState.MyPlayerPosition,
-            ETreasureState.NoOrUnknownTreasureState,
-            EFortState.NoOrUnknownFortState,
-            0,
-            0);
+    FullMapNode a = new FullMapNode(
+        ETerrain.Grass,
+        EPlayerPositionState.MyPlayerPosition,
+        ETreasureState.NoOrUnknownTreasureState,
+        EFortState.NoOrUnknownFortState,
+        0,
+        0);
     FullMapNode b = node(1, 0, ETerrain.Grass);
     FullMapNode w = node(2, 0, ETerrain.Water);
     FullMapNode c = node(3, 0, ETerrain.Grass);
     FullMapNode d = node(4, 0, ETerrain.Grass);
     List<FullMapNode> nodes = List.of(a, b, w, c, d);
-    Set<PlayerState> players =
-        Set.of(
-            new PlayerState(
-                "Test",
-                "Player",
-                "u123456",
-                EPlayerGameState.MustWait,
-                new UniquePlayerIdentifier("player1"),
-                false));
+    Set<PlayerState> players = Set.of(
+        new PlayerState(
+            "Test",
+            "Player",
+            "u123456",
+            EPlayerGameState.MustWait,
+            new UniquePlayerIdentifier("player1"),
+            false));
     FullMap map = new FullMap(nodes);
     GameState gamestate = new GameState(map, players, "ABC");
     GameHelper helper = new GameHelper(new UniquePlayerIdentifier("player1"), true);
@@ -125,27 +125,25 @@ class StrategyPlannedTourUtilsTest {
   void continiousPathBFS_randomlyChoosesBetweenAlternativePaths() {
     StrategyPlannedTour strategy = new StrategyPlannedTour();
 
-    FullMapNode a =
-        new FullMapNode(
-            ETerrain.Grass,
-            EPlayerPositionState.MyPlayerPosition,
-            ETreasureState.NoOrUnknownTreasureState,
-            EFortState.NoOrUnknownFortState,
-            0,
-            0);
+    FullMapNode a = new FullMapNode(
+        ETerrain.Grass,
+        EPlayerPositionState.MyPlayerPosition,
+        ETreasureState.NoOrUnknownTreasureState,
+        EFortState.NoOrUnknownFortState,
+        0,
+        0);
     FullMapNode b = node(0, 1, ETerrain.Grass);
     FullMapNode c = node(1, 0, ETerrain.Grass);
     FullMapNode d = node(1, 1, ETerrain.Grass);
     List<FullMapNode> nodes = List.of(a, b, c, d);
-    Set<PlayerState> players =
-        Set.of(
-            new PlayerState(
-                "Test",
-                "Player",
-                "u123456",
-                EPlayerGameState.MustWait,
-                new UniquePlayerIdentifier("player1"),
-                false));
+    Set<PlayerState> players = Set.of(
+        new PlayerState(
+            "Test",
+            "Player",
+            "u123456",
+            EPlayerGameState.MustWait,
+            new UniquePlayerIdentifier("player1"),
+            false));
     FullMap map = new FullMap(nodes);
     GameState gamestate = new GameState(map, players, "ABC");
     GameHelper helper = new GameHelper(new UniquePlayerIdentifier("player1"));
@@ -160,8 +158,10 @@ class StrategyPlannedTourUtilsTest {
       assertEquals(a, path.get(0));
       assertEquals(d, path.get(path.size() - 1));
 
-      if (path.contains(b)) sawPathViaB = true;
-      if (path.contains(c)) sawPathViaC = true;
+      if (path.contains(b))
+        sawPathViaB = true;
+      if (path.contains(c))
+        sawPathViaC = true;
 
       if (sawPathViaB && sawPathViaC) {
         break;
@@ -174,27 +174,25 @@ class StrategyPlannedTourUtilsTest {
   void continiousPathBFS_prefersUnvisitedPathWhenAlternativeExists() {
     StrategyPlannedTour strategy = new StrategyPlannedTour();
 
-    FullMapNode a =
-        new FullMapNode(
-            ETerrain.Grass,
-            EPlayerPositionState.MyPlayerPosition,
-            ETreasureState.NoOrUnknownTreasureState,
-            EFortState.NoOrUnknownFortState,
-            0,
-            0);
+    FullMapNode a = new FullMapNode(
+        ETerrain.Grass,
+        EPlayerPositionState.MyPlayerPosition,
+        ETreasureState.NoOrUnknownTreasureState,
+        EFortState.NoOrUnknownFortState,
+        0,
+        0);
     FullMapNode b = node(0, 1, ETerrain.Grass);
     FullMapNode c = node(1, 0, ETerrain.Grass);
     FullMapNode d = node(1, 1, ETerrain.Grass);
     List<FullMapNode> nodes = List.of(a, b, c, d);
-    Set<PlayerState> players =
-        Set.of(
-            new PlayerState(
-                "Test",
-                "Player",
-                "u123456",
-                EPlayerGameState.MustWait,
-                new UniquePlayerIdentifier("player1"),
-                false));
+    Set<PlayerState> players = Set.of(
+        new PlayerState(
+            "Test",
+            "Player",
+            "u123456",
+            EPlayerGameState.MustWait,
+            new UniquePlayerIdentifier("player1"),
+            false));
     FullMap map = new FullMap(nodes);
     GameState gamestate = new GameState(map, players, "ABC");
     GameHelper helper = new GameHelper(new UniquePlayerIdentifier("player1"));
@@ -219,14 +217,13 @@ class StrategyPlannedTourUtilsTest {
     StrategyPlannedTour strategy = new StrategyPlannedTour();
 
     // A
-    FullMapNode a =
-        new FullMapNode(
-            ETerrain.Grass,
-            EPlayerPositionState.MyPlayerPosition,
-            ETreasureState.NoOrUnknownTreasureState,
-            EFortState.NoOrUnknownFortState,
-            0,
-            1);
+    FullMapNode a = new FullMapNode(
+        ETerrain.Grass,
+        EPlayerPositionState.MyPlayerPosition,
+        ETreasureState.NoOrUnknownTreasureState,
+        EFortState.NoOrUnknownFortState,
+        0,
+        1);
 
     // верхний (дешёвый) путь
     FullMapNode g1 = node(0, 0, ETerrain.Grass);
@@ -248,15 +245,14 @@ class StrategyPlannedTourUtilsTest {
 
     List<FullMapNode> nodes = List.of(g1, g2, g3, g4, g5, g6, g7, a, m1, m2, m3, m4, m5, b);
 
-    Set<PlayerState> players =
-        Set.of(
-            new PlayerState(
-                "Test",
-                "Player",
-                "u123456",
-                EPlayerGameState.MustWait,
-                new UniquePlayerIdentifier("player1"),
-                false));
+    Set<PlayerState> players = Set.of(
+        new PlayerState(
+            "Test",
+            "Player",
+            "u123456",
+            EPlayerGameState.MustWait,
+            new UniquePlayerIdentifier("player1"),
+            false));
 
     FullMap map = new FullMap(nodes);
     GameState gameState = new GameState(map, players, "ABC");
@@ -292,14 +288,13 @@ class StrategyPlannedTourUtilsTest {
     StrategyPlannedTour strategy = new StrategyPlannedTour();
 
     // A
-    FullMapNode a =
-        new FullMapNode(
-            ETerrain.Grass,
-            EPlayerPositionState.MyPlayerPosition,
-            ETreasureState.NoOrUnknownTreasureState,
-            EFortState.NoOrUnknownFortState,
-            0,
-            1);
+    FullMapNode a = new FullMapNode(
+        ETerrain.Grass,
+        EPlayerPositionState.MyPlayerPosition,
+        ETreasureState.NoOrUnknownTreasureState,
+        EFortState.NoOrUnknownFortState,
+        0,
+        1);
 
     // верхний (дешёвый) путь
     FullMapNode g1 = node(0, 0, ETerrain.Grass);
@@ -321,15 +316,14 @@ class StrategyPlannedTourUtilsTest {
 
     List<FullMapNode> nodes = List.of(g1, g2, g3, g4, g5, g6, g7, a, m1, m2, m3, m4, m5, b);
 
-    Set<PlayerState> players =
-        Set.of(
-            new PlayerState(
-                "Test",
-                "Player",
-                "u123456",
-                EPlayerGameState.MustWait,
-                new UniquePlayerIdentifier("player1"),
-                false));
+    Set<PlayerState> players = Set.of(
+        new PlayerState(
+            "Test",
+            "Player",
+            "u123456",
+            EPlayerGameState.MustWait,
+            new UniquePlayerIdentifier("player1"),
+            false));
 
     FullMap map = new FullMap(nodes);
     GameState gameState = new GameState(map, players, "ABC");
@@ -365,29 +359,27 @@ class StrategyPlannedTourUtilsTest {
     StrategyPlannedTour strategy = new StrategyPlannedTour();
 
     // A
-    FullMapNode a =
-        new FullMapNode(
-            ETerrain.Grass,
-            EPlayerPositionState.MyPlayerPosition,
-            ETreasureState.NoOrUnknownTreasureState,
-            EFortState.NoOrUnknownFortState,
-            0,
-            0);
+    FullMapNode a = new FullMapNode(
+        ETerrain.Grass,
+        EPlayerPositionState.MyPlayerPosition,
+        ETreasureState.NoOrUnknownTreasureState,
+        EFortState.NoOrUnknownFortState,
+        0,
+        0);
     FullMapNode b = node(1, 0, ETerrain.Grass);
     FullMapNode c = node(2, 0, ETerrain.Grass);
     FullMapNode d = node(3, 0, ETerrain.Grass);
 
     List<FullMapNode> nodes = List.of(a, b, c, d);
 
-    Set<PlayerState> players =
-        Set.of(
-            new PlayerState(
-                "Test",
-                "Player",
-                "u123456",
-                EPlayerGameState.MustWait,
-                new UniquePlayerIdentifier("player1"),
-                false));
+    Set<PlayerState> players = Set.of(
+        new PlayerState(
+            "Test",
+            "Player",
+            "u123456",
+            EPlayerGameState.MustWait,
+            new UniquePlayerIdentifier("player1"),
+            false));
 
     FullMap map = new FullMap(nodes);
     GameState gameState = new GameState(map, players, "ABC");
@@ -403,65 +395,69 @@ class StrategyPlannedTourUtilsTest {
     assertEquals(c, result);
   }
 
-  // @Test
   @RepeatedTest(100)
   public void firstEnemyObservedPositionAfter8Rounds() {
+
     FakeEngine engine = new FakeEngine();
+
     String playerId_1 = "player_1";
     String playerId_2 = "player_2";
+
     IStrategy strategy_1 = new StrategyPlannedTour();
     IStrategy strategy_2 = new StrategyAlwaysClosest();
-    ClientMap mapGenerator_1 = new ClientMap(playerId_1);
-    PlayerHalfMap halfMapData_1 = mapGenerator_1.generate();
+
+    IMapGenerator mapGenerator_1 = new ClientMap();
+    PlayerHalfMap halfMapData_1 = mapGenerator_1.generate(playerId_1);
     engine.registerPlayer(playerId_1, halfMapData_1);
 
-    ClientMap mapGenerator_2 = new ClientMap(playerId_2);
-    PlayerHalfMap halfMapData_2 = mapGenerator_2.generate();
+    IMapGenerator mapGenerator_2 = new ClientMap();
+    PlayerHalfMap halfMapData_2 = mapGenerator_2.generate(playerId_2);
     engine.registerPlayer(playerId_2, halfMapData_2);
 
     GameHelper helper_1 = new GameHelper(new UniquePlayerIdentifier(playerId_1));
+
     GameHelper helper_2 = new GameHelper(new UniquePlayerIdentifier(playerId_2));
+
     ConsoleView view = new ConsoleView();
 
-    GameState stateAfter2Rounds = null;
-    for (int i = 0; ; i++) {
+    for (int i = 0; i != NUM_ROUNDS_HIDDEN && !engine.isFinished(); i++) {
 
       GameState state_1 = engine.getState(playerId_1);
-      GameState state_2 = engine.getState(playerId_2);
 
       helper_1.update(state_1);
-      helper_2.update(state_2);
       view.render(helper_1);
 
       if (i < NUM_ROUNDS_HIDDEN) {
-        Point Pos2_expected = helper_1.getFirstTrueEnemyPosition();
+        Point Pos2_expected = helper_1._getFirstTrueEnemyPosition_v1();
         assert (Pos2_expected == null);
-      }
-
-      if (engine.isFinished() || i == NUM_ROUNDS_HIDDEN) {
-        break;
       }
 
       PlayerMove move_1 = strategy_1.calculateNextMove(helper_1);
       engine.applyMove(move_1);
+
+      GameState state_2 = engine.getState(playerId_2);
+      helper_2.update(state_2);
       PlayerMove move_2 = strategy_2.calculateNextMove(helper_2);
       engine.applyMove(move_2);
+
     }
+
+    helper_1.update(engine.getState(playerId_1));
+    helper_2.update(engine.getState(playerId_2));
+
     FullMapNode Pos1 = helper_1.getMyPosition();
     FullMapNode Pos2 = helper_2.getMyPosition();
 
     LOGGER.fine("Player1: " + Pos1.getX() + ", " + Pos1.getY());
     LOGGER.fine("Player2: " + Pos2.getX() + ", " + Pos2.getY());
 
-    Point Pos2_expected = helper_1.getFirstTrueEnemyPosition();
-    Point Pos1_expected = helper_2.getFirstTrueEnemyPosition();
-    assertTrue(Pos2.getX() == Pos2_expected.x && Pos2.getY() == Pos2_expected.y);
-    assertTrue(Pos1.getX() == Pos1_expected.x && Pos1.getY() == Pos1_expected.y);
+    for (int i = 0;; i++) {
 
-    for (int i = 0; ; i++) {
+      Point Pos2_expected = helper_1._getFirstTrueEnemyPosition_v1();
+      Point Pos1_expected = helper_2._getFirstTrueEnemyPosition_v1();
 
-      Pos2_expected = helper_1.getFirstTrueEnemyPosition();
       assertTrue(Pos2.getX() == Pos2_expected.x && Pos2.getY() == Pos2_expected.y);
+      assertTrue(Pos1.getX() == Pos1_expected.x && Pos1.getY() == Pos1_expected.y);
 
       if (engine.isFinished() || i == 6) {
         break;
@@ -469,14 +465,14 @@ class StrategyPlannedTourUtilsTest {
 
       PlayerMove move_1 = strategy_1.calculateNextMove(helper_1);
       engine.applyMove(move_1);
+
+      GameState state_2 = engine.getState(playerId_2);
+      helper_2.update(state_2);
       PlayerMove move_2 = strategy_2.calculateNextMove(helper_2);
       engine.applyMove(move_2);
 
       GameState state_1 = engine.getState(playerId_1);
-      GameState state_2 = engine.getState(playerId_2);
-
       helper_1.update(state_1);
-      helper_2.update(state_2);
       view.render(helper_1);
     }
   }

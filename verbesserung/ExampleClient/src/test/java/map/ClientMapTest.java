@@ -1,25 +1,26 @@
 package map;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertTrue;
-
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 import java.util.stream.Collectors;
+
+import static org.junit.Assert.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+import org.junit.jupiter.api.Disabled;
+import org.junit.jupiter.api.RepeatedTest;
+
 import messagesbase.messagesfromclient.ETerrain;
 import messagesbase.messagesfromclient.PlayerHalfMap;
 import messagesbase.messagesfromclient.PlayerHalfMapNode;
-import org.junit.jupiter.api.Disabled;
-import org.junit.jupiter.api.RepeatedTest;
 
 public class ClientMapTest {
 
   @RepeatedTest(100)
   void halfMapCorrectDimensions() {
 
-    ClientMap map = new ClientMap("player1");
-    PlayerHalfMap halfMap = map.generate();
+    IMapGenerator map = new ClientMap();
+    PlayerHalfMap halfMap = map.generate("player1");
     int width = map.getWidth();
     int height = map.getHeight();
     assertEquals(width * height, halfMap.getMapNodes().size());
@@ -31,21 +32,18 @@ public class ClientMapTest {
 
   @RepeatedTest(100)
   void halfMapContainsAtLeastOneCastle() {
-    ClientMap map = new ClientMap("player1");
+    IMapGenerator map = new ClientMap();
+    PlayerHalfMap halfMap = map.generate("player1");
 
-    PlayerHalfMap halfMap = map.generate();
-
-    boolean castleExists =
-        halfMap.getMapNodes().stream().anyMatch(PlayerHalfMapNode::isFortPresent);
+    boolean castleExists = halfMap.getMapNodes().stream().anyMatch(PlayerHalfMapNode::isFortPresent);
 
     assertTrue(castleExists, "HalfMap must contain at least one castle");
   }
 
   @RepeatedTest(100)
   void halfMapTerrainDistributionIsValid() {
-    ClientMap map = new ClientMap("player1");
-
-    PlayerHalfMap halfMap = map.generate();
+    IMapGenerator map = new ClientMap();
+    PlayerHalfMap halfMap = map.generate("player1");
     Collection<PlayerHalfMapNode> nodes = halfMap.getMapNodes();
     int total = nodes.size();
     long grass = nodes.stream().filter(n -> n.getTerrain() == ETerrain.Grass).count();
@@ -70,10 +68,8 @@ public class ClientMapTest {
   @Disabled
   @RepeatedTest(100)
   void eachMapBorderHasAtLeast51PercentPassableTiles() {
-    ClientMap map = new ClientMap("player1");
-
-    PlayerHalfMap halfMap = map.generate();
-
+    IMapGenerator map = new ClientMap();
+    PlayerHalfMap halfMap = map.generate("player1");
     List<PlayerHalfMapNode> nodes = halfMap.getMapNodes().stream().collect(Collectors.toList());
     int width = map.getWidth();
     int height = map.getHeight();
@@ -108,21 +104,18 @@ public class ClientMapTest {
 
   @RepeatedTest(100)
   void extendedBorderRulesAreSatisfied() {
-    ClientMap map = new ClientMap("player1");
-
-    PlayerHalfMap halfMap = map.generate();
+    IMapGenerator map = new ClientMap();
+    PlayerHalfMap halfMap = map.generate("player1");
     List<PlayerHalfMapNode> nodes = new ArrayList<>(halfMap.getMapNodes());
 
     int width = map.getWidth();
     int height = map.getHeight();
-    List<PlayerHalfMapNode> topBorder =
-        nodes.stream().filter(n -> n.getY() == 0).collect(Collectors.toList());
-    List<PlayerHalfMapNode> bottomBorder =
-        nodes.stream().filter(n -> n.getY() == height - 1).collect(Collectors.toList());
-    List<PlayerHalfMapNode> leftBorder =
-        nodes.stream().filter(n -> n.getX() == 0).collect(Collectors.toList());
-    List<PlayerHalfMapNode> rigthBorder =
-        nodes.stream().filter(n -> n.getX() == width - 1).collect(Collectors.toList());
+    List<PlayerHalfMapNode> topBorder = nodes.stream().filter(n -> n.getY() == 0).collect(Collectors.toList());
+    List<PlayerHalfMapNode> bottomBorder = nodes.stream().filter(n -> n.getY() == height - 1)
+        .collect(Collectors.toList());
+    List<PlayerHalfMapNode> leftBorder = nodes.stream().filter(n -> n.getX() == 0).collect(Collectors.toList());
+    List<PlayerHalfMapNode> rigthBorder = nodes.stream().filter(n -> n.getX() == width - 1)
+        .collect(Collectors.toList());
     assertTrue(borderHasAtLeastPercentAccessible(topBorder, 0.40));
     assertTrue(borderHasAtLeastPercentInaccessible(topBorder, 0.20));
     assertTrue(borderHasAtLeastPercentAccessible(bottomBorder, 0.40));
