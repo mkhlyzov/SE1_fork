@@ -15,7 +15,7 @@ import messagesbase.messagesfromserver.EPlayerGameState;
 import messagesbase.messagesfromserver.GameState;
 import messagesbase.messagesfromserver.PlayerState;
 
-public class OfflineNetwork extends AbstractDelayedNtwork implements INetwork {
+public class OfflineNetwork extends AbstractDelayedNetwork implements INetwork {
   private FakeEngine engine = new FakeEngine();
   private boolean mapReady = false;
 

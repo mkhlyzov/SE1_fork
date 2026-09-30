@@ -18,7 +18,7 @@ import messagesbase.messagesfromclient.PlayerRegistration;
 import messagesbase.messagesfromserver.GameState;
 import reactor.core.publisher.Mono;
 
-public class ClientNetwork extends AbstractDelayedNtwork implements INetwork {
+public class ClientNetwork extends AbstractDelayedNetwork implements INetwork {
   // === Attribute ===
   private final String baseURL;
   private final String gameId;
