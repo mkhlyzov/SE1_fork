@@ -9,6 +9,7 @@ import java.util.Queue;
 import java.util.Set;
 import java.util.logging.Logger;
 import java.util.stream.Collectors;
+
 import messagesbase.UniquePlayerIdentifier;
 import messagesbase.messagesfromclient.ETerrain;
 import messagesbase.messagesfromserver.EPlayerGameState;
@@ -41,6 +42,15 @@ public class GameHelper {
 
   private List<Point> playerPosHistory = new ArrayList<>();
   private List<Point> enemyPosHistory = new ArrayList<>();
+
+  /* Methode FOR DEBUGGING */
+  public void printEnemyPos() {
+    for (int i = 0; i < enemyPosHistory.size(); i++) {
+      Point p = enemyPosHistory.get(i);
+
+      System.out.println(i + ": (" + p.x + "," + p.y + ")");
+    }
+  }
 
   public GameHelper(UniquePlayerIdentifier playerId) {
     this.playerId = playerId;
@@ -110,9 +120,8 @@ public class GameHelper {
     FullMap map = currentGameState.getMap();
     return map.getMapNodes().stream()
         .filter(
-            n ->
-                n.getPlayerPositionState() == EPlayerPositionState.BothPlayerPosition
-                    || n.getPlayerPositionState() == EPlayerPositionState.MyPlayerPosition)
+            n -> n.getPlayerPositionState() == EPlayerPositionState.BothPlayerPosition
+                || n.getPlayerPositionState() == EPlayerPositionState.MyPlayerPosition)
         .findFirst()
         .orElse(null);
   }
@@ -121,9 +130,8 @@ public class GameHelper {
     FullMap map = currentGameState.getMap();
     return map.getMapNodes().stream()
         .filter(
-            n ->
-                n.getPlayerPositionState() == EPlayerPositionState.BothPlayerPosition
-                    || n.getPlayerPositionState() == EPlayerPositionState.EnemyPlayerPosition)
+            n -> n.getPlayerPositionState() == EPlayerPositionState.BothPlayerPosition
+                || n.getPlayerPositionState() == EPlayerPositionState.EnemyPlayerPosition)
         .findFirst()
         .orElse(null);
   }
@@ -139,11 +147,33 @@ public class GameHelper {
     return null;
   }
 
+  // public Point _getFirstTrueEnemyPosition_v2() {
+  // for (int i = 0; i + 2 < enemyPosHistory.size(); i++) {
+  // Point p1 = enemyPosHistory.get(i);
+  // Point p2 = enemyPosHistory.get(i + 1);
+  // Point p3 = enemyPosHistory.get(i + 2);
+
+  // int dx21 = p2.x - p1.x;
+  // int dy21 = p2.y - p1.y;
+
+  // int dx32 = p3.x - p2.x;
+  // int dy32 = p3.y - p2.y;
+
+  // if (dx21 * dx21 + dy21 * dy21 <= 1 && dx32 * dx32 + dy32 * dy32 <= 1) {
+  // return p1;
+  // }
+  // }
+  // return null;
+  // }
+
   public Point _getFirstTrueEnemyPosition_v2() {
-    for (int i = 0; i + 2 < enemyPosHistory.size(); i++) {
-      Point p1 = enemyPosHistory.get(i);
-      Point p2 = enemyPosHistory.get(i + 1);
-      Point p3 = enemyPosHistory.get(i + 2);
+
+    int firstTrueIndex = -1;
+    for (int i = enemyPosHistory.size() - 1; i >= 2; i--) {
+
+      Point p1 = enemyPosHistory.get(i - 2);
+      Point p2 = enemyPosHistory.get(i - 1);
+      Point p3 = enemyPosHistory.get(i);
 
       int dx21 = p2.x - p1.x;
       int dy21 = p2.y - p1.y;
@@ -151,9 +181,16 @@ public class GameHelper {
       int dx32 = p3.x - p2.x;
       int dy32 = p3.y - p2.y;
 
-      if (dx21 * dx21 + dy21 * dy21 <= 1 && dx32 * dx32 + dy32 * dy32 <= 1) {
-        return p1;
+      if (dx21 * dx21 + dy21 * dy21 <= 1
+          && dx32 * dx32 + dy32 * dy32 <= 1) {
+
+        firstTrueIndex = i - 2;
+      } else {
+        break;
       }
+    }
+    if (firstTrueIndex != -1) {
+      return enemyPosHistory.get(firstTrueIndex);
     }
     return null;
   }
@@ -239,14 +276,14 @@ public class GameHelper {
         if (node.getTerrain() == ETerrain.Mountain) {
 
           int[][] dirs = {
-            {1, 0},
-            {-1, 0},
-            {0, 1},
-            {0, -1},
-            {1, 1},
-            {-1, 1},
-            {-1, -1},
-            {1, -1}
+              { 1, 0 },
+              { -1, 0 },
+              { 0, 1 },
+              { 0, -1 },
+              { 1, 1 },
+              { -1, 1 },
+              { -1, -1 },
+              { 1, -1 }
           };
 
           for (int[] dir : dirs) {
@@ -287,7 +324,8 @@ public class GameHelper {
   }
 
   private void initialize() {
-    if (isInitialized) return;
+    if (isInitialized)
+      return;
 
     if (!DEBUG) {
       checkAllNodesAreReachable();
@@ -303,10 +341,9 @@ public class GameHelper {
      * Returns True if all Goals are reachable, returns False otherwise
      */
 
-    Set<FullMapNode> nodesLeft =
-        getMap().getMapNodes().stream()
-            .filter(n -> n.getTerrain() != ETerrain.Water)
-            .collect(Collectors.toSet());
+    Set<FullMapNode> nodesLeft = getMap().getMapNodes().stream()
+        .filter(n -> n.getTerrain() != ETerrain.Water)
+        .collect(Collectors.toSet());
     Set<FullMapNode> visited = new HashSet<>();
     Queue<FullMapNode> queue = new LinkedList<>();
 
@@ -426,10 +463,12 @@ public class GameHelper {
   /**
    * Calculates the movement cost between two directly adjacent nodes.
    *
-   * <p>The transition cost is the sum of terrain costs of both nodes: Grass = 1, Mountain = 2.
+   * <p>
+   * The transition cost is the sum of terrain costs of both nodes: Grass = 1,
+   * Mountain = 2.
    *
    * @param from the source node
-   * @param to the directly adjacent target node
+   * @param to   the directly adjacent target node
    * @return the movement cost between the two nodes
    */
   private int terrainTransitionCost(FullMapNode from, FullMapNode to) {

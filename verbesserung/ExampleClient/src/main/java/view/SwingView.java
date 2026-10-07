@@ -51,6 +51,7 @@ public class SwingView extends JFrame implements IView {
     super("SE1 MVC Game View");
 
     setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+    // setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
     setLayout(new BorderLayout());
 
     topPanel.setLayout(new BoxLayout(topPanel, BoxLayout.Y_AXIS));
@@ -58,8 +59,9 @@ public class SwingView extends JFrame implements IView {
 
     topPanel.add(buttonsPanel);
 
+    addGameInfo();
     addnewGameButton();
-
+    addPauseButton();
     addSettingsButton();
 
     /*
@@ -74,8 +76,21 @@ public class SwingView extends JFrame implements IView {
      * Fenster ist veränderbar.
      * Dadurch kann GamePanel seine Zellen skalieren.
      */
+    pack();
     setLocationRelativeTo(null);
     setVisible(true);
+    revalidate();
+  }
+
+  public void startNewGame() {
+    gamePanel.clearMap();
+
+    if (gamePanel.isEmpty()) {
+      // pack();
+      setResizable(false);
+    }
+    infoPanel.resetState();
+    setResizable(true);
   }
 
   public void setController(GameController controller) {
@@ -92,8 +107,31 @@ public class SwingView extends JFrame implements IView {
 
     topPanel.add(infoPanel);
 
+    infoPanel.resetState();
     topPanel.revalidate();
     topPanel.repaint();
+  }
+
+  private void addPauseButton() {
+
+    JButton pauseButton = new JButton("Pause");
+
+    pauseButton.setPreferredSize(new Dimension(180, 50));
+    pauseButton.setFont(new Font("SansSerif", Font.BOLD, 20));
+    pauseButton.setAlignmentX(CENTER_ALIGNMENT);
+
+    pauseButton.addActionListener(
+        e -> {
+          if (pauseButton.getText().equals("Pause")) {
+            controller.pauseGame();
+            pauseButton.setText("Resume");
+          } else {
+            controller.resumeGame();
+            pauseButton.setText("Pause");
+          }
+        });
+
+    topPanel.add(pauseButton, 1);
   }
 
   private void addSettingsButton() {
@@ -104,8 +142,7 @@ public class SwingView extends JFrame implements IView {
     settingsButton.setFont(new Font("SansSerif", Font.BOLD, 20));
     settingsButton.setAlignmentX(CENTER_ALIGNMENT);
 
-    settingsButton.addActionListener(
-        e -> openSettingsDialog());
+    settingsButton.addActionListener(e -> openSettingsDialog());
 
     buttonsPanel.add(settingsButton);
   }
@@ -164,12 +201,13 @@ public class SwingView extends JFrame implements IView {
 
     JButton applyButton = new JButton("Apply");
 
-    cancelButton.addActionListener(
-        e -> dialog.dispose());
+    playerStrategyBox.setSelectedItem(controller.getSettings().getPlayerStrategy());
+    enemyStrategyBox.setSelectedItem(controller.getSettings().getEnemyStrategy());
+
+    cancelButton.addActionListener(e -> dialog.dispose());
 
     applyButton.addActionListener(
         e -> {
-
           int delay = Integer.parseInt(delayField.getText());
 
           Long fixedSeed = null;
@@ -214,10 +252,11 @@ public class SwingView extends JFrame implements IView {
     newGameButton.addActionListener(
         e -> {
           // new Thread(
-          //     () -> {
-          //       controller.startNewGame();
-          //     })
-          //     .start();
+          // () -> {
+          // controller.startNewGame();
+          // })
+          // .start();
+          startNewGame();
           controller.startNewGame();
         });
     newGameButton.setVisible(true);
@@ -227,62 +266,14 @@ public class SwingView extends JFrame implements IView {
 
   @Override
   public void render(GameHelper gameHelper) {
-
-    // SwingUtilities.invokeLater(
-    // () -> {
-
-    // /*
-    // * Aktuelle Karte an GamePanel übergeben.
-    // */
-    // addGameInfo();
-    // int cols = gameHelper.getMaxX() + 1;
-    // int rows = gameHelper.getMaxY() + 1;
-
-    // if (rows == 10 && cols == 10) {
-    // gamePanel.setPreferredSize(new Dimension(500, 500));
-    // } else if (rows == 5 && cols == 20) {
-    // gamePanel.setPreferredSize(new Dimension(1000, 250));
-    // }
-    // setResizable(false);
-    // gamePanel.updateMap(gameHelper);
-
-    // /*
-    // * Genau wie im Minesweeper:
-    // * repaint() ruft paintComponent() erneut auf.
-    // */
-    // gamePanel.revalidate();
-    // gamePanel.repaint();
-    // pack();
-    // });
-    try {
-      SwingUtilities.invokeAndWait(
-          () -> {
-
-            addGameInfo();
-            infoPanel.updatePlayerState(gameHelper.getMyPlayerState());
-
-            int cols = gameHelper.getMaxX() + 1;
-            int rows = gameHelper.getMaxY() + 1;
-
-            if (rows == 10 && cols == 10) {
-              gamePanel.setPreferredSize(new Dimension(500, 500));
-            } else if (rows == 5 && cols == 20) {
-              gamePanel.setPreferredSize(new Dimension(1000, 250));
-            }
-
-            setResizable(false);
-
-            gamePanel.updateMap(gameHelper);
-
-            gamePanel.revalidate();
-            gamePanel.repaint();
-
-            pack();
-          });
-
-    } catch (Exception e) {
-      e.printStackTrace();
-    }
+    PlayerState playerState = gameHelper.getMyPlayerState();
+    SwingUtilities.invokeLater(
+        () -> {
+          infoPanel.updatePlayerState(playerState);
+          gamePanel.updateMap(gameHelper);
+          pack();
+          gamePanel.repaint();
+        });
   }
 
   @Override
@@ -290,12 +281,28 @@ public class SwingView extends JFrame implements IView {
 
     SwingUtilities.invokeLater(
         () -> {
-
           if (won) {
             infoPanel.updatePlayerStateWon();
           } else {
             infoPanel.updatePlayerStateLost();
           }
+        });
+  }
+
+  @Override
+  public void showMessage(String message) {
+    SwingUtilities.invokeLater(
+        () -> {
+          infoPanel.updateMessage(message);
+        });
+  }
+
+  @Override
+  public void clearMap() {
+    SwingUtilities.invokeLater(
+        () -> {
+          gamePanel.clearMap();
+          gamePanel.repaint();
         });
   }
 }
@@ -321,23 +328,29 @@ class GamePanel extends JPanel {
     setBackground(Color.LIGHT_GRAY);
   }
 
-  /** Aktuellen Spielzustand in ein Board übertragen. */
+  public boolean isEmpty() {
+    return board == null;
+  }
+
   public void updateMap(GameHelper gameHelper) {
+    int newRows = gameHelper.getMaxY() + 1;
+    int newCols = gameHelper.getMaxX() + 1;
 
-    int maxX = gameHelper.getMaxX();
-    int maxY = gameHelper.getMaxY();
+    if (board == null || rows != newRows || cols != newCols) {
+      rows = newRows;
+      cols = newCols;
 
-    rows = maxY + 1;
-    cols = maxX + 1;
+      board = new String[rows][cols];
 
-    board = new String[rows][cols];
+      if (rows == 10 && cols == 10) {
+        setPreferredSize(new Dimension(500, 500));
+      } else if (rows == 5 && cols == 20) {
+        setPreferredSize(new Dimension(1000, 250));
+      }
+    }
 
     for (FullMapNode node : gameHelper.getMap().getMapNodes()) {
-
-      int x = node.getX();
-      int y = node.getY();
-
-      board[y][x] = getSymbolForNode(node, gameHelper);
+      board[node.getY()][node.getX()] = getSymbolForNode(node, gameHelper);
     }
   }
 
@@ -485,6 +498,13 @@ class GamePanel extends JPanel {
       case Mountain -> "🟫";
     };
   }
+
+  public void clearMap() {
+    board = null;
+    rows = 0;
+    cols = 0;
+    repaint();
+  }
 }
 
 class InfoPanel extends JPanel {
@@ -508,35 +528,29 @@ class InfoPanel extends JPanel {
     JLabel myPlayerLabel = new JLabel("🙂");
     JLabel enemyPlayerLabel = new JLabel("😈");
 
-    myPlayerLabel.setFont(
-        new Font("Segoe UI Emoji", Font.PLAIN, 40));
+    myPlayerLabel.setFont(new Font("Segoe UI Emoji", Font.PLAIN, 40));
 
-    enemyPlayerLabel.setFont(
-        new Font("Segoe UI Emoji", Font.PLAIN, 40));
+    enemyPlayerLabel.setFont(new Font("Segoe UI Emoji", Font.PLAIN, 40));
 
     statusLabel = new JLabel("Game started", SwingConstants.CENTER);
 
-    statusLabel.setFont(
-        new Font("SansSerif", Font.BOLD, 20));
+    statusLabel.setFont(new Font("SansSerif", Font.BOLD, 20));
 
-    statusLabel.setBorder(
-        BorderFactory.createEmptyBorder(0, 20, 0, 0));
+    statusLabel.setBorder(BorderFactory.createEmptyBorder(0, 20, 0, 0));
 
     leftPanel = new JPanel();
 
     leftPanel.add(myText);
     leftPanel.add(myPlayerLabel);
 
-    leftPanel.setPreferredSize(
-        new Dimension(170, 60));
+    leftPanel.setPreferredSize(new Dimension(170, 60));
 
     rightPanel = new JPanel();
 
     rightPanel.add(enemyPlayerLabel);
     rightPanel.add(enemyText);
 
-    rightPanel.setPreferredSize(
-        new Dimension(170, 60));
+    rightPanel.setPreferredSize(new Dimension(170, 60));
 
     add(leftPanel, BorderLayout.WEST);
     add(statusLabel, BorderLayout.CENTER);
@@ -556,15 +570,12 @@ class InfoPanel extends JPanel {
       repaint();
 
       return;
-
     }
     switch (state.getState()) {
-
       case Won:
         statusLabel.setText("Won!");
 
-        leftPanel.setBorder(
-            BorderFactory.createLineBorder(Color.GREEN, 4));
+        leftPanel.setBorder(BorderFactory.createLineBorder(Color.GREEN, 4));
 
         rightPanel.setBorder(null);
 
@@ -573,8 +584,7 @@ class InfoPanel extends JPanel {
       case Lost:
         statusLabel.setText("Lost!");
 
-        rightPanel.setBorder(
-            BorderFactory.createLineBorder(Color.GREEN, 4));
+        rightPanel.setBorder(BorderFactory.createLineBorder(Color.GREEN, 4));
 
         leftPanel.setBorder(null);
 
@@ -589,11 +599,17 @@ class InfoPanel extends JPanel {
         break;
 
       // default:
-      //   statusLabel.setText("Game started");
-      //   break;
+      // statusLabel.setText("Game started");
+      // break;
     }
 
     repaint();
+  }
+
+  public void resetState() {
+    rightPanel.setBorder(null);
+    leftPanel.setBorder(null);
+    statusLabel.setText("Game started");
   }
 
   @Override
@@ -605,8 +621,7 @@ class InfoPanel extends JPanel {
 
     statusLabel.setText("Won!");
 
-    leftPanel.setBorder(
-        BorderFactory.createLineBorder(Color.GREEN, 4));
+    leftPanel.setBorder(BorderFactory.createLineBorder(Color.GREEN, 4));
 
     rightPanel.setBorder(null);
   }
@@ -615,9 +630,13 @@ class InfoPanel extends JPanel {
 
     statusLabel.setText("Lost!");
 
-    rightPanel.setBorder(
-        BorderFactory.createLineBorder(Color.GREEN, 4));
+    rightPanel.setBorder(BorderFactory.createLineBorder(Color.GREEN, 4));
 
     leftPanel.setBorder(null);
+  }
+
+  public void updateMessage(String message) {
+    statusLabel.setText(message);
+    repaint();
   }
 }

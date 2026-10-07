@@ -1,7 +1,8 @@
 package engine;
 
-import main.Main;
 import org.junit.jupiter.api.Test;
+
+import main.Main;
 import util.RandomManager;
 
 public class FakeEngineTest {
@@ -16,5 +17,10 @@ public class FakeEngineTest {
   @Test
   public void RunGame() {
     Main.main(new String[0]);
+    try {
+      Thread.sleep(Long.MAX_VALUE);
+    } catch (Exception e) {
+      e.printStackTrace();
+    }
   }
 }

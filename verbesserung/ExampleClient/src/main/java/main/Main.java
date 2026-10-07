@@ -50,6 +50,7 @@ public class Main {
     GameController controller = new GameController(model, view);
     ((SwingView) view).setController(controller);
     controller.startSession();
+    // LockSupport.park();
   }
 
   private static void setupLogging() {
