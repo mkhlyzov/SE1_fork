@@ -1,27 +1,21 @@
 package logic;
 
-import java.awt.Point;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
+
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
 import java.util.logging.Logger;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertFalse;
-import static org.junit.jupiter.api.Assertions.assertNotNull;
-import static org.junit.jupiter.api.Assertions.assertTrue;
-import org.junit.jupiter.api.RepeatedTest;
 import org.junit.jupiter.api.Test;
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.when;
 
-import engine.FakeEngine;
-import map.ClientMap;
-import map.IMapGenerator;
 import messagesbase.UniquePlayerIdentifier;
 import messagesbase.messagesfromclient.ETerrain;
-import messagesbase.messagesfromclient.PlayerHalfMap;
-import messagesbase.messagesfromclient.PlayerMove;
 import messagesbase.messagesfromserver.EFortState;
 import messagesbase.messagesfromserver.EPlayerGameState;
 import messagesbase.messagesfromserver.EPlayerPositionState;
@@ -31,7 +25,6 @@ import messagesbase.messagesfromserver.FullMapNode;
 import messagesbase.messagesfromserver.GameState;
 import messagesbase.messagesfromserver.PlayerState;
 import testutils.TestLogger;
-import view.ConsoleView;
 
 class StrategyPlannedTourUtilsTest {
 
@@ -393,83 +386,6 @@ class StrategyPlannedTourUtilsTest {
 
     // должна быть выбрана неразведанная цель
     assertEquals(c, result);
-  }
-
-  @RepeatedTest(100)
-  public void firstEnemyObservedPositionAfter8Rounds() {
-
-    FakeEngine engine = new FakeEngine();
-
-    String playerId_1 = "player_1";
-    String playerId_2 = "player_2";
-
-    IStrategy strategy_1 = new StrategyPlannedTour();
-    IStrategy strategy_2 = new StrategyAlwaysClosest();
-
-    IMapGenerator mapGenerator_1 = new ClientMap();
-    PlayerHalfMap halfMapData_1 = mapGenerator_1.generate(playerId_1);
-    engine.registerPlayer(playerId_1, halfMapData_1);
-
-    IMapGenerator mapGenerator_2 = new ClientMap();
-    PlayerHalfMap halfMapData_2 = mapGenerator_2.generate(playerId_2);
-    engine.registerPlayer(playerId_2, halfMapData_2);
-
-    GameHelper helper_1 = new GameHelper(new UniquePlayerIdentifier(playerId_1));
-
-    GameHelper helper_2 = new GameHelper(new UniquePlayerIdentifier(playerId_2));
-
-    ConsoleView view = new ConsoleView();
-
-    for (int i = 0; i != NUM_ROUNDS_HIDDEN && !engine.isFinished(); i++) {
-
-      GameState state_1 = engine.getState(playerId_1);
-
-      helper_1.update(state_1);
-      view.render(helper_1);
-
-      if (i < NUM_ROUNDS_HIDDEN) {
-        Point Pos2_expected = helper_1._getFirstTrueEnemyPosition_v1();
-        assert (Pos2_expected == null);
-      }
-
-      PlayerMove move_1 = strategy_1.calculateNextMove(helper_1);
-      engine.applyMove(move_1);
-
-      GameState state_2 = engine.getState(playerId_2);
-      helper_2.update(state_2);
-      PlayerMove move_2 = strategy_2.calculateNextMove(helper_2);
-      engine.applyMove(move_2);
-    }
-
-    helper_1.update(engine.getState(playerId_1));
-    helper_2.update(engine.getState(playerId_2));
-
-    FullMapNode Pos2 = helper_2.getMyPosition();
-
-    LOGGER.fine("Player2: " + Pos2.getX() + ", " + Pos2.getY());
-
-    for (int i = 0;; i++) {
-
-      Point Pos2_expected = helper_1._getFirstTrueEnemyPosition_v1();
-
-      assertTrue(Pos2.getX() == Pos2_expected.x && Pos2.getY() == Pos2_expected.y);
-
-      if (engine.isFinished() || i == 6) {
-        break;
-      }
-
-      PlayerMove move_1 = strategy_1.calculateNextMove(helper_1);
-      engine.applyMove(move_1);
-
-      GameState state_2 = engine.getState(playerId_2);
-      helper_2.update(state_2);
-      PlayerMove move_2 = strategy_2.calculateNextMove(helper_2);
-      engine.applyMove(move_2);
-
-      GameState state_1 = engine.getState(playerId_1);
-      helper_1.update(state_1);
-      view.render(helper_1);
-    }
   }
 
   @Test

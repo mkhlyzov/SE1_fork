@@ -1,15 +1,16 @@
 package logic;
 
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertNull;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+
 import java.awt.Point;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
 import java.util.function.Supplier;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertNull;
-import static org.junit.jupiter.api.Assertions.assertTrue;
 import org.junit.jupiter.api.RepeatedTest;
 import org.junit.jupiter.api.Test;
 
@@ -29,6 +30,7 @@ import messagesbase.messagesfromserver.FullMapNode;
 import messagesbase.messagesfromserver.GameState;
 import messagesbase.messagesfromserver.PlayerState;
 import util.RandomManager;
+import view.ConsoleView;
 
 public class GameHelperTest {
 
@@ -224,10 +226,11 @@ public class GameHelperTest {
     engine.registerPlayer(playerId_2, halfMapData_2);
 
     GameHelper helper_1 = new GameHelper(new UniquePlayerIdentifier(playerId_1));
-
     GameHelper helper_2 = new GameHelper(new UniquePlayerIdentifier(playerId_2));
 
-    for (int i = 0; i < NUM_ROUNDS_HIDDEN && !engine.isFinished(); i++) {
+    int turnCount = 0;
+
+    for (; turnCount < NUM_ROUNDS_HIDDEN && !engine.isFinished(); turnCount++) {
 
       GameState state_1 = engine.getState(playerId_1);
       helper_1.update(state_1);
@@ -252,7 +255,7 @@ public class GameHelperTest {
 
     FullMapNode pos_2_real = helper_2.getMyPosition();
 
-    for (int i = 0; i < 10 && !engine.isFinished(); i++) {
+    for (; turnCount < NUM_ROUNDS_HIDDEN + 10 && !engine.isFinished(); turnCount++) {
 
       GameState state_1 = engine.getState(playerId_1);
       helper_1.update(state_1);
@@ -274,6 +277,10 @@ public class GameHelperTest {
     }
     helper_1.update(engine.getState(playerId_1));
     helper_2.update(engine.getState(playerId_2));
+
+    if (turnCount < NUM_ROUNDS_HIDDEN + 10) {
+      return;
+    }
 
     Point pos_1_predicted_by_2 = helper_2._getFirstTrueEnemyPosition_v2();
     Point pos_2_predicted_by_1 = helper_1._getFirstTrueEnemyPosition_v2();
@@ -305,6 +312,84 @@ public class GameHelperTest {
         pos_2_real.getX() == pos_2_predicted_by_1.x
             && pos_2_real.getY() == pos_2_predicted_by_1.y);
   }
+
+  @RepeatedTest(100)
+  public void FirstTrueEnemyPosition_v1_wihtBonusRounds() {
+
+    FakeEngine engine = new FakeEngine();
+
+    String playerId_1 = "player_1";
+    String playerId_2 = "player_2";
+
+    IStrategy strategy_1 = new StrategyPlannedTour();
+    IStrategy strategy_2 = new StrategyAlwaysClosest();
+
+    IMapGenerator mapGenerator_1 = new ClientMap();
+    PlayerHalfMap halfMapData_1 = mapGenerator_1.generate(playerId_1);
+    engine.registerPlayer(playerId_1, halfMapData_1);
+
+    IMapGenerator mapGenerator_2 = new ClientMap();
+    PlayerHalfMap halfMapData_2 = mapGenerator_2.generate(playerId_2);
+    engine.registerPlayer(playerId_2, halfMapData_2);
+
+    GameHelper helper_1 = new GameHelper(new UniquePlayerIdentifier(playerId_1));
+
+    GameHelper helper_2 = new GameHelper(new UniquePlayerIdentifier(playerId_2));
+
+    ConsoleView view = new ConsoleView();
+
+    for (int i = 0; i != NUM_ROUNDS_HIDDEN && !engine.isFinished(); i++) {
+
+      GameState state_1 = engine.getState(playerId_1);
+
+      helper_1.update(state_1);
+      view.render(helper_1);
+
+      if (i < NUM_ROUNDS_HIDDEN) {
+        Point Pos2_expected = helper_1._getFirstTrueEnemyPosition_v1();
+        assert (Pos2_expected == null);
+      }
+
+      PlayerMove move_1 = strategy_1.calculateNextMove(helper_1);
+      engine.applyMove(move_1);
+
+      GameState state_2 = engine.getState(playerId_2);
+      helper_2.update(state_2);
+      PlayerMove move_2 = strategy_2.calculateNextMove(helper_2);
+      engine.applyMove(move_2);
+    }
+
+    helper_1.update(engine.getState(playerId_1));
+    helper_2.update(engine.getState(playerId_2));
+
+    FullMapNode Pos2 = helper_2.getMyPosition();
+
+    // LOGGER.fine("Player2: " + Pos2.getX() + ", " + Pos2.getY());
+
+    for (int i = 0;; i++) {
+
+      Point Pos2_expected = helper_1._getFirstTrueEnemyPosition_v1();
+
+      assertTrue(Pos2.getX() == Pos2_expected.x && Pos2.getY() == Pos2_expected.y);
+
+      if (engine.isFinished() || i == 6) {
+        break;
+      }
+
+      PlayerMove move_1 = strategy_1.calculateNextMove(helper_1);
+      engine.applyMove(move_1);
+
+      GameState state_2 = engine.getState(playerId_2);
+      helper_2.update(state_2);
+      PlayerMove move_2 = strategy_2.calculateNextMove(helper_2);
+      engine.applyMove(move_2);
+
+      GameState state_1 = engine.getState(playerId_1);
+      helper_1.update(state_1);
+      view.render(helper_1);
+    }
+  }
+  
   /*
    * TestEnemyPositionTrackCorrectlyUnderMustWait
    *

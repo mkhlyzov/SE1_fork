@@ -73,6 +73,14 @@ public class GameHelper {
     return currentGameState.getMap();
   }
 
+  public ETerrain getTerrain(int x, int y) {
+    return getMap().getMapNodes().stream()
+        .filter(n -> n.getX() == x && n.getY() == y)
+        .findFirst()
+        .map(FullMapNode::getTerrain)
+        .orElse(null);
+  }
+
   public static PlayerState getPlayerState(GameState state, UniquePlayerIdentifier playerId) {
 
     for (PlayerState player : state.getPlayers()) {
@@ -147,26 +155,7 @@ public class GameHelper {
     return null;
   }
 
-  // public Point _getFirstTrueEnemyPosition_v2() {
-  // for (int i = 0; i + 2 < enemyPosHistory.size(); i++) {
-  // Point p1 = enemyPosHistory.get(i);
-  // Point p2 = enemyPosHistory.get(i + 1);
-  // Point p3 = enemyPosHistory.get(i + 2);
-
-  // int dx21 = p2.x - p1.x;
-  // int dy21 = p2.y - p1.y;
-
-  // int dx32 = p3.x - p2.x;
-  // int dy32 = p3.y - p2.y;
-
-  // if (dx21 * dx21 + dy21 * dy21 <= 1 && dx32 * dx32 + dy32 * dy32 <= 1) {
-  // return p1;
-  // }
-  // }
-  // return null;
-  // }
-
-  public Point _getFirstTrueEnemyPosition_v2() {
+  public Point _getFirstTrueEnemyPosition_v2_fork() {
 
     int firstTrueIndex = -1;
     for (int i = enemyPosHistory.size() - 1; i >= 2; i--) {
@@ -192,6 +181,83 @@ public class GameHelper {
     if (firstTrueIndex != -1) {
       return enemyPosHistory.get(firstTrueIndex);
     }
+    return null;
+  }
+
+  public Point _getFirstTrueEnemyPosition_v2() {
+    class TransitionInfo {
+      Point p;
+      int num_repeats;
+      ETerrain terrain;
+      
+      TransitionInfo(Point p, int num_repeats, ETerrain terrain) {
+        this.p = p;
+        this.num_repeats = num_repeats;
+        this.terrain = terrain;
+      }
+    }
+
+    class Validator {
+      public List<TransitionInfo> buildTransitions(List<Point> points) {
+        List <TransitionInfo> transitions = new ArrayList<>();
+        transitions.add(new TransitionInfo(
+          enemyPosHistory.get(0), 0,
+          getTerrain(enemyPosHistory.get(0).x,
+          enemyPosHistory.get(0).y))
+        );
+
+        for (Point p : enemyPosHistory) {
+          if (!transitions.get(transitions.size() - 1).p.equals(p)) {
+            transitions.add(new TransitionInfo(p, 0, getTerrain(p.x, p.y)));
+          }
+          transitions.get(transitions.size() - 1).num_repeats++;
+        }   
+
+        return transitions;
+      }
+      public boolean sufixIsValid(List<TransitionInfo> transitions, int index) {
+        for (int j = index; j + 1 < transitions.size(); j++) {
+          TransitionInfo t1 = transitions.get(j);
+          TransitionInfo t2 = transitions.get(j + 1);
+
+          if (!pointsAreAdjacent(t1.p, t2.p)) {
+            return false;
+          }
+          
+          int transitionCost = terrainTransitionCost(t1.p, t2.p);
+          if (t1.num_repeats != transitionCost && j != index) {
+            return false;
+          }
+          
+        }
+
+        if (index + 1 >= transitions.size()) {
+          return false;
+        }
+
+        return true;
+      }
+
+      public boolean pointsAreAdjacent(Point p1, Point p2) {
+        int dx = p2.x - p1.x;
+        int dy = p2.y - p1.y;
+        return dx * dx + dy * dy == 1;
+      }
+    }
+
+    if (enemyPosHistory.isEmpty()) {
+      return null;
+    }
+
+    Validator validator = new Validator();
+    List<TransitionInfo> transitions = validator.buildTransitions(enemyPosHistory);
+
+    for (int i = 0; i < transitions.size(); i++) {
+      if (validator.sufixIsValid(transitions, i)) {
+        return transitions.get(i).p;
+      }
+    }
+
     return null;
   }
 
@@ -471,13 +537,25 @@ public class GameHelper {
    * @param to   the directly adjacent target node
    * @return the movement cost between the two nodes
    */
+  private int terrainTransitionCost(ETerrain from, ETerrain to) {
+     int fromCost = (from == ETerrain.Mountain) ? 2 : 1;
+    int toCost = (to == ETerrain.Mountain) ? 2 : 1;
+    return fromCost + toCost;
+  }
+
   private int terrainTransitionCost(FullMapNode from, FullMapNode to) {
     int dx = to.getX() - from.getX();
     int dy = to.getY() - from.getY();
     assert dx * dx + dy * dy == 1;
 
-    int fromCost = (from.getTerrain() == ETerrain.Mountain) ? 2 : 1;
-    int toCost = (to.getTerrain() == ETerrain.Mountain) ? 2 : 1;
-    return fromCost + toCost;
+    return terrainTransitionCost(from.getTerrain(), to.getTerrain());
+  }
+
+  private int terrainTransitionCost(Point from, Point to) {
+    int dx = to.x - from.x;
+    int dy = to.y - from.y;
+    assert dx * dx + dy * dy == 1;
+
+    return terrainTransitionCost(getTerrain(from.x, from.y), getTerrain(to.x, to.y));
   }
 }
