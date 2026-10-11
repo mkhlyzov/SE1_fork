@@ -5,6 +5,7 @@ import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Map;
 import java.util.Queue;
 import java.util.Set;
 import java.util.logging.Logger;
@@ -185,57 +186,143 @@ public class GameHelper {
   }
 
   public Point _getFirstTrueEnemyPosition_v2() {
-    class TransitionInfo {
-      Point p;
-      int num_repeats;
-      ETerrain terrain;
-      
-      TransitionInfo(Point p, int num_repeats, ETerrain terrain) {
-        this.p = p;
-        this.num_repeats = num_repeats;
-        this.terrain = terrain;
-      }
-    }
 
     class Validator {
-      public List<TransitionInfo> buildTransitions(List<Point> points) {
-        List <TransitionInfo> transitions = new ArrayList<>();
-        transitions.add(new TransitionInfo(
-          enemyPosHistory.get(0), 0,
-          getTerrain(enemyPosHistory.get(0).x,
-          enemyPosHistory.get(0).y))
-        );
-
-        for (Point p : enemyPosHistory) {
-          if (!transitions.get(transitions.size() - 1).p.equals(p)) {
-            transitions.add(new TransitionInfo(p, 0, getTerrain(p.x, p.y)));
-          }
-          transitions.get(transitions.size() - 1).num_repeats++;
-        }   
-
-        return transitions;
+      public boolean sufixIsValid(List<Point> points, int index) {
+        return transitionCostsAreValid(points, index) &&
+            terrainPatternIsValid(points, index);
       }
-      public boolean sufixIsValid(List<TransitionInfo> transitions, int index) {
-        for (int j = index; j + 1 < transitions.size(); j++) {
-          TransitionInfo t1 = transitions.get(j);
-          TransitionInfo t2 = transitions.get(j + 1);
 
-          if (!pointsAreAdjacent(t1.p, t2.p)) {
-            return false;
-          }
-          
-          int transitionCost = terrainTransitionCost(t1.p, t2.p);
-          if (t1.num_repeats != transitionCost && j != index) {
-            return false;
-          }
-          
-        }
-
-        if (index + 1 >= transitions.size()) {
+      public boolean transitionCostsAreValid(List<Point> points, int index) {
+        // check that sequence has enough points
+        if (index + 4 >= points.size()) {
           return false;
         }
 
+
+        int idx1 = index;
+        int idx2 = idx1;
+
+        while (idx1 < points.size()) {
+          while (idx2 < points.size() && points.get(idx1).equals(points.get(idx2))) {
+            idx2++;
+          }
+          if (idx2 == points.size()) {
+            break;
+          }
+          Point p1 = points.get(idx1);
+          Point p2 = points.get(idx2);
+          assert !p1.equals(p2);
+          
+          if (!pointsAreAdjacent(p1, p2)) {
+            return false;
+          }
+          int transitionCost = terrainTransitionCost(p1, p2);
+          int numRepeats = idx2 - idx1;
+
+          if (numRepeats != transitionCost && index != idx1) {
+            return false;
+          }
+
+          idx1 = idx2;
+        }
+
         return true;
+      }
+      
+      public boolean terrainPatternIsValid(List<Point> points, int index) {
+        class Automaton {
+          enum State {
+            q0, q1, q2, q3, q4, q5, qF;
+
+            public boolean isAccepting() {
+              return (this == qF);
+            }
+          }
+
+          enum Symbol {
+            sG, nG, sM, nM;
+
+            public static Symbol getSymbol(ETerrain terrain, boolean hasChanged) {
+              if (terrain == ETerrain.Grass) {
+                if (hasChanged) {
+                  return nG;
+                } else {
+                  return sG;
+                }
+              } else if (terrain == ETerrain.Mountain) {
+              if (hasChanged) {
+                return nM;
+              } else {
+                return sM;
+              }
+              } else {
+                return null;
+              }
+            }
+          }
+
+          private record Transition(State from, Symbol symbol) {}
+
+          private final Map<Transition, State> transitions = Map.of(
+              new Transition(State.q0, Symbol.nG), State.q1,
+              new Transition(State.q0, Symbol.nM), State.q3,
+
+              new Transition(State.q1, Symbol.sG), State.q2,
+              new Transition(State.q1, Symbol.nM), State.qF,
+
+              new Transition(State.q2, Symbol.nG), State.qF,
+              new Transition(State.q2, Symbol.sG), State.qF,
+              
+              new Transition(State.q3, Symbol.sM), State.q4,
+
+              new Transition(State.q4, Symbol.sM), State.q5,
+              new Transition(State.q4, Symbol.nG), State.qF,
+
+              new Transition(State.q5, Symbol.nM), State.qF
+
+          );
+          
+          State state = State.q0;
+          
+          boolean step(ETerrain terrain, boolean hasChanged) {
+            Symbol symbol = Symbol.getSymbol(terrain, hasChanged);
+            return _step(symbol);
+          }
+          
+          boolean _step(Symbol symbol) {
+            State next = transitions.get(new Transition(state, symbol));
+
+            if (next == null) {
+                return false;
+            }
+
+            state = next;
+            return true;
+          }
+
+          boolean isAccepting() {
+            return state.isAccepting();
+          }
+        }
+
+        Automaton automaton = new Automaton();
+        
+        for (int i = index; i < points.size(); i++) {
+          Point p = points.get(i);
+
+          boolean hasChanged = (i == index || !p.equals(points.get(i - 1)));
+          ETerrain terrain = getTerrain(p.x, p.y);
+
+          if (!automaton.step(terrain, hasChanged)) {
+            return false;
+          }
+          if (automaton.isAccepting()) {
+            return true;
+          }
+
+        }
+        return false;
       }
 
       public boolean pointsAreAdjacent(Point p1, Point p2) {
@@ -250,11 +337,10 @@ public class GameHelper {
     }
 
     Validator validator = new Validator();
-    List<TransitionInfo> transitions = validator.buildTransitions(enemyPosHistory);
-
-    for (int i = 0; i < transitions.size(); i++) {
-      if (validator.sufixIsValid(transitions, i)) {
-        return transitions.get(i).p;
+  
+    for (int i = 0; i < enemyPosHistory.size(); i++) {
+      if (validator.sufixIsValid(enemyPosHistory, i)) {
+        return enemyPosHistory.get(i);
       }
     }
 
