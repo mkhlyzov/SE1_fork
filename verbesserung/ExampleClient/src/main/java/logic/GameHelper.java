@@ -2,6 +2,7 @@ package logic;
 
 import java.awt.Point;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.List;
@@ -44,15 +45,6 @@ public class GameHelper {
   private List<Point> playerPosHistory = new ArrayList<>();
   private List<Point> enemyPosHistory = new ArrayList<>();
 
-  /* Methode FOR DEBUGGING */
-  public void printEnemyPos() {
-    for (int i = 0; i < enemyPosHistory.size(); i++) {
-      Point p = enemyPosHistory.get(i);
-
-      System.out.println(i + ": (" + p.x + "," + p.y + ")");
-    }
-  }
-
   public GameHelper(UniquePlayerIdentifier playerId) {
     this.playerId = playerId;
   }
@@ -64,6 +56,14 @@ public class GameHelper {
 
   public UniquePlayerIdentifier getPlayerId() {
     return playerId;
+  }
+
+  public List<Point> getPlayerPosHistory() {
+    return playerPosHistory;
+  }
+
+  public List<Point> getEnemyPosHistory() {
+    return enemyPosHistory;
   }
 
   public GameState getGameState() {
@@ -264,26 +264,28 @@ public class GameHelper {
 
           private record Transition(State from, Symbol symbol) {}
 
-          private final Map<Transition, State> transitions = Map.of(
-              new Transition(State.q0, Symbol.nG), State.q1,
-              new Transition(State.q0, Symbol.nM), State.q3,
-
-              new Transition(State.q1, Symbol.sG), State.q2,
-              new Transition(State.q1, Symbol.nM), State.qF,
-
-              new Transition(State.q2, Symbol.nG), State.qF,
-              new Transition(State.q2, Symbol.sG), State.qF,
-              
-              new Transition(State.q3, Symbol.sM), State.q4,
-
-              new Transition(State.q4, Symbol.sM), State.q5,
-              new Transition(State.q4, Symbol.nG), State.qF,
-
-              new Transition(State.q5, Symbol.nM), State.qF
-
-          );
+          private final Map<Transition, State> transitions = new HashMap<>();
           
           State state = State.q0;
+
+          Automaton() {
+            transitions.put(new Transition(State.q0, Symbol.nG), State.q1);
+            transitions.put(new Transition(State.q0, Symbol.nM), State.q3);
+
+            transitions.put(new Transition(State.q1, Symbol.sG), State.q2);
+            transitions.put(new Transition(State.q1, Symbol.nM), State.qF);
+
+            transitions.put(new Transition(State.q2, Symbol.nG), State.qF);
+            transitions.put(new Transition(State.q2, Symbol.sG), State.qF);
+              
+            transitions.put(new Transition(State.q3, Symbol.sM), State.q4);
+            transitions.put(new Transition(State.q3, Symbol.nM), State.qF);
+
+            transitions.put(new Transition(State.q4, Symbol.sM), State.q5);
+            transitions.put(new Transition(State.q4, Symbol.nG), State.qF);
+
+            transitions.put(new Transition(State.q5, Symbol.nM), State.qF);
+          }
           
           boolean step(ETerrain terrain, boolean hasChanged) {
             Symbol symbol = Symbol.getSymbol(terrain, hasChanged);
@@ -469,10 +471,6 @@ public class GameHelper {
 
       updatePositions();
     }
-  }
-
-  public List<Point> getPlayerPosHistory() {
-    return playerPosHistory;
   }
 
   private void initialize() {

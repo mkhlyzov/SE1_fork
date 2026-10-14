@@ -10,6 +10,10 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
 import java.util.function.Supplier;
+import java.util.logging.Formatter;
+import java.util.logging.Level;
+import java.util.logging.LogRecord;
+import java.util.logging.Logger;
 
 import org.junit.jupiter.api.RepeatedTest;
 import org.junit.jupiter.api.Test;
@@ -34,7 +38,48 @@ import view.ConsoleView;
 
 public class GameHelperTest {
 
+  private final static Logger LOGGER = Logger.getLogger(GameHelperTest.class.getName());
   private final int NUM_ROUNDS_HIDDEN = 8;
+
+  GameHelperTest() {
+    Logger root = Logger.getLogger("");
+    root.setLevel(Level.INFO);
+
+    for (var h : root.getHandlers()) {
+      h.setLevel(Level.FINEST);
+
+      h.setFormatter(
+          new Formatter() {
+            @Override
+            public String format(LogRecord record) {
+              String className = record.getSourceClassName();
+              String methodName = record.getSourceMethodName();
+
+              return String.format(
+                  "%1$tH:%1$tM:%1$tS %2$s %5$s%n",
+                  record.getMillis(),
+                  record.getLevel().getName(),
+                  className,
+                  methodName,
+                  formatMessage(record));
+            }
+          });
+    }
+
+    Logger.getLogger("controller").setLevel(Level.OFF);
+    Logger.getLogger("network").setLevel(Level.OFF);
+    Logger.getLogger("logic").setLevel(Level.OFF);
+    Logger.getLogger("map").setLevel(Level.OFF);
+    Logger.getLogger("model").setLevel(Level.OFF);
+    Logger.getLogger("view").setLevel(Level.OFF);
+
+    // Swing/AWT
+    Logger.getLogger("javax.swing").setLevel(Level.OFF);
+    Logger.getLogger("java.awt").setLevel(Level.OFF);
+
+    // Tests
+    Logger.getLogger("logic.GameHelperTest").setLevel(Level.FINEST);
+  }
 
   @Test
   void mustWaitDoesNotChangePlayerPositionHistory() {
@@ -203,6 +248,8 @@ public class GameHelperTest {
 
   @RepeatedTest(100)
   void FirstTrueEnemyPosition_v2() {
+    RandomManager.randomizeSeed();
+    // RandomManager.setSeed(1791888696387L);
 
     FakeEngine engine = new FakeEngine();
 
@@ -257,8 +304,10 @@ public class GameHelperTest {
 
     for (; turnCount < NUM_ROUNDS_HIDDEN + 10 && !engine.isFinished(); turnCount++) {
 
-      GameState state_1 = engine.getState(playerId_1);
-      helper_1.update(state_1);
+      if (turnCount != NUM_ROUNDS_HIDDEN) {
+        GameState state_1 = engine.getState(playerId_1);
+        helper_1.update(state_1);
+      }
 
       PlayerMove move_1 = strategy_1.calculateNextMove(helper_1);
       engine.applyMove(move_1);
@@ -288,22 +337,49 @@ public class GameHelperTest {
     assertNotNull(pos_2_predicted_by_1);
 
     if (pos_1_real.getX() != pos_1_predicted_by_2.x || pos_1_real.getY() != pos_1_predicted_by_2.y) {
-
-      System.out.println(
+      LOGGER.fine("strategy 1: " + strategy_1.getClass().getSimpleName() + " | strategy 2: " + strategy_2.getClass().getSimpleName());
+      LOGGER.fine(
           "P1 real after 8 = "
               + pos_1_real.getX() + "," + pos_1_real.getY()
               + " | predicted by P2 = "
 
               + pos_1_predicted_by_2.x + "," + pos_1_predicted_by_2.y);
-      helper_2.printEnemyPos();
+
+      String msg = "Observed Enemy Position History, P2 pov:";
+      for (int i = 0; i < helper_2.getEnemyPosHistory().size(); i++) {
+        Point p = helper_2.getEnemyPosHistory().get(i);
+        msg += "\n" + i + ": (" + p.x + "," + p.y + ")    " + helper_2.getTerrain(p.x, p.y);
+      }
+      LOGGER.fine(msg);
+
+      msg = "Real Player Position History, P1 pov:";
+      for (int i = 0; i < helper_1.getPlayerPosHistory().size(); i++) {
+        Point p = helper_1.getPlayerPosHistory().get(i);
+        msg += "\n" + i + ": (" + p.x + "," + p.y + ")    " + helper_1.getTerrain(p.x, p.y);
+      }
+      LOGGER.fine(msg);
     }
     if (pos_2_real.getX() != pos_2_predicted_by_1.x || pos_2_real.getY() != pos_2_predicted_by_1.y) {
-      System.out.println(
+      LOGGER.fine("strategy 1: " + strategy_1.getClass().getSimpleName() + " | strategy 2: " + strategy_2.getClass().getSimpleName());
+      LOGGER.fine(
           "P2 real after 8 = "
               + pos_2_real.getX() + "," + pos_2_real.getY()
               + " | predicted by P1 = "
               + pos_2_predicted_by_1.x + "," + pos_2_predicted_by_1.y);
-      helper_1.printEnemyPos();
+      
+      String msg = "Observed Enemy Position History, P1 pov:";
+      for (int i = 0; i < helper_1.getEnemyPosHistory().size(); i++) {
+        Point p = helper_1.getEnemyPosHistory().get(i);
+        msg += "\n" + i + ": (" + p.x + "," + p.y + ")    " + helper_1.getTerrain(p.x, p.y);
+      }
+      LOGGER.fine(msg);
+
+      msg = "Real Player Position History, P2 pov:";
+      for (int i = 0; i < helper_2.getPlayerPosHistory().size(); i++) {
+        Point p = helper_2.getPlayerPosHistory().get(i);
+        msg += "\n" + i + ": (" + p.x + "," + p.y + ")    " + helper_2.getTerrain(p.x, p.y);
+      }
+      LOGGER.fine(msg);
     }
     assertTrue(
         pos_1_real.getX() == pos_1_predicted_by_2.x
