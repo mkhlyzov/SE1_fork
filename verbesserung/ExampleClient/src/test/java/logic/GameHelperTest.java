@@ -1,22 +1,25 @@
 package logic;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertNull;
-import static org.junit.jupiter.api.Assertions.assertTrue;
-
 import java.awt.Point;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
+import java.util.function.Function;
 import java.util.function.Supplier;
 import java.util.logging.Formatter;
 import java.util.logging.Level;
 import java.util.logging.LogRecord;
 import java.util.logging.Logger;
+import java.util.stream.Stream;
 
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertNull;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 import org.junit.jupiter.api.RepeatedTest;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.MethodSource;
 
 import engine.FakeEngine;
 import map.ClientMap;
@@ -79,6 +82,15 @@ public class GameHelperTest {
 
     // Tests
     Logger.getLogger("logic.GameHelperTest").setLevel(Level.FINEST);
+  }
+
+  interface EnemyPositionFunction extends Function<GameHelper, Point> {
+  }
+
+  static Stream<EnemyPositionFunction> implementations() {
+    return Stream.of(
+        GameHelper::_getFirstTrueEnemyPosition_v2,
+        GameHelper::_getFirstTrueEnemyPosition_v3);
   }
 
   @Test
@@ -246,10 +258,12 @@ public class GameHelperTest {
         pos_2_real.getX() == pos_2_predicted_by_1.x && pos_2_real.getY() == pos_2_predicted_by_1.y);
   }
 
-  @RepeatedTest(100)
-  void FirstTrueEnemyPosition_v2() {
+  @RepeatedTest(3)
+  @ParameterizedTest
+  @MethodSource("implementations")
+  void FirstTrueEnemyPosition_v2(EnemyPositionFunction impl) {
     RandomManager.randomizeSeed();
-    // RandomManager.setSeed(1791888696387L);
+    // RandomManager.setSeed(1791973700330L);
 
     FakeEngine engine = new FakeEngine();
 
@@ -331,13 +345,16 @@ public class GameHelperTest {
       return;
     }
 
-    Point pos_1_predicted_by_2 = helper_2._getFirstTrueEnemyPosition_v2();
-    Point pos_2_predicted_by_1 = helper_1._getFirstTrueEnemyPosition_v2();
+    // Point pos_1_predicted_by_2 = helper_2._getFirstTrueEnemyPosition_v3();
+    // Point pos_2_predicted_by_1 = helper_1._getFirstTrueEnemyPosition_v3();
+    Point pos_1_predicted_by_2 = impl.apply(helper_2);
+    Point pos_2_predicted_by_1 = impl.apply(helper_1);
     assertNotNull(pos_1_predicted_by_2);
     assertNotNull(pos_2_predicted_by_1);
 
     if (pos_1_real.getX() != pos_1_predicted_by_2.x || pos_1_real.getY() != pos_1_predicted_by_2.y) {
-      LOGGER.fine("strategy 1: " + strategy_1.getClass().getSimpleName() + " | strategy 2: " + strategy_2.getClass().getSimpleName());
+      LOGGER.fine("strategy 1: " + strategy_1.getClass().getSimpleName() + " | strategy 2: "
+          + strategy_2.getClass().getSimpleName());
       LOGGER.fine(
           "P1 real after 8 = "
               + pos_1_real.getX() + "," + pos_1_real.getY()
@@ -360,13 +377,14 @@ public class GameHelperTest {
       LOGGER.fine(msg);
     }
     if (pos_2_real.getX() != pos_2_predicted_by_1.x || pos_2_real.getY() != pos_2_predicted_by_1.y) {
-      LOGGER.fine("strategy 1: " + strategy_1.getClass().getSimpleName() + " | strategy 2: " + strategy_2.getClass().getSimpleName());
+      LOGGER.fine("strategy 1: " + strategy_1.getClass().getSimpleName() + " | strategy 2: "
+          + strategy_2.getClass().getSimpleName());
       LOGGER.fine(
           "P2 real after 8 = "
               + pos_2_real.getX() + "," + pos_2_real.getY()
               + " | predicted by P1 = "
               + pos_2_predicted_by_1.x + "," + pos_2_predicted_by_1.y);
-      
+
       String msg = "Observed Enemy Position History, P1 pov:";
       for (int i = 0; i < helper_1.getEnemyPosHistory().size(); i++) {
         Point p = helper_1.getEnemyPosHistory().get(i);
@@ -465,7 +483,7 @@ public class GameHelperTest {
       view.render(helper_1);
     }
   }
-  
+
   /*
    * TestEnemyPositionTrackCorrectlyUnderMustWait
    *
